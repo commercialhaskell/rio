@@ -168,7 +168,7 @@ PartialTypeSignatures
 
 Notes on some surprising choices:
 
-* `ImplicitParams` is selected so that `HasCallback` can be used for
+* `ImplicitParams` is selected so that `HasCallStack` can be used for
   better error messages
 * `RecordWildCards` is really up for debate. It's widely used, but
   rightfully considered by many to be dangerous. Open question about
