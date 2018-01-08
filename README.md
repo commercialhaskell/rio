@@ -12,13 +12,13 @@ improving the project and getting it to a useful first release. For
 more information, see the
 [description of goals](https://github.com/snoyberg/codename-karka#readme)
 and the
-[issue tracker for discussions](https://github.com/snoyberg/codename-karka/issues). If
+[issue tracker for discussions](https://github.com/commercialhaskell/rio/issues). If
 you're reading this file anywhere but Github, you should probably
-[read the Github version instead](https://github.com/commercialhaskell/stack/tree/rio/subs/rio#readme),
+[read the Github version instead](https://github.com/commercialhaskell/rio#readme),
 which will be more up to date.
 
-The goal of the `rio` library is to help you jump start your Haskell
-coding. It is intended as a cross between:
+The goal of the `rio` library is to make it easier to adopt Haskell
+for writing production software.  It is intended as a cross between:
 
 * Collection of well designed, trusted libraries
 * Useful `Prelude` replacement
@@ -30,7 +30,7 @@ extent.
 
 ## Standard library
 
-While GHC ships with a `base` library, as well as another of other
+While GHC ships with a `base` library, as well as a number of other
 common packages like `directory` and `transformers`, there are large
 gaps in functionality provided by these libraries. This choice for a
 more minimalistic `base` is by design, but it leads to some
@@ -93,8 +93,28 @@ decisions towards optimizing for these use cases. And for Haskellers
 looking for a set of best practices to follow: you've come to the
 right place!
 
-For now, this is just a collection of links to existing best practices
-documents. We'll expand in the future.
+### Import practices
+
+This library is intended to provide a fully loaded set of basic
+functionality. You should:
+
+* Enable the `NoImplicitPrelude` language extension
+* Add `import RIO` as your replacement prelude
+* Use the `RIO.`-prefixed modules as necessary, imported using the
+  recommended qualified names in the modules themselves.
+
+### Language extensions
+
+### Monads
 
 * https://www.fpcomplete.com/blog/2017/07/the-rio-monad
+* Lenses
+
+### Exceptions
+
 * https://www.fpcomplete.com/blog/2016/11/exceptions-best-practices-haskell
+
+### Project template
+
+__TODO__ In the future, we'll add a new Stack template for using this
+library.
