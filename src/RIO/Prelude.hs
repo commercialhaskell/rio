@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
@@ -39,11 +40,21 @@ module RIO.Prelude
   , writeFileDisplayBuilder
   , hPutBuilder
   , sappend
+  , Control.Applicative.Alternative
+  , Control.Applicative.Applicative (..)
+  , Control.Applicative.liftA
+#if !MIN_VERSION_base(4, 10, 0)
+  , Control.Applicative.liftA2
+#endif
+  , Control.Applicative.liftA3
+  , Control.Applicative.many
+  , Control.Applicative.optional
+  , Control.Applicative.some
+  , (Control.Applicative.<|>)
   ) where
 
-import           Control.Applicative  as X (Alternative, Applicative (..),
-                                            liftA, liftA2, liftA3, many,
-                                            optional, some, (<|>))
+import           Control.Applicative       (Applicative)
+import qualified Control.Applicative
 import           Control.Arrow        as X (first, second, (&&&), (***))
 import           Control.DeepSeq      as X (NFData (..), force, ($!!))
 import           Control.Monad        as X (Monad (..), MonadPlus (..), filterM,
