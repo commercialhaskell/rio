@@ -192,7 +192,7 @@ MagicHash
 UnliftedFFITypes
 TypeOperators
 UnboxedTuples
-IackageImports
+PackageImports
 QuasiQuotes
 DeriveAnyClass
 DeriveLift
