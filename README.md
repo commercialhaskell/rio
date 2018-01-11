@@ -130,7 +130,6 @@ FunctionalDependencies
 RankNTypes
 ExistentialQuantification
 ScopedTypeVariables
-ImplicitParams
 FlexibleContexts
 FlexibleInstances
 EmptyDataDecls
@@ -168,8 +167,6 @@ PartialTypeSignatures
 
 Notes on some surprising choices:
 
-* `ImplicitParams` is selected so that `HasCallStack` can be used for
-  better error messages
 * `RecordWildCards` is really up for debate. It's widely used, but
   rightfully considered by many to be dangerous. Open question about
   what we do with it.
