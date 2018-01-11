@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 module RIO.Logger
   ( LogLevel (..)
@@ -27,7 +26,7 @@ import qualified Data.Text as T
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (MonadReader, ReaderT, runReaderT)
 import Lens.Micro (to)
-import GHC.Stack (HasCallStack, CallStack, SrcLoc (..), getCallStack)
+import GHC.Stack (HasCallStack, CallStack, SrcLoc (..), getCallStack, callStack)
 import Data.Time
 import qualified Data.Text.IO as TIO
 import Data.ByteString.Builder (toLazyByteString, char7)
@@ -54,7 +53,7 @@ logGeneric
   -> m ()
 logGeneric src level str = do
   logFunc <- view logFuncL
-  liftIO $ logFunc ?callStack src level str
+  liftIO $ logFunc callStack src level str
 
 logDebug
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
