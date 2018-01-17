@@ -1,5 +1,7 @@
+{-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -14,9 +16,11 @@ module RIO.Prelude
   , forMaybeM
   , stripCR
   , RIO (..)
+  , HasResource (..)
   , runRIO
   , liftRIO
   , tshow
+  , nubOrd
   , readFileBinary
   , writeFileBinary
   , ReadFileUtf8Exception (..)
@@ -149,6 +153,10 @@ import qualified Data.Semigroup
 import Control.Applicative (Const (..))
 import Lens.Micro.Internal ((#.))
 
+import Control.Monad.Trans.Resource.Internal (MonadResource (..), ReleaseMap, ResourceT (..))
+
+import qualified Data.Set as Set
+
 mapLeft :: (a1 -> a2) -> Either a1 b -> Either a2 b
 mapLeft f (Left a1) = Left (f a1)
 mapLeft _ (Right b) = Right b
@@ -206,8 +214,24 @@ instance MonadUnliftIO (RIO env) where
                   withUnliftIO $ \u ->
                   return (UnliftIO (unliftIO u . flip runReaderT r . unRIO))
 
+class HasResource env where
+  resourceL :: Lens' env (IORef ReleaseMap)
+instance HasResource (IORef ReleaseMap) where
+  resourceL = id
+instance HasResource env => MonadResource (RIO env) where
+  liftResourceT (ResourceT f) = view resourceL >>= liftIO . f
+
 tshow :: Show a => a -> Text
 tshow = T.pack . show
+
+nubOrd :: Ord a => [a] -> [a]
+nubOrd =
+  loop mempty
+  where
+    loop _ [] = []
+    loop !s (a:as)
+      | a `Set.member` s = loop s as
+      | otherwise = a : loop (Set.insert a s) as
 
 -- | Same as 'B.readFile', but generalized to 'MonadIO'
 readFileBinary :: MonadIO m => FilePath -> m ByteString

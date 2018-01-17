@@ -5,12 +5,17 @@ module RIO.Logger
   , LogSource
   , LogStr
   , LogFunc
+  , CallStack
   , HasLogFunc (..)
   , logGeneric
   , logDebug
   , logInfo
   , logWarn
   , logError
+  , logDebugS
+  , logInfoS
+  , logWarnS
+  , logErrorS
   , logOther
   , logSticky
   , logStickyDone
@@ -18,6 +23,7 @@ module RIO.Logger
   , NoLogging (..)
   , withStickyLogger
   , LogOptions (..)
+  , displayCallStack
   ) where
 
 import RIO.Prelude
@@ -78,6 +84,34 @@ logError
   => LogStr
   -> m ()
 logError = logGeneric "" LevelError
+
+logDebugS
+  :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
+  => LogSource
+  -> LogStr
+  -> m ()
+logDebugS src = logGeneric src LevelDebug
+
+logInfoS
+  :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
+  => LogSource
+  -> LogStr
+  -> m ()
+logInfoS src = logGeneric src LevelInfo
+
+logWarnS
+  :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
+  => LogSource
+  -> LogStr
+  -> m ()
+logWarnS src = logGeneric src LevelWarn
+
+logErrorS
+  :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
+  => LogSource
+  -> LogStr
+  -> m ()
+logErrorS src = logGeneric src LevelError
 
 logOther
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
@@ -217,11 +251,11 @@ simpleLogFunc lo printer cs _src level msg =
 
    getLoc :: DisplayBuilder
    getLoc
-     | logVerboseFormat lo = ansi setBlack <> "\n@(" <> fileLocStr <> ")"
+     | logVerboseFormat lo = ansi setBlack <> "\n@(" <> displayCallStack cs <> ")"
      | otherwise = mempty
 
-   fileLocStr :: DisplayBuilder
-   fileLocStr =
+displayCallStack :: CallStack -> DisplayBuilder
+displayCallStack cs =
      case reverse $ getCallStack cs of
        [] -> "<no call stack found>"
        (_desc, loc):_ ->
