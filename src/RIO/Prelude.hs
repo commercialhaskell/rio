@@ -3,9 +3,12 @@
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MagicHash                  #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
+{-# LANGUAGE UnboxedTuples              #-}
 module RIO.Prelude
   ( module UnliftIO
   , mapLeft
@@ -320,7 +323,7 @@ import qualified Data.ByteString.Builder  as BB
 import qualified Data.Semigroup
 
 import           Control.Applicative      (Const (..))
-import           Lens.Micro.Internal      (( #. ))
+import qualified Lens.Micro.Internal
 
 import qualified Data.Set                 as Set
 
@@ -373,6 +376,9 @@ import qualified Text.Read
 import qualified UnliftIO
 
 
+import GHC.Prim (State#, RealWorld)
+import GHC.Types (IO (IO))
+
 mapLeft :: (a1 -> a2) -> Either a1 b -> Either a2 b
 mapLeft f (Left a1) = Left (f a1)
 mapLeft _ (Right b) = Right b
@@ -414,11 +420,79 @@ withLazyFile fp inner = withBinaryFile fp ReadMode $ inner <=< liftIO . BL.hGetC
 -- * Instances of typeclasses like 'MonadLogger' are implemented using
 -- classes defined on the environment, instead of using an
 -- underlying monad.
-newtype RIO env a = RIO { unRIO :: ReaderT env IO a }
-  deriving (Functor,Applicative,Monad,MonadIO,MonadReader env,MonadThrow)
+newtype RIO env a = RIO (env -> State# RealWorld -> (# State# RealWorld, a #))
+-- NOTE Using the low level implementation to avoid any accidental
+-- performance problems. This shouldn't be necessary in practice, call
+-- this paranoia.
+
+instance Functor (RIO env) where
+  fmap f (RIO g) =
+    RIO (\env s0 ->
+      case g env s0 of
+        (# s1, a #) -> (# s1, f a #))
+  {-# INLINE fmap #-}
+
+  b <$ RIO f =
+    RIO (\env s0 ->
+      case f env s0 of
+        (# s1, _ #) -> (# s1, b #))
+  {-# INLINE (<$) #-}
+
+instance Applicative (RIO env) where
+  pure x = RIO (\_ s -> (# s, x #))
+  {-# INLINE pure #-}
+
+  RIO ff <*> RIO fa =
+    RIO (\env s0 ->
+      case ff env s0 of
+        (# s1, f #) ->
+          case fa env s1 of
+            (# s2, a #) -> (# s2, f a #))
+  {-# INLINE (<*>) #-}
+
+  liftA2 f (RIO fa) (RIO fb) =
+    RIO (\env s0 ->
+      case fa env s0 of
+        (# s1, a #) ->
+          case fb env s1 of
+            (# s2, b #) -> (# s2, f a b #))
+  {-# INLINE liftA2 #-}
+
+  RIO fa *> RIO fb =
+    RIO (\env s0 ->
+      case fa env s0 of
+        (# s1, _ #) ->
+          case fb env s1 of
+            (# s2, b #) -> (# s2, b #))
+  {-# INLINE (*>) #-}
+instance Monad (RIO env) where
+  return = Control.Applicative.pure
+  {-# INLINE return #-}
+  (>>) = (Control.Applicative.*>)
+  {-# INLINE (>>) #-}
+
+  RIO fa >>= g =
+    RIO (\env s0 ->
+      case fa env s0 of
+        (# s1, a #) ->
+          case g a of
+            RIO h -> h env s1)
+  {-# INLINE (>>=) #-}
+instance MonadIO (RIO env) where
+  liftIO (IO f) = RIO (\_ -> f)
+  {-# INLINE liftIO #-}
+instance MonadReader env (RIO env) where
+  ask = RIO (\env s -> (# s, env #))
+  {-# INLINE ask #-}
+
+  local f (RIO g) = RIO (g . f)
+  {-# INLINE local #-}
+instance MonadThrow (RIO env) where
+  throwM = throwIO
+  {-# INLINE throwM #-}
 
 runRIO :: MonadIO m => env -> RIO env a -> m a
-runRIO env (RIO (ReaderT f)) = liftIO (f env)
+runRIO env (RIO f) = liftIO (IO (f env))
 
 liftRIO :: (MonadIO m, MonadReader env m) => RIO env a -> m a
 liftRIO rio = do
@@ -426,9 +500,14 @@ liftRIO rio = do
   runRIO env rio
 
 instance MonadUnliftIO (RIO env) where
-    askUnliftIO = RIO $ ReaderT $ \r ->
-                  withUnliftIO $ \u ->
-                  return (UnliftIO (unliftIO u . flip runReaderT r . unRIO))
+  askUnliftIO = RIO (\r s0 -> (# s0, UnliftIO (runRIO r) #))
+  {-# INLINE askUnliftIO #-}
+  withRunInIO f =
+    RIO (\r s0 ->
+      let run (RIO g) = IO (g r)
+       in case f run of
+            IO f' -> f' s0)
+  {-# INLINE withRunInIO #-}
 
 tshow :: Show a => a -> Text
 tshow = T.pack . show
@@ -476,7 +555,7 @@ fromStrictBytes :: ByteString -> LByteString
 fromStrictBytes = BL.fromStrict
 
 view :: MonadReader s m => Getting a s a -> m a
-view l = asks (getConst #. l Const)
+view l = asks (getConst Lens.Micro.Internal.#. l Const)
 
 type UVector = UVector.Vector
 type SVector = SVector.Vector
