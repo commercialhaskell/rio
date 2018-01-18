@@ -7,7 +7,8 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
 module RIO.Prelude
-  ( mapLeft
+  ( module UnliftIO
+  , mapLeft
   , withLazyFile
   , fromFirst
   , mapMaybeA
@@ -34,7 +35,6 @@ module RIO.Prelude
   , UVector
   , SVector
   , GVector
-  , module X
   , DisplayBuilder (..)
   , Display (..)
   , displayShow
@@ -54,105 +54,324 @@ module RIO.Prelude
   , Control.Applicative.optional
   , Control.Applicative.some
   , (Control.Applicative.<|>)
+  , Control.Arrow.first
+  , Control.Arrow.second
+  , (Control.Arrow.&&&)
+  , (Control.Arrow.***)
+  , Control.DeepSeq.NFData(..)
+  , Control.DeepSeq.force
+  , (Control.DeepSeq.$!!)
+  , Control.Monad.Monad(..)
+  , Control.Monad.MonadPlus(..)
+  , Control.Monad.filterM
+  , Control.Monad.foldM
+  , Control.Monad.foldM_
+  , Control.Monad.forever
+  , Control.Monad.guard
+  , Control.Monad.join
+  , Control.Monad.liftM
+  , Control.Monad.liftM2
+  , Control.Monad.replicateM_
+  , Control.Monad.unless
+  , Control.Monad.when
+  , Control.Monad.zipWithM
+  , Control.Monad.zipWithM_
+  , (Control.Monad.<$!>)
+  , (Control.Monad.<=<)
+  , (Control.Monad.=<<)
+  , (Control.Monad.>=>)
+  , Control.Monad.Catch.MonadThrow(..)
+  , Control.Monad.Reader.MonadReader
+  , Control.Monad.Reader.MonadTrans(..)
+  , Control.Monad.Reader.ReaderT(..)
+  , Control.Monad.Reader.ask
+  , Control.Monad.Reader.asks
+  , Control.Monad.Reader.local
+  , Data.Bool.Bool(..)
+  , Data.Bool.not
+  , Data.Bool.otherwise
+  , (Data.Bool.&&)
+  , (Data.Bool.||)
+  , Data.ByteString.ByteString
+  , Data.ByteString.Builder.Builder
+  , Data.ByteString.Short.ShortByteString
+  , Data.ByteString.Short.toShort
+  , Data.ByteString.Short.fromShort
+  , Data.Char.Char
+  , Data.Data.Data(..)
+  , Data.Either.Either(..)
+  , Data.Either.either
+  , Data.Either.isLeft
+  , Data.Either.isRight
+  , Data.Either.lefts
+  , Data.Either.partitionEithers
+  , Data.Either.rights
+  , Data.Eq.Eq(..)
+  , Data.Foldable.Foldable
+  , Data.Foldable.all
+  , Data.Foldable.and
+  , Data.Foldable.any
+  , Data.Foldable.asum
+  , Data.Foldable.concat
+  , Data.Foldable.concatMap
+  , Data.Foldable.elem
+  , Data.Foldable.fold
+  , Data.Foldable.foldMap
+  , Data.Foldable.foldl'
+  , Data.Foldable.foldr
+  , Data.Foldable.forM_
+  , Data.Foldable.for_
+  , Data.Foldable.length
+  , Data.Foldable.mapM_
+  , Data.Foldable.msum
+  , Data.Foldable.notElem
+  , Data.Foldable.null
+  , Data.Foldable.or
+  , Data.Foldable.product
+  , Data.Foldable.sequenceA_
+  , Data.Foldable.sequence_
+  , Data.Foldable.sum
+  , Data.Foldable.toList
+  , Data.Foldable.traverse_
+  , Data.Function.const
+  , Data.Function.fix
+  , Data.Function.flip
+  , Data.Function.id
+  , Data.Function.on
+  , (Data.Function.$)
+  , (Data.Function.&)
+  , (Data.Function..)
+  , Data.Functor.Functor(..)
+  , Data.Functor.void
+  , (Data.Functor.$>)
+  , (Data.Functor.<$>)
+  , Data.Hashable.Hashable
+  , Data.HashMap.Strict.HashMap
+  , Data.HashSet.HashSet
+  , Data.Int.Int
+  , Data.Int.Int8
+  , Data.Int.Int16
+  , Data.Int.Int32
+  , Data.Int.Int64
+  , Data.IntMap.Strict.IntMap
+  , Data.IntSet.IntSet
+  , Data.List.break
+  , Data.List.drop
+  , Data.List.dropWhile
+  , Data.List.filter
+  , Data.List.lines
+  , Data.List.lookup
+  , Data.List.map
+  , Data.List.replicate
+  , Data.List.reverse
+  , Data.List.span
+  , Data.List.take
+  , Data.List.takeWhile
+  , Data.List.unlines
+  , Data.List.unwords
+  , Data.List.words
+  , Data.List.zip
+  , (Data.List.++)
+  , Data.Map.Strict.Map
+  , Data.Maybe.Maybe(..)
+  , Data.Maybe.catMaybes
+  , Data.Maybe.fromMaybe
+  , Data.Maybe.isJust
+  , Data.Maybe.isNothing
+  , Data.Maybe.listToMaybe
+  , Data.Maybe.mapMaybe
+  , Data.Maybe.maybe
+  , Data.Maybe.maybeToList
+  , Data.Monoid.All (..)
+  , Data.Monoid.Any (..)
+  , Data.Monoid.Endo (..)
+  , Data.Monoid.First (..)
+  , Data.Monoid.Last (..)
+  , Data.Monoid.Monoid (..)
+  , Data.Monoid.Product (..)
+  , Data.Monoid.Sum (..)
+  , (Data.Monoid.<>)
+  , Data.Ord.Ord(..)
+  , Data.Ord.Ordering(..)
+  , Data.Ord.comparing
+  , Data.Semigroup.Semigroup
+  , Data.Set.Set
+  , Data.String.IsString(..)
+  , Data.Text.Text
+  , Data.Text.Encoding.decodeUtf8'
+  , Data.Text.Encoding.decodeUtf8With
+  , Data.Text.Encoding.encodeUtf8
+  , Data.Text.Encoding.encodeUtf8Builder
+  , Data.Text.Encoding.Error.UnicodeException(..)
+  , Data.Text.Encoding.Error.lenientDecode
+  , Data.Traversable.Traversable(..)
+  , Data.Traversable.for
+  , Data.Traversable.forM
+  , Data.Vector.Vector
+  , Data.Void.Void
+  , Data.Void.absurd
+  , Data.Word.Word
+  , Data.Word.Word8
+  , Data.Word.Word16
+  , Data.Word.Word32
+  , Data.Word.Word64
+  , Data.Word.byteSwap16
+  , Data.Word.byteSwap32
+  , Data.Word.byteSwap64
+  , Foreign.Storable.Storable
+  , GHC.Generics.Generic
+  , GHC.Stack.HasCallStack
+  , Lens.Micro.ASetter
+  , Lens.Micro.ASetter'
+  , Lens.Micro.Getting
+  , Lens.Micro.Lens
+  , Lens.Micro.Lens'
+  , Lens.Micro.SimpleGetter
+  , Lens.Micro.lens
+  , Lens.Micro.over
+  , Lens.Micro.set
+  , Lens.Micro.sets
+  , Lens.Micro.to
+  , (Lens.Micro.^.)
+  , Prelude.Bounded (..)
+  , Prelude.Double
+  , Prelude.Enum
+  , Prelude.FilePath
+  , Prelude.Float
+  , Prelude.Floating (..)
+  , Prelude.Fractional (..)
+  , Prelude.IO
+  , Prelude.Integer
+  , Prelude.Integral (..)
+  , Prelude.Num (..)
+  , Prelude.Rational
+  , Prelude.Real (..)
+  , Prelude.RealFloat (..)
+  , Prelude.RealFrac (..)
+  , Prelude.Show
+  , Prelude.String
+  , Prelude.asTypeOf
+  , Prelude.curry
+  , Prelude.error
+  , Prelude.even
+  , Prelude.fromIntegral
+  , Prelude.fst
+  , Prelude.gcd
+  , Prelude.lcm
+  , Prelude.odd
+  , Prelude.realToFrac
+  , Prelude.seq
+  , Prelude.show
+  , Prelude.snd
+  , Prelude.subtract
+  , Prelude.uncurry
+  , Prelude.undefined
+  , (Prelude.$!)
+  , (Prelude.^)
+  , (Prelude.^^)
+  , System.Exit.ExitCode(..)
+  , Text.Read.Read
+  , Text.Read.readMaybe
+  -- List imports from UnliftIO?
   ) where
 
-import           Control.Applicative       (Applicative)
-import qualified Control.Applicative
-import           Control.Arrow        as X (first, second, (&&&), (***))
-import           Control.DeepSeq      as X (NFData (..), force, ($!!))
-import           Control.Monad        as X (Monad (..), MonadPlus (..), filterM,
-                                            foldM, foldM_, forever, guard, join,
-                                            liftM, liftM2, replicateM_, unless,
-                                            when, zipWithM, zipWithM_, (<$!>),
-                                            (<=<), (=<<), (>=>))
-import           Control.Monad.Catch  as X (MonadThrow (..))
-import           Control.Monad.Reader as X (MonadReader, MonadTrans (..),
-                                            ReaderT (..), ask, asks, local)
-import           Data.Bool            as X (Bool (..), not, otherwise, (&&),
-                                            (||))
-import           Data.ByteString      as X (ByteString)
-import           Data.ByteString.Builder as X (Builder)
-import           Data.ByteString.Short as X (ShortByteString, toShort, fromShort)
-import           Data.Char            as X (Char)
-import           Data.Data            as X (Data (..))
-import           Data.Either          as X (Either (..), either, isLeft,
-                                            isRight, lefts, partitionEithers,
-                                            rights)
-import           Data.Eq              as X (Eq (..))
-import           Data.Foldable        as X (Foldable, all, and, any, asum,
-                                            concat, concatMap, elem, fold,
-                                            foldMap, foldl', foldr, forM_, for_,
-                                            length, mapM_, msum, notElem, null,
-                                            or, product, sequenceA_, sequence_,
-                                            sum, toList, traverse_)
-import           Data.Function        as X (const, fix, flip, id, on, ($), (&),
-                                            (.))
-import           Data.Functor         as X (Functor (..), void, ($>), (<$),
-                                            (<$>))
-import           Data.Hashable        as X (Hashable)
-import           Data.HashMap.Strict  as X (HashMap)
-import           Data.HashSet         as X (HashSet)
-import           Data.Int             as X
-import           Data.IntMap.Strict   as X (IntMap)
-import           Data.IntSet          as X (IntSet)
-import           Data.List            as X (break, drop, dropWhile, filter,
-                                            lines, lookup, map, replicate,
-                                            reverse, span, take, takeWhile,
-                                            unlines, unwords, words, zip, (++))
-import           Data.Map.Strict      as X (Map)
-import           Data.Maybe           as X (Maybe (..), catMaybes, fromMaybe,
-                                            isJust, isNothing, listToMaybe,
-                                            mapMaybe, maybe, maybeToList)
-import           Data.Monoid          as X (All (..), Any (..), Endo (..),
-                                            First (..), Last (..), Monoid (..),
-                                            Product (..), Sum (..), (<>))
-import           Data.Ord             as X (Ord (..), Ordering (..), comparing)
-import           Data.Semigroup       as X (Semigroup)
-import           Data.Set             as X (Set)
-import           Data.String          as X (IsString (..))
-import           Data.Text            as X (Text)
-import           Data.Text.Encoding   as X (encodeUtf8, decodeUtf8', decodeUtf8With, encodeUtf8Builder)
-import           Data.Text.Encoding.Error as X (lenientDecode, UnicodeException (..))
-import           Data.Traversable     as X (Traversable (..), for, forM)
-import           Data.Vector          as X (Vector)
-import           Data.Void            as X (Void, absurd)
-import           Data.Word            as X
-import           Foreign.Storable     as X (Storable)
-import           GHC.Generics         as X (Generic)
-import           GHC.Stack            as X (HasCallStack)
-import           Lens.Micro           as X (ASetter, ASetter', sets, over, set, SimpleGetter, Getting, (^.), to, Lens, Lens', lens)
-import           Prelude              as X (Bounded (..), Double, Enum,
-                                            FilePath, Float, Floating (..),
-                                            Fractional (..), IO, Integer,
-                                            Integral (..), Num (..), Rational,
-                                            Real (..), RealFloat (..),
-                                            RealFrac (..), Show, String,
-                                            asTypeOf, curry, error, even,
-                                            fromIntegral, fst, gcd, lcm, odd,
-                                            realToFrac, seq, show, snd,
-                                            subtract, uncurry, undefined, ($!),
-                                            (^), (^^))
-import           System.Exit          as X (ExitCode (..))
-import           Text.Read            as X (Read, readMaybe)
-import           UnliftIO             as X
+-- Fixed imports go here
+import           Control.Applicative      (Applicative)
+import           Control.Monad            (Monad (..), liftM, (<=<))
+import           Control.Monad.Catch      (MonadThrow)
+import           Control.Monad.Reader     (MonadReader, ReaderT (..), ask, asks)
+import           Data.Bool                (otherwise)
+import           Data.ByteString          (ByteString)
+import           Data.ByteString.Builder  (Builder)
+import           Data.Either              (Either (..))
+import           Data.Foldable            (foldMap)
+import           Data.Function            (flip, ($), (.))
+import           Data.Functor             (Functor (..))
+import           Data.Int                 (Int)
+import           Data.Maybe               (Maybe, catMaybes, fromMaybe)
+import           Data.Monoid              (First (..), Monoid (..))
+import           Data.Ord                 (Ord)
+import           Data.Semigroup           (Semigroup)
+import           Data.String              (IsString (..))
+import           Data.Text                (Text)
+import           Data.Text.Encoding       (decodeUtf8', decodeUtf8With,
+                                           encodeUtf8, encodeUtf8Builder)
+import           Data.Text.Encoding.Error (UnicodeException, lenientDecode)
+import           Data.Traversable         (Traversable (..))
+import           Lens.Micro               (Getting)
+import           Prelude                  (FilePath, IO, Show (..))
+import           UnliftIO
+-- import           UnliftIO                 (Exception, Handle, IOMode (..),
+--                                            MonadIO (..), MonadUnliftIO,
+--                                            Typeable, UnliftIO (..), throwIO,
+--                                            withBinaryFile, withUnliftIO)
 
-import qualified Data.Text            as T
-import qualified Data.Text.Lazy       as TL
+import qualified Data.Text                as T
+import qualified Data.Text.Lazy           as TL
 
-import qualified Data.ByteString      as B
-import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString          as B
+import qualified Data.ByteString.Lazy     as BL
 
-import qualified Data.Vector.Unboxed as UVector
-import qualified Data.Vector.Storable as SVector
-import qualified Data.Vector.Generic as GVector
+import qualified Data.Vector.Generic      as GVector
+import qualified Data.Vector.Storable     as SVector
+import qualified Data.Vector.Unboxed      as UVector
 
-import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Builder  as BB
 import qualified Data.Semigroup
 
-import Control.Applicative (Const (..))
-import Lens.Micro.Internal ((#.))
+import           Control.Applicative      (Const (..))
+import           Lens.Micro.Internal      (( #. ))
 
-import qualified Data.Set as Set
+import qualified Data.Set                 as Set
+
+-- Reexports
+import qualified Control.Applicative
+import qualified Control.Arrow
+import qualified Control.DeepSeq
+import qualified Control.Monad
+import qualified Control.Monad.Catch
+import qualified Control.Monad.Reader
+import qualified Data.Bool
+import qualified Data.ByteString
+import qualified Data.ByteString.Builder
+import qualified Data.ByteString.Short
+import qualified Data.Char
+import qualified Data.Data
+import qualified Data.Either
+import qualified Data.Eq
+import qualified Data.Foldable
+import qualified Data.Function
+import qualified Data.Functor
+import qualified Data.Hashable
+import qualified Data.HashMap.Strict
+import qualified Data.HashSet
+import qualified Data.Int
+import qualified Data.IntMap.Strict
+import qualified Data.IntSet
+import qualified Data.List
+import qualified Data.Map.Strict
+import qualified Data.Maybe
+import qualified Data.Monoid
+import qualified Data.Ord
+import qualified Data.Semigroup
+import qualified Data.Set
+import qualified Data.String
+import qualified Data.Text
+import qualified Data.Text.Encoding
+import qualified Data.Text.Encoding.Error
+import qualified Data.Traversable
+import qualified Data.Vector
+import qualified Data.Void
+import qualified Data.Word
+import qualified Foreign.Storable
+import qualified GHC.Generics
+import qualified GHC.Stack
+import qualified Lens.Micro
+import qualified Prelude
+import qualified System.Exit
+import qualified Text.Read
+import qualified UnliftIO
+
 
 mapLeft :: (a1 -> a2) -> Either a1 b -> Either a2 b
 mapLeft f (Left a1) = Left (f a1)
@@ -237,7 +456,7 @@ readFileUtf8 :: MonadIO m => FilePath -> m Text
 readFileUtf8 fp = do
   bs <- readFileBinary fp
   case decodeUtf8' bs of
-    Left e -> throwIO $ ReadFileUtf8Exception fp e
+    Left e     -> throwIO $ ReadFileUtf8Exception fp e
     Right text -> return text
 
 data ReadFileUtf8Exception = ReadFileUtf8Exception !FilePath !UnicodeException
