@@ -1,4 +1,5 @@
-module RIO (module X) where
+module RIO ( module RIO.Logger
+           , module RIO.Prelude) where
 
-import RIO.Prelude as X
-import RIO.Logger as X
+import RIO.Prelude
+import RIO.Logger
