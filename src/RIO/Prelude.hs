@@ -16,7 +16,6 @@ module RIO.Prelude
   , forMaybeM
   , stripCR
   , RIO (..)
-  , HasResource (..)
   , runRIO
   , liftRIO
   , tshow
@@ -153,8 +152,6 @@ import qualified Data.Semigroup
 import Control.Applicative (Const (..))
 import Lens.Micro.Internal ((#.))
 
-import Control.Monad.Trans.Resource.Internal (MonadResource (..), ReleaseMap, ResourceT (..))
-
 import qualified Data.Set as Set
 
 mapLeft :: (a1 -> a2) -> Either a1 b -> Either a2 b
@@ -213,13 +210,6 @@ instance MonadUnliftIO (RIO env) where
     askUnliftIO = RIO $ ReaderT $ \r ->
                   withUnliftIO $ \u ->
                   return (UnliftIO (unliftIO u . flip runReaderT r . unRIO))
-
-class HasResource env where
-  resourceL :: Lens' env (IORef ReleaseMap)
-instance HasResource (IORef ReleaseMap) where
-  resourceL = id
-instance HasResource env => MonadResource (RIO env) where
-  liftResourceT (ResourceT f) = view resourceL >>= liftIO . f
 
 tshow :: Show a => a -> Text
 tshow = T.pack . show

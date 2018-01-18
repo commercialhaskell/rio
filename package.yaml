@@ -22,7 +22,6 @@ dependencies:
 - hashable
 - microlens
 - mtl
-- resourcet >= 1.2
 - text
 - time
 - typed-process >= 0.2.1.0
