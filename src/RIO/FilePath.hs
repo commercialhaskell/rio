@@ -1,5 +1,5 @@
 module RIO.FilePath
-  ( module X
+  ( module System.FilePath
   ) where
 
-import System.FilePath as X
+import System.FilePath

@@ -1,5 +1,5 @@
 module RIO.Text.Lazy
-  ( module X
+  ( module Data.Text.Lazy
   ) where
 
-import Data.Text.Lazy as X
+import Data.Text.Lazy

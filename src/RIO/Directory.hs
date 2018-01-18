@@ -1,6 +1,5 @@
--- FIXME lift/unlift functions
 module RIO.Directory
-  ( module X
+  ( module System.Directory
   ) where
 
-import System.Directory as X
+import System.Directory

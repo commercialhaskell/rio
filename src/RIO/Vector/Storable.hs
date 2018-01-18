@@ -1,5 +1,5 @@
 module RIO.Vector.Storable
-  ( module X
+  ( module Data.Vector.Storable
   ) where
 
-import Data.Vector.Storable as X
+import Data.Vector.Storable

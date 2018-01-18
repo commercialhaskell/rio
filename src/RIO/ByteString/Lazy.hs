@@ -1,5 +1,5 @@
 module RIO.ByteString.Lazy
-  ( module X
+  ( module Data.ByteString.Lazy
   ) where
 
-import Data.ByteString.Lazy as X
+import Data.ByteString.Lazy

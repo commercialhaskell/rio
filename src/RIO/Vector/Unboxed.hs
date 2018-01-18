@@ -1,5 +1,5 @@
 module RIO.Vector.Unboxed
-  ( module X
+  ( module Data.Vector.Unboxed
   ) where
 
-import Data.Vector.Unboxed as X
+import Data.Vector.Unboxed

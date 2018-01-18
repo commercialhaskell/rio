@@ -1,5 +1,5 @@
 module RIO.HashSet
-  ( module X
+  ( module Data.HashSet
   ) where
 
-import Data.HashSet as X
+import Data.HashSet

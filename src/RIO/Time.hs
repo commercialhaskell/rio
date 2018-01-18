@@ -1,5 +1,5 @@
 module RIO.Time
-  ( module X
+  ( module Data.Time
   ) where
 
-import Data.Time as X
+import Data.Time
