@@ -1,5 +1,5 @@
 module RIO.HashMap
-  ( module X
+  ( module Data.HashMap.Strict
   ) where
 
-import Data.HashMap.Strict as X
+import Data.HashMap.Strict

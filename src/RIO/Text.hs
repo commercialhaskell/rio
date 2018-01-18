@@ -1,7 +1,11 @@
 module RIO.Text
-  ( module X
+  ( module Data.Text
+  , Data.Text.Encoding.encodeUtf8
+  , Data.Text.Encoding.decodeUtf8With
+  , Data.Text.Encoding.decodeUtf8'
+  , Data.Text.Encoding.Error.lenientDecode
   ) where
 
-import Data.Text as X -- FIXME hide partials
-import Data.Text.Encoding as X (encodeUtf8, decodeUtf8With, decodeUtf8')
-import Data.Text.Encoding.Error as X (lenientDecode)
+import           Data.Text -- FIXME hide partials
+import qualified Data.Text.Encoding
+import qualified Data.Text.Encoding.Error

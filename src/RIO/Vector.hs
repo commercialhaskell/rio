@@ -1,5 +1,5 @@
 module RIO.Vector
-  ( module X
+  ( module Data.Vector.Generic
   ) where
 
-import Data.Vector.Generic as X
+import Data.Vector.Generic

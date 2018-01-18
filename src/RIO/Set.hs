@@ -1,5 +1,5 @@
 module RIO.Set
-  ( module X
+  ( module Data.Set
   ) where
 
-import Data.Set as X
+import Data.Set

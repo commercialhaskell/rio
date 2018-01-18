@@ -1,5 +1,5 @@
 module RIO.List
-  ( module X
+  ( module Data.List
   ) where
 
-import Data.List as X
+import Data.List

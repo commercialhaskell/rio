@@ -1,5 +1,5 @@
 module RIO.Map
-  ( module X
+  ( module Data.Map.Strict
   ) where
 
-import Data.Map.Strict as X
+import Data.Map.Strict
