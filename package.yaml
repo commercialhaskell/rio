@@ -1,5 +1,5 @@
 name: rio
-version: 0.0.0.0
+version: 0.0.1.0
 synopsis: A standard library for Haskell
 description: Work in progress library, see README at <https://github.com/commercialhaskell/rio#readme>
 license: MIT
