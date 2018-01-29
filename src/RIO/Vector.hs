@@ -1,4 +1,4 @@
--- | Strict @ByteString@. Import as:
+-- | Generic @Vector@ interface. Import as:
 --
 -- > import qualified RIO.Vector as V
 module RIO.Vector

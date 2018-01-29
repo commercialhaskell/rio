@@ -1,4 +1,4 @@
--- | Strict @ByteString@. Import as:
+-- | Lazy @ByteString@. Import as:
 --
 -- > import qualified RIO.ByteString.Lazy as B.Lazy
 module RIO.ByteString.Lazy

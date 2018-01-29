@@ -1,4 +1,4 @@
--- | Strict @ByteString@. Import as:
+-- | Lazy @Text@. Import as:
 --
 -- > import qualified RIO.Text.Lazy as T.Lazy
 module RIO.Text.Lazy

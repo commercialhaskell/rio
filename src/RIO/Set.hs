@@ -1,4 +1,4 @@
--- | Strict @ByteString@. Import as:
+-- | @Set@. Import as:
 --
 -- > import qualified RIO.Set as S
 module RIO.Set

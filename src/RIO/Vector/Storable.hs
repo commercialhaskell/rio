@@ -1,4 +1,4 @@
--- | Strict @ByteString@. Import as:
+-- | Storable @Vector@. Import as:
 --
 -- > import qualified RIO.Vector.Storable as V.Storable
 module RIO.Vector.Storable

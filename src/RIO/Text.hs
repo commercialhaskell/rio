@@ -1,4 +1,4 @@
--- | Strict @ByteString@. Import as:
+-- | Strict @Text@. Import as:
 --
 -- > import qualified RIO.Text as T
 module RIO.Text

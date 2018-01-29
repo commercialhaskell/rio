@@ -1,4 +1,4 @@
--- | Strict @ByteString@. Import as:
+-- | @Set@ with hashed members. Import as:
 --
 -- > import qualified RIO.HashSet as S.Hash
 module RIO.HashSet

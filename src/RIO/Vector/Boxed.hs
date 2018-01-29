@@ -1,4 +1,4 @@
--- | Strict @ByteString@. Import as:
+-- | Boxed @Vector@. Import as:
 --
 -- > import qualified RIO.Vector.Boxed as V.Boxed
 module RIO.Vector.Boxed

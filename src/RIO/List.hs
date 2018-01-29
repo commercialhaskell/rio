@@ -1,4 +1,4 @@
--- | Strict @ByteString@. Import as:
+-- | @List@. Import as:
 --
 -- > import qualified RIO.List as L
 module RIO.List
