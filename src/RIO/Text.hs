@@ -1,3 +1,6 @@
+-- | Strict @Text@. Import as:
+--
+-- > import qualified RIO.Text as T
 module RIO.Text
   ( module Data.Text
   , Data.Text.Encoding.encodeUtf8
