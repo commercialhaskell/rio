@@ -1,3 +1,6 @@
+-- | Strict @ByteString@. Import as:
+--
+-- > import qualified RIO.Map as M
 module RIO.Map
   ( module Data.Map.Strict
   ) where

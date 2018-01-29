@@ -1,3 +1,6 @@
+-- | Strict @ByteString@. Import as:
+--
+-- > import qualified RIO.Vector as V
 module RIO.Vector
   ( module Data.Vector.Generic
   ) where

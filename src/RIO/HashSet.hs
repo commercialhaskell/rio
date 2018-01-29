@@ -1,3 +1,6 @@
+-- | Strict @ByteString@. Import as:
+--
+-- > import qualified RIO.HashSet as S.Hash
 module RIO.HashSet
   ( module Data.HashSet
   ) where
