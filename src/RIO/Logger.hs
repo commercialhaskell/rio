@@ -26,6 +26,7 @@ module RIO.Logger
   , withStickyLogger
   , LogOptions (..)
   , displayCallStack
+  , mkLogOptions
   ) where
 
 import RIO.Prelude
@@ -37,11 +38,14 @@ import Lens.Micro (to)
 import GHC.Stack (HasCallStack, CallStack, SrcLoc (..), getCallStack, callStack)
 import Data.Time
 import qualified Data.Text.IO as TIO
-import Data.ByteString.Builder (toLazyByteString, char7)
+import Data.ByteString.Builder (toLazyByteString, char7, byteString)
+import Data.ByteString.Builder.Extra (flush)
 import           GHC.IO.Handle.Internals         (wantWritableHandle)
 import           GHC.IO.Encoding.Types           (textEncodingName)
 import           GHC.IO.Handle.Types             (Handle__ (..))
 import qualified Data.ByteString as B
+import           System.IO                  (localeEncoding)
+import           GHC.Foreign                (peekCString, withCString)
 
 data LogLevel = LevelDebug | LevelInfo | LevelWarn | LevelError | LevelOther !Text
     deriving (Eq, Show, Read, Ord)
@@ -155,32 +159,55 @@ canUseUtf8 h = liftIO $ wantWritableHandle "canUseUtf8" h $ \h_ -> do
   -- TODO also handle haOutputNL for CRLF
   return $ (textEncodingName <$> haCodec h_) == Just "UTF-8"
 
+mkLogOptions
+  :: MonadIO m
+  => Handle
+  -> Bool -- ^ verbose?
+  -> m LogOptions
+mkLogOptions handle verbose = liftIO $ do
+  terminal <- hIsTerminalDevice handle
+  useUtf8 <- canUseUtf8 handle
+  unicode <- if useUtf8 then return True else getCanUseUnicode
+  return LogOptions
+    { logMinLevel = if verbose then LevelDebug else LevelInfo
+    , logVerboseFormat = verbose
+    , logTerminal = terminal
+    , logUseTime = verbose
+    , logUseColor = verbose
+    , logSend = \builder ->
+        if useUtf8 && unicode
+          then hPutBuilder handle (builder <> flush)
+          else do
+            let lbs = toLazyByteString builder
+                bs = toStrictBytes lbs
+            case decodeUtf8' bs of
+              Left e -> error $ "mkLogOptions: invalid UTF8 sequence: " ++ show (e, bs)
+              Right text -> do
+                let text'
+                      | unicode = text
+                      | otherwise = T.map replaceUnicode text
+                TIO.hPutStr handle text'
+                hFlush handle
+    }
+
+-- | Taken from GHC: determine if we should use Unicode syntax
+getCanUseUnicode :: IO Bool
+getCanUseUnicode = do
+    let enc = localeEncoding
+        str = "\x2018\x2019"
+        test = withCString enc str $ \cstr -> do
+            str' <- peekCString enc cstr
+            return (str == str')
+    test `catchIO` \_ -> return False
+
 withStickyLogger :: MonadUnliftIO m => LogOptions -> (LogFunc -> m a) -> m a
 withStickyLogger options inner = withRunInIO $ \run -> do
-  useUtf8 <- canUseUtf8 stderr
-  let printer =
-        if useUtf8 && logUseUnicode options
-          then \db -> do
-            hPutBuilder stderr $ getUtf8Builder db
-            hFlush stderr
-          else \db -> do
-            let lbs = toLazyByteString $ getUtf8Builder db
-                bs = toStrictBytes lbs
-            text <-
-              case decodeUtf8' bs of
-                Left e -> error $ "mkStickyLogger: invalid UTF8 sequence: " ++ show (e, bs)
-                Right text -> return text
-            let text'
-                  | logUseUnicode options = text
-                  | otherwise = T.map replaceUnicode text
-            TIO.hPutStr stderr text'
-            hFlush stderr
   if logTerminal options
-    then withSticky stderr $ \var ->
-           run $ inner $ stickyImpl var options (simpleLogFunc options printer)
+    then withSticky options $ \var ->
+           run $ inner $ stickyImpl var options (simpleLogFunc options)
     else
       run $ inner $ \cs src level str ->
-      simpleLogFunc options printer cs src (noSticky level) str
+      simpleLogFunc options cs src (noSticky level) str
 
 -- | Replace Unicode characters with non-Unicode equivalents
 replaceUnicode :: Char -> Char
@@ -199,14 +226,14 @@ data LogOptions = LogOptions
   , logTerminal :: !Bool
   , logUseTime :: !Bool
   , logUseColor :: !Bool
-  , logUseUnicode :: !Bool
+  , logSend :: !(Builder -> IO ())
   }
 
-simpleLogFunc :: LogOptions -> (LogStr -> IO ()) -> LogFunc
-simpleLogFunc lo printer cs _src level msg =
+simpleLogFunc :: LogOptions -> LogFunc
+simpleLogFunc lo cs _src level msg =
     when (level >= logMinLevel lo) $ do
       timestamp <- getTimestamp
-      printer $
+      logSend lo $ getUtf8Builder $
         timestamp <>
         getLevel <>
         ansi reset <>
@@ -281,7 +308,7 @@ stickyImpl
 stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> do
   let backSpaceChar = '\8'
       repeating = mconcat . replicate (B.length sticky) . char7
-      clear = hPutBuilder stderr
+      clear = logSend lo
         (repeating backSpaceChar <>
         repeating ' ' <>
         repeating backSpaceChar)
@@ -290,29 +317,25 @@ stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> d
     LevelOther "sticky-done" -> do
       clear
       logFunc loc src LevelInfo msgOrig
-      hFlush stderr
       return mempty
     LevelOther "sticky" -> do
       clear
       let bs = toStrictBytes $ toLazyByteString $ getUtf8Builder msgOrig
-      B.hPut stderr bs
-      hFlush stderr
+      logSend lo (byteString bs <> flush)
       return bs
     _
       | level >= logMinLevel lo -> do
           clear
           logFunc loc src level msgOrig
-          unless (B.null sticky) $ do
-            B.hPut stderr sticky
-            hFlush stderr
+          unless (B.null sticky) $ logSend lo (byteString sticky <> flush)
           return sticky
       | otherwise -> return sticky
 
 -- | With a sticky state, do the thing.
-withSticky :: Handle -> (MVar ByteString -> IO b) -> IO b
-withSticky h inner = bracket
+withSticky :: LogOptions -> (MVar ByteString -> IO b) -> IO b
+withSticky lo inner = bracket
   (newMVar mempty)
   (\state -> do
       state' <- takeMVar state
-      unless (B.null state') (B.hPutStr h "\n"))
+      unless (B.null state') (logSend lo "\n"))
   inner
