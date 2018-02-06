@@ -205,7 +205,6 @@ simpleLogFunc lo printer cs _src level msg =
       printer $
         timestamp <>
         getLevel <>
-        " " <>
         ansi reset <>
         msg <>
         getLoc <>
@@ -238,10 +237,10 @@ simpleLogFunc lo printer cs _src level msg =
    getLevel
      | logVerboseFormat lo =
          case level of
-           LevelDebug -> ansi setGreen <> "[debug]"
-           LevelInfo -> ansi setBlue <> "[info]"
-           LevelWarn -> ansi setYellow <> "[warn]"
-           LevelError -> ansi setRed <> "[error]"
+           LevelDebug -> ansi setGreen <> "[debug] "
+           LevelInfo -> ansi setBlue <> "[info] "
+           LevelWarn -> ansi setYellow <> "[warn] "
+           LevelError -> ansi setRed <> "[error] "
            LevelOther name ->
              ansi setMagenta <>
              "[" <>
