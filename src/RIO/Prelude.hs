@@ -8,6 +8,7 @@
 {-# LANGUAGE TypeSynonymInstances       #-}
 module RIO.Prelude
   ( module UnliftIO
+  , UnliftIO.Concurrent.threadDelay
   , mapLeft
   , withLazyFile
   , fromFirst
@@ -301,6 +302,7 @@ import           Data.Traversable         (Traversable (..))
 import           Lens.Micro               (Getting)
 import           Prelude                  (FilePath, IO, Show (..))
 import           UnliftIO
+import qualified UnliftIO.Concurrent
 -- import           UnliftIO                 (Exception, Handle, IOMode (..),
 --                                            MonadIO (..), MonadUnliftIO,
 --                                            Typeable, UnliftIO (..), throwIO,
