@@ -1,5 +1,5 @@
 name: rio
-version: 0.0.1.0
+version: 0.0.2.0
 synopsis: A standard library for Haskell
 description: Work in progress library, see README at <https://github.com/commercialhaskell/rio#readme>
 license: MIT
@@ -22,6 +22,7 @@ dependencies:
 - hashable
 - microlens
 - mtl
+- primitive
 - text
 - time
 - typed-process >= 0.2.1.0
@@ -43,3 +44,11 @@ library:
   source-dirs: src/
   other-modules:
   - RIO.Prelude
+
+tests:
+  spec:
+    source-dirs: test
+    main: Spec.hs
+    dependencies:
+    - rio
+    - hspec
