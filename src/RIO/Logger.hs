@@ -155,8 +155,8 @@ canUseUtf8 h = liftIO $ wantWritableHandle "canUseUtf8" h $ \h_ -> do
   -- TODO also handle haOutputNL for CRLF
   return $ (textEncodingName <$> haCodec h_) == Just "UTF-8"
 
-withStickyLogger :: MonadIO m => LogOptions -> (LogFunc -> m a) -> m a
-withStickyLogger options inner = do
+withStickyLogger :: MonadUnliftIO m => LogOptions -> (LogFunc -> m a) -> m a
+withStickyLogger options inner = withRunInIO $ \run -> do
   useUtf8 <- canUseUtf8 stderr
   let printer =
         if useUtf8 && logUseUnicode options
@@ -176,10 +176,10 @@ withStickyLogger options inner = do
             TIO.hPutStr stderr text'
             hFlush stderr
   if logTerminal options
-    then withSticky $ \var ->
-           inner $ stickyImpl var options (simpleLogFunc options printer)
+    then withSticky stderr $ \var ->
+           run $ inner $ stickyImpl var options (simpleLogFunc options printer)
     else
-      inner $ \cs src level str ->
+      run $ inner $ \cs src level str ->
       simpleLogFunc options printer cs src (noSticky level) str
 
 -- | Replace Unicode characters with non-Unicode equivalents
@@ -309,14 +309,10 @@ stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> d
       | otherwise -> return sticky
 
 -- | With a sticky state, do the thing.
-withSticky :: (MonadIO m) => (MVar ByteString -> m b) -> m b
-withSticky inner = do
-  state <- newMVar mempty
-  originalMode <- liftIO (hGetBuffering stdout)
-  liftIO (hSetBuffering stdout NoBuffering)
-  a <- inner state
-  state' <- takeMVar state
-  liftIO $ do
-    unless (B.null state') (B.putStr "\n")
-    hSetBuffering stdout originalMode
-  return a
+withSticky :: Handle -> (MVar ByteString -> IO b) -> IO b
+withSticky h inner = bracket
+  (newMVar mempty)
+  (\state -> do
+      state' <- takeMVar state
+      unless (B.null state') (B.hPutStr h "\n"))
+  inner
