@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module RIO.Logger
   ( LogLevel (..)
   , LogSource
@@ -48,6 +50,8 @@ type LogSource = Text
 type LogStr = DisplayBuilder
 class HasLogFunc env where
   logFuncL :: SimpleGetter env LogFunc
+instance HasLogFunc LogFunc where
+  logFuncL = id
 
 type LogFunc = CallStack -> LogSource -> LogLevel -> LogStr -> IO ()
 
