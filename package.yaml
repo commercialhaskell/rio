@@ -20,6 +20,7 @@ dependencies:
 - exceptions # FIXME what do we do with MonadThrow?
 - filepath
 - hashable
+- ghc-prim
 - microlens
 - mtl
 - primitive
