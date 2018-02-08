@@ -1,4 +1,1 @@
-resolver: lts-10.3
-extra-deps:
-- unliftio-0.2.4.0
-- unliftio-core-0.1.1.0
+resolver: lts-10.4
