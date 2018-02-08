@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-module RIO.Logger
+module RIO.Prelude.Logger
   ( -- * Standard logging functions
     logDebug
   , logInfo
@@ -42,16 +42,17 @@ module RIO.Logger
   , displayCallStack
   ) where
 
-import RIO.Prelude hiding ((<>))
+import RIO.Prelude.Reexports hiding ((<>))
+import RIO.Prelude.Renames
+import RIO.Prelude.Display
+import RIO.Prelude.Lens
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Reader (MonadReader, ReaderT, runReaderT)
-import Lens.Micro (to)
 import GHC.Stack (HasCallStack, CallStack, SrcLoc (..), getCallStack, callStack)
 import Data.Time
 import qualified Data.Text.IO as TIO
-import Data.ByteString.Builder (toLazyByteString, char7, byteString)
+import Data.ByteString.Builder (toLazyByteString, char7, byteString, hPutBuilder)
 import Data.ByteString.Builder.Extra (flush)
 import           GHC.IO.Handle.Internals         (wantWritableHandle)
 import           GHC.IO.Encoding.Types           (textEncodingName)
@@ -88,7 +89,7 @@ instance HasLogFunc LogFunc where
 --
 -- @since 0.0.0.0
 newtype LogFunc = LogFunc
-  { unLogFunc :: CallStack -> LogSource -> LogLevel -> DisplayBuilder -> IO ()
+  { _unLogFunc :: CallStack -> LogSource -> LogLevel -> DisplayBuilder -> IO ()
   }
 
 -- | Perform both sets of actions per log entry.
@@ -285,9 +286,9 @@ logOptionsHandle
   => Handle
   -> Bool -- ^ verbose?
   -> m LogOptions
-logOptionsHandle handle verbose = liftIO $ do
-  terminal <- hIsTerminalDevice handle
-  useUtf8 <- canUseUtf8 handle
+logOptionsHandle handle' verbose = liftIO $ do
+  terminal <- hIsTerminalDevice handle'
+  useUtf8 <- canUseUtf8 handle'
   unicode <- if useUtf8 then return True else getCanUseUnicode
   return LogOptions
     { logMinLevel = if verbose then LevelDebug else LevelInfo
@@ -297,7 +298,7 @@ logOptionsHandle handle verbose = liftIO $ do
     , logUseColor = verbose && terminal
     , logSend = \builder ->
         if useUtf8 && unicode
-          then hPutBuilder handle (builder <> flush)
+          then hPutBuilder handle' (builder <> flush)
           else do
             let lbs = toLazyByteString builder
                 bs = toStrictBytes lbs
@@ -307,8 +308,8 @@ logOptionsHandle handle verbose = liftIO $ do
                 let text'
                       | unicode = text
                       | otherwise = T.map replaceUnicode text
-                TIO.hPutStr handle text'
-                hFlush handle
+                TIO.hPutStr handle' text'
+                hFlush handle'
     }
 
 -- | Taken from GHC: determine if we should use Unicode syntax

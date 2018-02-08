@@ -9,7 +9,7 @@ module RIO.ByteString
 
 import Data.ByteString hiding (head, last, tail, init, foldl1, foldl1', foldr1, foldr1', maximum, minimum, findSubstring, findSubstrings, packCString, packCStringLen, useAsCString, useAsCStringLen, getLine, getContents, putStr, putStrLn, interact, readFile, writeFile, appendFile, hGetLine, hGetContents, hGet, hGetSome, hGetNonBlocking, hPut, hPutNonBlocking, hPutStr, hPutStrLn, breakByte)
 import qualified Data.ByteString as B
-import RIO.Prelude
+import RIO
 import Foreign.C.String (CString, CStringLen)
 
 -- | Lifted 'B.packCString'

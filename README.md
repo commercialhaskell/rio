@@ -344,3 +344,13 @@ __TODO__ Expand, clarify, examples.
 
 __TODO__ Point to coding style guidelines, and discuss
 [hindent](https://github.com/commercialhaskell/hindent).
+
+### Module hierarchy
+
+The `RIO.Prelude.` module hierarchy contains identifiers which are reexported
+by the `RIO` module. The reason for this is to make it easier to view the
+generated Haddocks. The `RIO` module itself is intended to be imported
+unqualified, with `NoImplicitPrelude` enabled. All other modules are _not_
+reexported by the `RIO` module,
+and will document inside of them whether they should be imported qualified or
+unqualified.

@@ -43,14 +43,12 @@ module RIO.Process
   )
   where
 
-import           RIO.Prelude
-import           RIO.Logger
+import           RIO
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import           Data.Text.Encoding.Error (lenientDecode)
-import           Lens.Micro (set, to)
 import qualified System.Directory as D
 import           System.Environment (getEnvironment)
 import           System.Exit (exitWith)
