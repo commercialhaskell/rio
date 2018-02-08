@@ -9,31 +9,15 @@ import Data.ByteString.Builder (toLazyByteString)
 spec :: Spec
 spec = do
   it "sanity" $ do
-    ref <- newIORef mempty
-    let options = LogOptions
-          { logMinLevel = LevelInfo
-          , logVerboseFormat = False
-          , logTerminal = True
-          , logUseTime = False
-          , logUseColor = False
-          , logSend = \builder -> modifyIORef ref (<> builder)
-          }
-    withStickyLogger options $ \lf -> runRIO lf $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc options $ \lf -> runRIO lf $ do
       logDebug "should not appear"
       logInfo "should appear"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "should appear\n"
   it "sticky" $ do
-    ref <- newIORef mempty
-    let options = LogOptions
-          { logMinLevel = LevelInfo
-          , logVerboseFormat = False
-          , logTerminal = True
-          , logUseTime = False
-          , logUseColor = False
-          , logSend = \builder -> modifyIORef ref (<> builder)
-          }
-    withStickyLogger options $ \lf -> runRIO lf $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc options $ \lf -> runRIO lf $ do
       logSticky "ABC"
       logDebug "should not appear"
       logInfo "should appear"

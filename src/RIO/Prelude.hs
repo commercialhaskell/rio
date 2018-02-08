@@ -172,7 +172,6 @@ module RIO.Prelude
   , Data.List.unwords
   , Data.List.words
   , Data.List.zip
-  , (Data.List.++)
   , Data.Map.Strict.Map
   , Data.Maybe.Maybe(..)
   , Data.Maybe.catMaybes
@@ -191,11 +190,11 @@ module RIO.Prelude
   , Data.Monoid.Monoid (..)
   , Data.Monoid.Product (..)
   , Data.Monoid.Sum (..)
-  , (Data.Monoid.<>)
+  , (++)
   , Data.Ord.Ord(..)
   , Data.Ord.Ordering(..)
   , Data.Ord.comparing
-  , Data.Semigroup.Semigroup
+  , Data.Semigroup.Semigroup (..)
   , Data.Set.Set
   , Data.String.IsString(..)
   , Data.Text.Text
@@ -581,3 +580,14 @@ writeURef (URef v) = MUVector.unsafeWrite v 0
 -- @since 0.0.2.0
 modifyURef :: (PrimMonad m, Unbox a) => URef (PrimState m) a -> (a -> a) -> m ()
 modifyURef u f = readURef u >>= writeURef u . f
+
+infixr 5  ++
+
+-- | A synonym for 'mappend'. While the typical abbreviation of this
+-- is @<>@, this can conflict with @Semigroup@'s definition for GHC <
+-- 8.4.
+--
+-- @since 0.0.0.0
+(++) :: Monoid m => m -> m -> m
+(++) = mappend
+{-# INLINE (++) #-}

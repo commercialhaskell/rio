@@ -32,6 +32,7 @@ module RIO.Process
   ,withEnvOverride
   ,withModifyEnvOverride
   ,withWorkingDir
+  ,EnvWithLogFunc
   ,runEnvNoLogging
   ,withProcessTimeLog
   ,showProcessArgDebug
@@ -316,16 +317,16 @@ augmentPathMap dirs origEnv =
   where
     mpath = Map.lookup "PATH" origEnv
 
-runEnvNoLogging :: RIO EnvNoLogging a -> IO a
+runEnvNoLogging :: RIO EnvWithLogFunc a -> IO a
 runEnvNoLogging inner = do
   menv <- getEnvOverride
-  runRIO (EnvNoLogging menv) inner
+  runRIO (EnvWithLogFunc menv mempty) inner
 
-newtype EnvNoLogging = EnvNoLogging EnvOverride
-instance HasLogFunc EnvNoLogging where
-  logFuncL = to (\_ _ _ _ _ -> return ())
-instance HasEnvOverride EnvNoLogging where
-  envOverrideL = lens (\(EnvNoLogging x) -> x) (const EnvNoLogging)
+data EnvWithLogFunc = EnvWithLogFunc EnvOverride LogFunc
+instance HasLogFunc EnvWithLogFunc where
+  logFuncL = lens (\(EnvWithLogFunc _ lf) -> lf) (\(EnvWithLogFunc eo _) lf -> EnvWithLogFunc eo lf)
+instance HasEnvOverride EnvWithLogFunc where
+  envOverrideL = lens (\(EnvWithLogFunc x _) -> x) (\(EnvWithLogFunc _ lf) eo -> EnvWithLogFunc eo lf)
 
 -- | Log running a process with its arguments, for debugging (-v).
 --
