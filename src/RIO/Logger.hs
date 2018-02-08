@@ -42,7 +42,7 @@ module RIO.Logger
   , displayCallStack
   ) where
 
-import RIO.Prelude
+import RIO.Prelude hiding ((<>))
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -59,6 +59,7 @@ import           GHC.IO.Handle.Types             (Handle__ (..))
 import qualified Data.ByteString as B
 import           System.IO                  (localeEncoding)
 import           GHC.Foreign                (peekCString, withCString)
+import Data.Semigroup (Semigroup (..))
 
 -- | The log level of a message.
 --
