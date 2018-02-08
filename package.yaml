@@ -42,8 +42,6 @@ when:
 
 library:
   source-dirs: src/
-  other-modules:
-  - RIO.Prelude
 
 tests:
   spec:

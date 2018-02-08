@@ -4,7 +4,6 @@ module RIO.PreludeSpec (spec) where
 
 import Test.Hspec
 import RIO
-import Data.ByteString.Builder (toLazyByteString)
 
 spec :: Spec
 spec = do
