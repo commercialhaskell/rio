@@ -215,7 +215,7 @@ For code targeting production use, you should also use the flag that turns all
 warnings into errors, to force you to resolve the warnings before you ship your 
 code:
 
-* -Werror
+* `-Werror`
 
 Further reading: Alexis King explains why these are a good idea in [her blog 
 post](https://lexi-lambda.github.io/blog/2018/02/10/an-opinionated-guide-to-haskell-in-2018/) 
