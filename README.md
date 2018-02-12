@@ -196,6 +196,31 @@ DeriveLift
 StaticPointers
 ```
 
+### GHC Options
+
+We recommend using these GHC complier warning flags on all projects, to catch 
+problems that might otherwise go overlooked:
+
+* -Wall
+* -Wcompat
+* -Wincomplete-record-updates
+* -Wincomplete-uni-patterns
+* -Wredundant-constraints
+
+You may add them per file, or to your package.yaml, or pass them on the command 
+line when running ghc. We plan to add these to the package.yaml of our project 
+template, once its ready.
+
+For code targeting production use, you should also use the flag that turns all 
+warnings into errors, to force you to resolve the warnings before you ship your 
+code:
+
+* -Werror
+
+Further reading: Alexis King explains why these are a good idea in [his blog 
+post](https://lexi-lambda.github.io/blog/2018/02/10/an-opinionated-guide-to-haskell-in-2018/) 
+which was the original inspiration for this section.
+
 ### Monads
 
 A primary design choice you'll need to make in your code is how to
