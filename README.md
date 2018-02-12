@@ -201,11 +201,11 @@ StaticPointers
 We recommend using these GHC complier warning flags on all projects, to catch 
 problems that might otherwise go overlooked:
 
-* -Wall
-* -Wcompat
-* -Wincomplete-record-updates
-* -Wincomplete-uni-patterns
-* -Wredundant-constraints
+* `-Wall`
+* `-Wcompat`
+* `-Wincomplete-record-updates`
+* `-Wincomplete-uni-patterns`
+* `-Wredundant-constraints`
 
 You may add them per file, or to your package.yaml, or pass them on the command 
 line when running ghc. We plan to add these to the package.yaml of our project 
@@ -217,7 +217,7 @@ code:
 
 * -Werror
 
-Further reading: Alexis King explains why these are a good idea in [his blog 
+Further reading: Alexis King explains why these are a good idea in [her blog 
 post](https://lexi-lambda.github.io/blog/2018/02/10/an-opinionated-guide-to-haskell-in-2018/) 
 which was the original inspiration for this section.
 
