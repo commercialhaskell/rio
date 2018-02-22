@@ -30,6 +30,9 @@ dependencies:
 - unordered-containers
 - vector
 
+# Just for preprocessor directives
+- process
+
 when:
 - condition: os(windows)
   then:

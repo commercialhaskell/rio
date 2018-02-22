@@ -82,11 +82,15 @@ module RIO.Process
   , P.setCloseFds
   , P.setCreateGroup
   , P.setDelegateCtlc
+#if MIN_VERSION_process(1, 3, 0)
   , P.setDetachConsole
   , P.setCreateNewConsole
   , P.setNewSession
+#endif
+#if MIN_VERSION_process(1, 4, 0) && !WINDOWS
   , P.setChildGroup
   , P.setChildUser
+#endif
   , P.mkStreamSpec
   , P.inherit
   , P.closed
