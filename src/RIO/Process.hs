@@ -6,63 +6,198 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Reading from external processes.
-
+-- | Interacting with external processes.
+--
+-- This module provides a layer on top of "System.Process.Typed", with
+-- the following additions:
+--
+-- * For efficiency, it will cache @PATH@ lookups.
+--
+-- * For convenience, you can set the working directory and env vars
+--   overrides in a 'RIO' environment instead of on the individual
+--   calls to the process.
+--
+-- * Built-in support for logging at the debug level.
+--
+-- In order to switch over to this API, the main idea is:
+--
+-- * Like most of the rio library, you need to create an environment
+--   value (this time 'ProcessContext'), and include it in your 'RIO'
+--   environment. See 'mkProcessContext'.
+--
+-- * Instead of using the 'proc' function for creating a
+--   'ProcessConfig', use the 'proc' function, which will handle
+--   overriding environment variables, looking up paths, performing
+--   logging, etc.
+--
+-- Once you have your 'ProcessConfig', use the standard functions from
+-- 'System.Process.Typed' (reexported here for convenient) for running
+-- the 'ProcessConfig'.
+--
+-- @since 0.0.3.0
 module RIO.Process
-  (withProcess
-  ,withProcess_
-  ,EnvOverride(..)
-  ,unEnvOverride
-  ,mkEnvOverride
-  ,modifyEnvOverride
-  ,envHelper
-  ,doesExecutableExist
-  ,findExecutable
-  ,getEnvOverride
-  ,envSearchPath
-  ,preProcess
-  ,readProcessNull
-  ,ReadProcessException (..)
-  ,augmentPath
-  ,augmentPathMap
-  ,resetExeCache
-  ,HasEnvOverride (..)
-  ,workingDirL
-  ,withProc
-  ,withEnvOverride
-  ,withModifyEnvOverride
-  ,withWorkingDir
-  ,EnvWithLogFunc
-  ,runEnvNoLogging
-  ,withProcessTimeLog
-  ,showProcessArgDebug
-  ,exec
-  ,execSpawn
-  ,execObserve
-  ,module System.Process.Typed
-  )
-  where
+  ( -- * Process context
+    ProcessContext
+  , HasProcessContext (..)
+  , EnvVars
+  , mkProcessContext
+  , mkDefaultProcessContext
+  , modifyEnvVars
+  , withModifyEnvVars
+  , withWorkingDir
+    -- ** Lenses
+  , workingDirL
+  , envVarsL
+  , envVarsStringsL
+  , exeSearchPathL
+    -- ** Actions
+  , resetExeCache
+    -- * Configuring
+  , proc
+    -- * Spawning (run child process)
+  , withProcess
+  , withProcess_
+    -- * Exec (replacing current process)
+  , exec
+  , execSpawn
+    -- * Environment helper
+  , LoggedProcessContext (..)
+  , withProcessContextNoLogging
+    -- * Exceptions
+  , ProcessException (..)
+    -- * Utilities
+  , doesExecutableExist
+  , findExecutable
+  , augmentPath
+  , augmentPathMap
+  , showProcessArgDebug
+    -- * Reexports
+  , P.ProcessConfig
+  , P.StreamSpec
+  , P.StreamType (..)
+  , P.Process
+  , P.setStdin
+  , P.setStdout
+  , P.setStderr
+  , P.setCloseFds
+  , P.setCreateGroup
+  , P.setDelegateCtlc
+  , P.setDetachConsole
+  , P.setCreateNewConsole
+  , P.setNewSession
+  , P.setChildGroup
+  , P.setChildUser
+  , P.mkStreamSpec
+  , P.inherit
+  , P.closed
+  , P.byteStringInput
+  , P.byteStringOutput
+  , P.createPipe
+  , P.useHandleOpen
+  , P.useHandleClose
+  , P.startProcess
+  , P.stopProcess
+  , P.readProcess
+  , P.readProcess_
+  , P.runProcess
+  , P.runProcess_
+  , P.readProcessStdout
+  , P.readProcessStdout_
+  , P.readProcessStderr
+  , P.readProcessStderr_
+  , P.waitExitCode
+  , P.waitExitCodeSTM
+  , P.getExitCode
+  , P.getExitCodeSTM
+  , P.checkExitCode
+  , P.checkExitCodeSTM
+  , P.getStdin
+  , P.getStdout
+  , P.getStderr
+  , P.ExitCodeException (..)
+  , P.ByteStringOutputException (..)
+  , P.unsafeProcessHandle
+  ) where
 
 import           RIO
 import qualified Data.Map as Map
 import qualified Data.Text as T
-import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Lazy.Encoding as TLE
-import           Data.Text.Encoding.Error (lenientDecode)
 import qualified System.Directory as D
 import           System.Environment (getEnvironment)
 import           System.Exit (exitWith)
 import qualified System.FilePath as FP
 import qualified System.Process.Typed as P
-import           System.Process.Typed hiding (withProcess, withProcess_)
+import           System.Process.Typed hiding (withProcess, withProcess_, proc)
 
 #ifndef WINDOWS
 import           System.Directory (setCurrentDirectory)
 import           System.Posix.Process (executeFile)
 #endif
 
-class HasLogFunc env => HasEnvOverride env where
-  envOverrideL :: Lens' env EnvOverride
+-- | The environment variable map
+--
+-- @since 0.0.3.0
+type EnvVars = Map Text Text
+
+-- | Context in which to run processes.
+--
+-- @since 0.0.3.0
+data ProcessContext = ProcessContext
+    { pcTextMap :: !EnvVars
+    -- ^ Environment variables as map
+
+    , pcStringList :: ![(String, String)]
+    -- ^ Environment variables as association list
+
+    , pcPath :: ![FilePath]
+    -- ^ List of directories searched for executables (@PATH@)
+
+    , pcExeCache :: !(IORef (Map FilePath (Either ProcessException FilePath)))
+    -- ^ Cache of already looked up executable paths.
+
+    , pcExeExtensions :: [String]
+    -- ^ @[""]@ on non-Windows systems, @["", ".exe", ".bat"]@ on Windows
+
+    , pcWorkingDir :: !(Maybe FilePath)
+    -- ^ Override the working directory.
+    }
+
+-- | Exception type which may be generated in this module.
+--
+-- /NOTE/ Other exceptions may be thrown by underlying libraries!
+--
+-- @since 0.0.3.0
+data ProcessException
+    = NoPathFound
+    | ExecutableNotFound String [FilePath]
+    | ExecutableNotFoundAt FilePath
+    | PathsInvalidInPath [FilePath]
+    deriving Typeable
+instance Show ProcessException where
+    show NoPathFound = "PATH not found in ProcessContext"
+    show (ExecutableNotFound name path) = concat
+        [ "Executable named "
+        , name
+        , " not found on path: "
+        , show path
+        ]
+    show (ExecutableNotFoundAt name) =
+        "Did not find executable at specified path: " ++ name
+    show (PathsInvalidInPath paths) = unlines $
+        [ "Would need to add some paths to the PATH environment variable \
+          \to continue, but they would be invalid because they contain a "
+          ++ show FP.searchPathSeparator ++ "."
+        , "Please fix the following paths and try again:"
+        ] ++ paths
+instance Exception ProcessException
+
+-- | Get the 'ProcessContext' from the environment.
+--
+-- @since 0.0.3.0
+class HasProcessContext env where
+  processContextL :: Lens' env ProcessContext
+instance HasProcessContext ProcessContext where
+  processContextL = id
 
 data EnvVarFormat = EVFWindows | EVFNotWindows
 
@@ -74,55 +209,58 @@ currentEnvVarFormat =
   EVFNotWindows
 #endif
 
--- | Override the environment received by a child process.
-data EnvOverride = EnvOverride
-    { eoTextMap :: Map Text Text -- ^ Environment variables as map
-    , eoStringList :: [(String, String)] -- ^ Environment variables as association list
-    , eoPath :: [FilePath] -- ^ List of directories searched for executables (@PATH@)
-    , eoExeCache :: IORef (Map FilePath (Either ReadProcessException FilePath))
-    , eoExeExtensions :: [String] -- ^ @[""]@ on non-Windows systems, @["", ".exe", ".bat"]@ on Windows
-    , eoWorkingDir :: !(Maybe FilePath)
-    }
+-- | Override the working directory processes run in. @Nothing@ means
+-- the current process's working directory.
+--
+-- @since 0.0.3.0
+workingDirL :: HasProcessContext env => Lens' env (Maybe FilePath)
+workingDirL = processContextL.lens pcWorkingDir (\x y -> x { pcWorkingDir = y })
 
-workingDirL :: HasEnvOverride env => Lens' env (Maybe FilePath)
-workingDirL = envOverrideL.lens eoWorkingDir (\x y -> x { eoWorkingDir = y })
+-- | Get the environment variables. We cannot provide a @Lens@ here,
+-- since updating the environment variables requires an @IO@ action to
+-- allocate a new @IORef@ for holding the executable path cache.
+--
+-- @since 0.0.3.0
+envVarsL :: HasProcessContext env => SimpleGetter env EnvVars
+envVarsL = processContextL.to pcTextMap
 
--- | Get the environment variables from an 'EnvOverride'.
-unEnvOverride :: EnvOverride -> Map Text Text
-unEnvOverride = eoTextMap
+-- | Get the 'EnvVars' as an associated list of 'String's.
+--
+-- Useful for interacting with other libraries.
+--
+-- @since 0.0.3.0
+envVarsStringsL :: HasProcessContext env => SimpleGetter env [(String, String)]
+envVarsStringsL = processContextL.to pcStringList
 
--- | Get the list of directories searched (@PATH@).
-envSearchPath :: EnvOverride -> [FilePath]
-envSearchPath = eoPath
+-- | Get the list of directories searched for executables (the @PATH@).
+--
+-- Similar to 'envVarMapL', this cannot be a full @Lens@.
+--
+-- @since 0.0.3.0
+exeSearchPathL :: HasProcessContext env => SimpleGetter env [FilePath]
+exeSearchPathL = processContextL.to pcPath
 
--- | Modify the environment variables of an 'EnvOverride'.
-modifyEnvOverride :: MonadIO m
-                  => EnvOverride
-                  -> (Map Text Text -> Map Text Text)
-                  -> m EnvOverride
-modifyEnvOverride eo f = mkEnvOverride (f $ eoTextMap eo)
-
--- | Create a new 'EnvOverride'.
-mkEnvOverride :: MonadIO m
-              => Map Text Text
-              -> m EnvOverride
-mkEnvOverride tm' = do
-    ref <- liftIO $ newIORef Map.empty
-    return EnvOverride
-        { eoTextMap = tm
-        , eoStringList = map (T.unpack *** T.unpack) $ Map.toList tm
-        , eoPath =
+-- | Create a new 'ProcessContext' from the given environment variable map.
+--
+-- @since 0.0.3.0
+mkProcessContext :: MonadIO m => EnvVars -> m ProcessContext
+mkProcessContext tm' = do
+    ref <- newIORef Map.empty
+    return ProcessContext
+        { pcTextMap = tm
+        , pcStringList = map (T.unpack *** T.unpack) $ Map.toList tm
+        , pcPath =
              (if isWindows then (".":) else id)
              (maybe [] (FP.splitSearchPath . T.unpack) (Map.lookup "PATH" tm))
-        , eoExeCache = ref
-        , eoExeExtensions =
+        , pcExeCache = ref
+        , pcExeExtensions =
             if isWindows
                 then let pathext = fromMaybe
                            ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
                            (Map.lookup "PATHEXT" tm)
                       in map T.unpack $ "" : T.splitOn ";" pathext
                 else [""]
-        , eoWorkingDir = Nothing
+        , pcWorkingDir = Nothing
         }
   where
     -- Fix case insensitivity of the PATH environment variable on Windows.
@@ -137,199 +275,92 @@ mkEnvOverride tm' = do
             EVFWindows -> True
             EVFNotWindows -> False
 
--- | Helper conversion function.
-envHelper :: EnvOverride -> [(String, String)]
-envHelper = eoStringList
-
--- | Read from the process, ignoring any output.
+-- | Reset the executable cache.
 --
--- Throws a 'ReadProcessException' exception if the process fails.
-readProcessNull :: HasEnvOverride env -- FIXME remove
-                => String -- ^ Command
-                -> [String] -- ^ Command line arguments
-                -> RIO env ()
-readProcessNull name args =
-  -- We want the output to appear in any exceptions, so we capture and drop it
-  void $ withProc name args readProcessStdout_
+-- @since 0.0.3.0
+resetExeCache :: (MonadIO m, MonadReader env m, HasProcessContext env) => m ()
+resetExeCache = do
+  pc <- view processContextL
+  atomicModifyIORef (pcExeCache pc) (const mempty)
 
--- | An exception while trying to read from process.
-data ReadProcessException
-    = NoPathFound
-    | ExecutableNotFound String [FilePath]
-    | ExecutableNotFoundAt FilePath
-    deriving Typeable
-instance Show ReadProcessException where
-    show NoPathFound = "PATH not found in EnvOverride"
-    show (ExecutableNotFound name path) = concat
-        [ "Executable named "
-        , name
-        , " not found on path: "
-        , show path
-        ]
-    show (ExecutableNotFoundAt name) =
-        "Did not find executable at specified path: " ++ name
-instance Exception ReadProcessException
+-- | Load up an 'EnvOverride' from the standard environment.
+mkDefaultProcessContext :: MonadIO m => m ProcessContext
+mkDefaultProcessContext =
+    liftIO $
+    getEnvironment >>=
+          mkProcessContext
+        . Map.fromList . map (T.pack *** T.pack)
 
--- | Provide a 'ProcessConfig' based on the 'EnvOverride' in
--- scope. Deals with resolving the full path, setting the child
--- process's environment variables, setting the working directory, and
--- wrapping the call with 'withProcessTimeLog' for debugging output.
-withProc
-  :: HasEnvOverride env
-  => FilePath -- ^ command to run
-  -> [String] -- ^ command line arguments
-  -> (ProcessConfig () () () -> RIO env a)
-  -> RIO env a
-withProc name0 args inner = do
-  menv <- view envOverrideL
-  name <- preProcess name0
+-- | Modify the environment variables of a 'ProcessContext'.
+--
+-- This will keep other settings unchanged, in particular the working
+-- directory.
+--
+-- Note that this requires 'MonadIO', as it will create a new 'IORef'
+-- for the cache.
+--
+-- @since 0.0.3.0
+modifyEnvVars
+  :: MonadIO m
+  => ProcessContext
+  -> (EnvVars -> EnvVars)
+  -> m ProcessContext
+modifyEnvVars pc f = do
+  pc' <- mkProcessContext (f $ pcTextMap pc)
+  return pc' { pcWorkingDir = pcWorkingDir pc }
 
-  withProcessTimeLog (eoWorkingDir menv) name args
-    $ inner
-    $ setEnv (envHelper menv)
-    $ maybe id setWorkingDir (eoWorkingDir menv)
-    $ proc name args
-
--- | Apply the given function to the modified environment
--- variables. For more details, see 'withEnvOverride'.
-withModifyEnvOverride :: HasEnvOverride env => (Map Text Text -> Map Text Text) -> RIO env a -> RIO env a
-withModifyEnvOverride f inner = do
-  menv <- view envOverrideL
-  menv' <- modifyEnvOverride menv f
-  withEnvOverride menv' inner
-
--- | Set a new 'EnvOverride' in the child reader. Note that this will
--- keep the working directory set in the parent with 'withWorkingDir'.
-withEnvOverride :: HasEnvOverride env => EnvOverride -> RIO env a -> RIO env a
-withEnvOverride newEnv = local $ \r ->
-  let newEnv' = newEnv { eoWorkingDir = eoWorkingDir $ view envOverrideL r }
-   in set envOverrideL newEnv' r
+-- | Use 'modifyEnvVarMap' to create a new 'ProcessContext', and then
+-- use it in the provided action.
+--
+-- @since 0.0.3.0
+withModifyEnvVars
+  :: (HasProcessContext env, MonadReader env m, MonadIO m)
+  => (EnvVars -> EnvVars)
+  -> m a
+  -> m a
+withModifyEnvVars f inner = do
+  pc <- view processContextL
+  pc' <- modifyEnvVars pc f
+  local (set processContextL pc') inner
 
 -- | Set the working directory to be used by child processes.
-withWorkingDir :: HasEnvOverride env => FilePath -> RIO env a -> RIO env a
+--
+-- @since 0.0.3.0
+withWorkingDir
+  :: (HasProcessContext env, MonadReader env m, MonadIO m)
+  => FilePath
+  -> m a
+  -> m a
 withWorkingDir = local . set workingDirL . Just
 
 -- | Perform pre-call-process tasks.  Ensure the working directory exists and find the
 -- executable path.
 --
--- Throws a 'ReadProcessException' if unsuccessful.
+-- Throws a 'ProcessException' if unsuccessful.
+--
+-- NOT CURRENTLY EXPORTED
 preProcess
-  :: HasEnvOverride env
+  :: (HasProcessContext env, MonadReader env m, MonadIO m)
   => String            -- ^ Command name
-  -> RIO env  FilePath
+  -> m FilePath
 preProcess name = do
-  menv <- view envOverrideL
-  let wd = eoWorkingDir menv
-  name' <- liftIO $ join $ findExecutable menv name
+  name' <- findExecutable name >>= either throwIO return
+  wd <- view workingDirL
   liftIO $ maybe (return ()) (D.createDirectoryIfMissing True) wd
   return name'
-
--- | Check if the given executable exists on the given PATH.
-doesExecutableExist :: (MonadIO m)
-  => EnvOverride       -- ^ How to override environment
-  -> String            -- ^ Name of executable
-  -> m Bool
-doesExecutableExist menv name = liftM isJust $ findExecutable menv name
-
--- | Find the complete path for the executable.
---
--- Throws a 'ReadProcessException' if unsuccessful.
-findExecutable :: (MonadIO m, MonadThrow n)
-  => EnvOverride       -- ^ How to override environment
-  -> String            -- ^ Name of executable
-  -> m (n FilePath) -- ^ Full path to that executable on success
-findExecutable eo name0 | any FP.isPathSeparator name0 = do
-    let names0 = map (name0 ++) (eoExeExtensions eo)
-        testNames [] = return $ throwM $ ExecutableNotFoundAt name0
-        testNames (name:names) = do
-            exists <- liftIO $ D.doesFileExist name
-            if exists
-                then do
-                    path <- liftIO $ D.canonicalizePath name
-                    return $ return path
-                else testNames names
-    testNames names0
-findExecutable eo name = liftIO $ do
-    m <- readIORef $ eoExeCache eo
-    epath <- case Map.lookup name m of
-        Just epath -> return epath
-        Nothing -> do
-            let loop [] = return $ Left $ ExecutableNotFound name (eoPath eo)
-                loop (dir:dirs) = do
-                    let fp0 = dir FP.</> name
-                        fps0 = map (fp0 ++) (eoExeExtensions eo)
-                        testFPs [] = loop dirs
-                        testFPs (fp:fps) = do
-                            exists <- D.doesFileExist fp
-                            existsExec <- if exists then liftM D.executable $ D.getPermissions fp else return False
-                            if existsExec
-                                then do
-                                    fp' <- D.makeAbsolute fp
-                                    return $ return fp'
-                                else testFPs fps
-                    testFPs fps0
-            epath <- loop $ eoPath eo
-            () <- atomicModifyIORef (eoExeCache eo) $ \m' ->
-                (Map.insert name epath m', ())
-            return epath
-    return $ either throwM return epath
-
--- | Reset the executable cache.
-resetExeCache :: MonadIO m => EnvOverride -> m ()
-resetExeCache eo = liftIO (atomicModifyIORef (eoExeCache eo) (const mempty))
-
--- | Load up an 'EnvOverride' from the standard environment.
-getEnvOverride :: MonadIO m => m EnvOverride
-getEnvOverride =
-    liftIO $
-    getEnvironment >>=
-          mkEnvOverride
-        . Map.fromList . map (T.pack *** T.pack)
-
-newtype InvalidPathException = PathsInvalidInPath [FilePath]
-    deriving Typeable
-
-instance Exception InvalidPathException
-instance Show InvalidPathException where
-    show (PathsInvalidInPath paths) = unlines $
-        [ "Would need to add some paths to the PATH environment variable \
-          \to continue, but they would be invalid because they contain a "
-          ++ show FP.searchPathSeparator ++ "."
-        , "Please fix the following paths and try again:"
-        ] ++ paths
-
--- | Augment the PATH environment variable with the given extra paths.
-augmentPath :: MonadThrow m => [FilePath] -> Maybe Text -> m Text
-augmentPath dirs mpath =
-  do let illegal = filter (FP.searchPathSeparator `elem`) dirs
-     unless (null illegal) (throwM $ PathsInvalidInPath illegal)
-     return $ T.intercalate (T.singleton FP.searchPathSeparator)
-            $ map (T.pack . FP.dropTrailingPathSeparator) dirs
-            ++ maybeToList mpath
-
--- | Apply 'augmentPath' on the PATH value in the given Map.
-augmentPathMap :: MonadThrow m => [FilePath] -> Map Text Text -> m (Map Text Text)
-augmentPathMap dirs origEnv =
-  do path <- augmentPath dirs mpath
-     return $ Map.insert "PATH" path origEnv
-  where
-    mpath = Map.lookup "PATH" origEnv
-
-runEnvNoLogging :: RIO EnvWithLogFunc a -> IO a
-runEnvNoLogging inner = do
-  menv <- getEnvOverride
-  runRIO (EnvWithLogFunc menv mempty) inner
-
-data EnvWithLogFunc = EnvWithLogFunc EnvOverride LogFunc
-instance HasLogFunc EnvWithLogFunc where
-  logFuncL = lens (\(EnvWithLogFunc _ lf) -> lf) (\(EnvWithLogFunc eo _) lf -> EnvWithLogFunc eo lf)
-instance HasEnvOverride EnvWithLogFunc where
-  envOverrideL = lens (\(EnvWithLogFunc x _) -> x) (\(EnvWithLogFunc _ lf) eo -> EnvWithLogFunc eo lf)
 
 -- | Log running a process with its arguments, for debugging (-v).
 --
 -- This logs one message before running the process and one message after.
-withProcessTimeLog :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack) => Maybe FilePath -> String -> [String] -> m a -> m a
+--
+-- NOT CURRENTLY EXPORTED
+withProcessTimeLog
+  :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
+  => Maybe FilePath -- ^ working dirj
+  -> String -- ^ executable
+  -> [String] -- ^ arguments
+  -> m a
+  -> m a
 withProcessTimeLog mdir name args proc' = do
   let cmdText =
           T.intercalate
@@ -357,56 +388,37 @@ withProcessTimeLog mdir name args proc' = do
 timeSpecMilliSecondText :: Double -> DisplayBuilder
 timeSpecMilliSecondText d = display (round (d * 1000) :: Int) <> "ms"
 
--- | Show a process arg including speechmarks when necessary. Just for
--- debugging purposes, not functionally important.
-showProcessArgDebug :: String -> Text
-showProcessArgDebug x
-    | any special x || null x = T.pack (show x)
-    | otherwise = T.pack x
-  where special '"' = True
-        special ' ' = True
-        special _ = False
+-- | Provide a 'ProcessConfig' based on the 'ProcessContext' in
+-- scope. Deals with resolving the full path, setting the child
+-- process's environment variables, setting the working directory, and
+-- wrapping the call with 'withProcessTimeLog' for debugging output.
+--
+-- This is intended to be analogous to the @proc@ function provided by
+-- the @System.Process.Typed@ module, but has a different type
+-- signature to (1) allow it to perform @IO@ actions for looking up
+-- paths, and (2) allow logging and timing of the running action.
+--
+-- @since 0.0.3.0
+proc
+  :: (HasProcessContext env, HasLogFunc env, MonadReader env m, MonadIO m, HasCallStack)
+  => FilePath -- ^ command to run
+  -> [String] -- ^ command line arguments
+  -> (ProcessConfig () () () -> m a)
+  -> m a
+proc name0 args inner = do
+  name <- preProcess name0
+  wd <- view workingDirL
+  envStrings <- view envVarsStringsL
 
--- | Execute a process within the Stack configured environment.
---
--- Execution will not return, because either:
---
--- 1) On non-windows, execution is taken over by execv of the
--- sub-process. This allows signals to be propagated (#527)
---
--- 2) On windows, an 'ExitCode' exception will be thrown.
-exec :: HasEnvOverride env => String -> [String] -> RIO env b
-#ifdef WINDOWS
-exec = execSpawn
-#else
-exec cmd0 args = do
-    menv <- view envOverrideL
-    cmd <- preProcess cmd0
-    withProcessTimeLog Nothing cmd args $ liftIO $ do
-      for_ (eoWorkingDir menv) setCurrentDirectory
-      executeFile cmd True args $ Just $ envHelper menv
-#endif
-
--- | Like 'exec', but does not use 'execv' on non-windows. This way, there
--- is a sub-process, which is helpful in some cases (#1306)
---
--- This function only exits by throwing 'ExitCode'.
-execSpawn :: HasEnvOverride env => String -> [String] -> RIO env a
-execSpawn cmd args = withProc cmd args (runProcess . setStdin inherit) >>= liftIO . exitWith
-
-execObserve :: HasEnvOverride env => String -> [String] -> RIO env String
-execObserve cmd0 args =
-  withProc cmd0 args $ \pc -> do
-    (out, _err) <- readProcess_ pc
-    return
-      $ TL.unpack
-      $ TL.filter (/= '\r')
-      $ TL.concat
-      $ take 1
-      $ TL.lines
-      $ TLE.decodeUtf8With lenientDecode out
+  withProcessTimeLog wd name args
+    $ inner
+    $ setEnv envStrings
+    $ maybe id setWorkingDir wd
+    $ P.proc name args
 
 -- | Same as 'P.withProcess', but generalized to 'MonadUnliftIO'.
+--
+-- @since 0.0.3.0
 withProcess
   :: MonadUnliftIO m
   => ProcessConfig stdin stdout stderr
@@ -415,9 +427,151 @@ withProcess
 withProcess pc f = withRunInIO $ \run -> P.withProcess pc (run . f)
 
 -- | Same as 'P.withProcess_', but generalized to 'MonadUnliftIO'.
+--
+-- @since 0.0.3.0
 withProcess_
   :: MonadUnliftIO m
   => ProcessConfig stdin stdout stderr
   -> (Process stdin stdout stderr -> m a)
   -> m a
 withProcess_ pc f = withRunInIO $ \run -> P.withProcess_ pc (run . f)
+
+-- | A convenience environment combining a 'LogFunc' and a 'ProcessContext'
+--
+-- @since 0.0.3.0
+data LoggedProcessContext = LoggedProcessContext ProcessContext LogFunc
+
+instance HasLogFunc LoggedProcessContext where
+  logFuncL = lens (\(LoggedProcessContext _ lf) -> lf) (\(LoggedProcessContext pc _) lf -> LoggedProcessContext pc lf)
+instance HasProcessContext LoggedProcessContext where
+  processContextL = lens (\(LoggedProcessContext x _) -> x) (\(LoggedProcessContext _ lf) pc -> LoggedProcessContext pc lf)
+
+-- | Run an action using a 'LoggedProcessContext' with default
+-- settings and no logging.
+--
+-- @since 0.0.3.0
+withProcessContextNoLogging :: MonadIO m => RIO LoggedProcessContext a -> m a
+withProcessContextNoLogging inner = do
+  pc <- mkDefaultProcessContext
+  runRIO (LoggedProcessContext pc mempty) inner
+
+-- | Execute a process within the configured environment.
+--
+-- Execution will not return, because either:
+--
+-- 1) On non-windows, execution is taken over by execv of the
+-- sub-process. This allows signals to be propagated (#527)
+--
+-- 2) On windows, an 'ExitCode' exception will be thrown.
+--
+-- @since 0.0.3.0
+exec :: (HasProcessContext env, HasLogFunc env) => String -> [String] -> RIO env b
+#ifdef WINDOWS
+exec = execSpawn
+#else
+exec cmd0 args = do
+    wd <- view workingDirL
+    envStringsL <- view envVarsStringsL
+    cmd <- preProcess cmd0
+    withProcessTimeLog wd cmd args $ liftIO $ do
+      for_ wd setCurrentDirectory
+      executeFile cmd True args $ Just envStringsL
+#endif
+
+-- | Like 'exec', but does not use 'execv' on non-windows. This way,
+-- there is a sub-process, which is helpful in some cases
+-- (<https://github.com/commercialhaskell/stack/issues/1306>).
+--
+-- This function only exits by throwing 'ExitCode'.
+--
+-- @since 0.0.3.0
+execSpawn :: (HasProcessContext env, HasLogFunc env) => String -> [String] -> RIO env a
+execSpawn cmd args = proc cmd args (runProcess . setStdin inherit) >>= liftIO . exitWith
+
+-- | Check if the given executable exists on the given PATH.
+--
+-- @since 0.0.3.0
+doesExecutableExist
+  :: (MonadIO m, MonadReader env m, HasProcessContext env)
+  => String            -- ^ Name of executable
+  -> m Bool
+doesExecutableExist = liftM isRight . findExecutable
+
+-- | Find the complete path for the executable.
+--
+-- @since 0.0.3.0
+findExecutable
+  :: (MonadIO m, MonadReader env m, HasProcessContext env)
+  => String            -- ^ Name of executable
+  -> m (Either ProcessException FilePath) -- ^ Full path to that executable on success
+findExecutable name0 | any FP.isPathSeparator name0 = do
+    pc <- view processContextL
+    let names0 = map (name0 ++) (pcExeExtensions pc)
+        testNames [] = return $ Left $ ExecutableNotFoundAt name0
+        testNames (name:names) = do
+            exists <- liftIO $ D.doesFileExist name
+            if exists
+                then do
+                    path <- liftIO $ D.canonicalizePath name
+                    return $ return path
+                else testNames names
+    testNames names0
+findExecutable name = do
+    pc <- view processContextL
+    m <- readIORef $ pcExeCache pc
+    epath <- case Map.lookup name m of
+        Just epath -> return epath
+        Nothing -> do
+            let loop [] = return $ Left $ ExecutableNotFound name (pcPath pc)
+                loop (dir:dirs) = do
+                    let fp0 = dir FP.</> name
+                        fps0 = map (fp0 ++) (pcExeExtensions pc)
+                        testFPs [] = loop dirs
+                        testFPs (fp:fps) = do
+                            exists <- D.doesFileExist fp
+                            existsExec <- if exists then liftM D.executable $ D.getPermissions fp else return False
+                            if existsExec
+                                then do
+                                    fp' <- D.makeAbsolute fp
+                                    return $ return fp'
+                                else testFPs fps
+                    testFPs fps0
+            epath <- liftIO $ loop $ pcPath pc
+            () <- atomicModifyIORef (pcExeCache pc) $ \m' ->
+                (Map.insert name epath m', ())
+            return epath
+    return epath
+
+-- | Augment the PATH environment variable with the given extra paths.
+--
+-- @since 0.0.3.0
+augmentPath :: [FilePath] -> Maybe Text -> Either ProcessException Text
+augmentPath dirs mpath =
+  case filter (FP.searchPathSeparator `elem`) dirs of
+    [] -> Right
+            $ T.intercalate (T.singleton FP.searchPathSeparator)
+            $ map (T.pack . FP.dropTrailingPathSeparator) dirs
+            ++ maybeToList mpath
+    illegal -> Left $ PathsInvalidInPath illegal
+
+-- | Apply 'augmentPath' on the PATH value in the given 'EnvVars'.
+--
+-- @since 0.0.3.0
+augmentPathMap :: [FilePath] -> EnvVars -> Either ProcessException EnvVars
+augmentPathMap dirs origEnv =
+  do path <- augmentPath dirs mpath
+     return $ Map.insert "PATH" path origEnv
+  where
+    mpath = Map.lookup "PATH" origEnv
+
+-- | Show a process arg including speechmarks when necessary. Just for
+-- debugging purposes, not functionally important.
+--
+-- @since 0.0.3.0
+showProcessArgDebug :: String -> Text
+showProcessArgDebug x
+    | any special x || null x = T.pack (show x)
+    | otherwise = T.pack x
+  where special '"' = True
+        special ' ' = True
+        special _ = False
