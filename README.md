@@ -327,6 +327,25 @@ basic idea is:
 * Do all resource allocations with functions like `bracket` and
   `finally`.
 
+It’s a good idea to define an app-wide exception type:
+
+```haskell
+data AppExceptions
+  = NetworkChangeError Text
+  | FilePathError FilePath
+  | ImpossibleError
+  deriving (Typeable)
+
+instance Exception AppExceptions
+
+instance Show AppExceptions where
+  show =
+    \case
+      NetworkChangeError err -> "network error: " <> (unpack err)
+      FilePathError fp -> "error accessing filepath at: " <> fp
+      ImpossibleError -> "this codepath should never have been executed. Please report a bug."
+```
+
 ### Strict data fields
 
 Make data fields strict by default, unless you have a good reason to
