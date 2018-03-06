@@ -106,6 +106,11 @@ functionality. You should:
   recommended qualified names in the modules themselves. For example,
   `import qualified RIO.ByteString as B`. See the module documentation
   for more information.
+* Infix operators may be imported unqualified, with a separate import
+  line if necessary. For example, `import RIO.Map ((?!), (\\))`. Do
+  this only if your module contains no overlapping infix names,
+  regardless of qualification. For instance, if you are importing both
+  `RIO.Map.\\` and `RIO.List.\\` do not import either one unqualified.
 
 __TODO__ In the future, we may have editor integration or external
 tooling to help with import management. Also, see project template
