@@ -233,7 +233,7 @@ getPermissions = liftIO . System.Directory.getPermissions
 
 -- | Lifted 'System.Directory.setPermissions'
 setPermissions :: MonadIO m => FilePath -> System.Directory.Permissions -> m ()
-setPermissions = liftIO . System.Directory.setPermissions
+setPermissions path = liftIO . System.Directory.setPermissions path
 
 -- | Lifted 'System.Directory.copyPermissions'
 copyPermissions :: MonadIO m => FilePath -> FilePath -> m ()

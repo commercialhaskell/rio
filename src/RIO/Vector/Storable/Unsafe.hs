@@ -41,7 +41,14 @@ module RIO.Vector.Storable.Unsafe
   , Data.Vector.Storable.unsafeFromForeignPtr0
   , Data.Vector.Storable.unsafeToForeignPtr
   , Data.Vector.Storable.unsafeToForeignPtr0
-  , Data.Vector.Storable.unsafeWith
+  , unsafeWith
   ) where
 
+import Data.Vector.Storable(Storable, Vector)
 import qualified Data.Vector.Storable
+import Foreign.Ptr(Ptr)
+import UnliftIO
+
+-- | Lifted version of 'Data.Vector.Storable.unsafeWith'
+unsafeWith :: (MonadUnliftIO m, Storable a) => Vector a -> (Ptr a -> m b) -> m b
+unsafeWith vec action = withRunInIO $ \unlifter -> Data.Vector.Storable.unsafeWith vec (unlifter . action)
