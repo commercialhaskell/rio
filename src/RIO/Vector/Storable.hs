@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 -- | Storable @Vector@. Import as:
 --
--- > import qualified RIO.Vector.Storable as V.Storable
+-- > import qualified RIO.Vector.Storable as VS
 module RIO.Vector.Storable
   (
   -- * Storable vectors

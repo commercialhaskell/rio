@@ -1,6 +1,6 @@
 -- | Strict @Map@ with hashed keys. Import as:
 --
--- > import qualified RIO.HashMap as M.Hash
+-- > import qualified RIO.HashMap as HM
 module RIO.HashMap
   (
     Data.HashMap.Strict.HashMap

@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 -- | @Set@. Import as:
 --
--- > import qualified RIO.Set as S
+-- > import qualified RIO.Set as Set
 module RIO.Set
   (
   -- * Set type

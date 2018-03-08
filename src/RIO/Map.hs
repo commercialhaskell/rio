@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 -- | Strict @Map@. Import as:
 --
--- > import qualified RIO.Map as M
+-- > import qualified RIO.Map as Map
 module RIO.Map
   (
   -- * Map type
