@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 module RIO.Directory
   ( module System.Directory
@@ -13,7 +14,6 @@ import System.Directory hiding (
   , createDirectoryIfMissing
   , doesDirectoryExist
   , doesFileExist
-  , doesPathExist
   , findExecutable
   , findExecutables
   , findExecutablesInDirectories
@@ -25,7 +25,6 @@ import System.Directory hiding (
   , getAppUserDataDirectory
   , getCurrentDirectory
   , getDirectoryContents
-  , getFileSize
   , getHomeDirectory
   , getModificationTime
   , getPermissions
@@ -36,19 +35,24 @@ import System.Directory hiding (
   , listDirectory
   , makeAbsolute
   , makeRelativeToCurrentDirectory
-  , pathIsSymbolicLink
   , removeDirectory
   , removeDirectoryRecursive
   , removeFile
   , removePathForcibly
   , renameDirectory
   , renameFile
-  , renamePath
   , setAccessTime
   , setCurrentDirectory
   , setModificationTime
   , setPermissions
   , withCurrentDirectory
+#if MIN_VERSION_directory(1, 3, 0)
+  , doesPathExist
+  , getFileSize
+  , pathIsSymbolicLink
+  , removePathForcibly
+  , renamePath
+#endif
   )
 
 import qualified System.Directory as Directory
@@ -86,10 +90,6 @@ doesDirectoryExist = liftIO . Directory.doesDirectoryExist
 -- | Lifted 'Directory.doesFileExist'
 doesFileExist :: MonadIO m => FilePath -> m Bool
 doesFileExist = liftIO . Directory.doesFileExist
-
--- | Lifted 'Directory.doesPathExist'
-doesPathExist :: MonadIO m => FilePath -> m Bool
-doesPathExist = liftIO . Directory.doesPathExist
 
 -- | Lifted 'Directory.findExecutable'
 findExecutable :: MonadIO m => String -> m (Maybe FilePath)
@@ -141,10 +141,6 @@ getCurrentDirectory = liftIO Directory.getCurrentDirectory
 getDirectoryContents :: MonadIO m => FilePath -> m [FilePath]
 getDirectoryContents = liftIO . Directory.getDirectoryContents
 
--- | Lifted 'Directory.getFileSize'
-getFileSize :: MonadIO m => FilePath -> m Integer
-getFileSize = liftIO . Directory.getFileSize
-
 -- | Lifted 'Directory.getHomeDirectory'
 getHomeDirectory :: MonadIO m => m FilePath
 getHomeDirectory = liftIO Directory.getHomeDirectory
@@ -168,10 +164,6 @@ getUserDocumentsDirectory = liftIO Directory.getUserDocumentsDirectory
 -- | Lifted 'Directory.getXdgDirectory'
 getXdgDirectory :: MonadIO m => XdgDirectory -> FilePath -> m FilePath
 getXdgDirectory dir fp = liftIO $ Directory.getXdgDirectory dir fp
-
--- | Lifted 'Directory.pathIsSymbolicLink'
-pathIsSymbolicLink :: MonadIO m => FilePath -> m Bool
-pathIsSymbolicLink = liftIO . Directory.pathIsSymbolicLink
 
 -- | Lifted 'Directory.listDirectory'
 listDirectory :: MonadIO m => FilePath -> m [FilePath]
@@ -197,10 +189,6 @@ removeDirectoryRecursive = liftIO . Directory.removeDirectoryRecursive
 removeFile :: MonadIO m => FilePath -> m ()
 removeFile = liftIO . Directory.removeFile
 
--- | Lifted 'Directory.removePathForcibly'
-removePathForcibly :: MonadIO m => FilePath -> m ()
-removePathForcibly = liftIO . Directory.removePathForcibly
-
 -- | Lifted 'Directory.renameDirectory'
 renameDirectory :: MonadIO m => FilePath -> FilePath -> m ()
 renameDirectory fp1 fp2 = liftIO $ Directory.renameDirectory fp1 fp2
@@ -208,10 +196,6 @@ renameDirectory fp1 fp2 = liftIO $ Directory.renameDirectory fp1 fp2
 -- | Lifted 'Directory.renameFile'
 renameFile :: MonadIO m => FilePath -> FilePath -> m ()
 renameFile fp1 fp2 = liftIO $ Directory.renameFile fp1 fp2
-
--- | Lifted 'Directory.renamePath'
-renamePath :: MonadIO m => FilePath -> FilePath -> m ()
-renamePath fp1 fp2 = liftIO $ Directory.renamePath fp1 fp2
 
 -- | Lifted 'Directory.setAccessTime'
 setAccessTime :: MonadIO m => FilePath -> UTCTime -> m ()
@@ -233,3 +217,27 @@ setPermissions fp perms = liftIO $ Directory.setPermissions fp perms
 withCurrentDirectory :: (MonadIO m, MonadUnliftIO m) => FilePath -> m a -> m a
 withCurrentDirectory fp inner =
   withRunInIO $ \run -> Directory.withCurrentDirectory fp (run inner)
+
+#if MIN_VERSION_directory(1, 3, 0)
+
+-- | Lifted 'Directory.doesPathExist'
+doesPathExist :: MonadIO m => FilePath -> m Bool
+doesPathExist = liftIO . Directory.doesPathExist
+
+-- | Lifted 'Directory.getFileSize'
+getFileSize :: MonadIO m => FilePath -> m Integer
+getFileSize = liftIO . Directory.getFileSize
+
+-- | Lifted 'Directory.pathIsSymbolicLink'
+pathIsSymbolicLink :: MonadIO m => FilePath -> m Bool
+pathIsSymbolicLink = liftIO . Directory.pathIsSymbolicLink
+
+-- | Lifted 'Directory.removePathForcibly'
+removePathForcibly :: MonadIO m => FilePath -> m ()
+removePathForcibly = liftIO . Directory.removePathForcibly
+
+-- | Lifted 'Directory.renamePath'
+renamePath :: MonadIO m => FilePath -> FilePath -> m ()
+renamePath fp1 fp2 = liftIO $ Directory.renamePath fp1 fp2
+
+#endif
