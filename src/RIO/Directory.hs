@@ -1,258 +1,235 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 module RIO.Directory
-   (
-    -- * Actions on directories
-      createDirectory
-    , createDirectoryIfMissing
-    , removeDirectory
-    , removeDirectoryRecursive
-    , removePathForcibly
-    , renameDirectory
-    , listDirectory
-    , getDirectoryContents
-    -- ** Current working directory
-    , getCurrentDirectory
-    , setCurrentDirectory
-    , withCurrentDirectory
+  ( module System.Directory
+  , module RIO.Directory
+  ) where
 
-    -- * Pre-defined directories
-    , getHomeDirectory
-    , System.Directory.XdgDirectory(..)
-    , getXdgDirectory
-    , getAppUserDataDirectory
-    , getUserDocumentsDirectory
-    , getTemporaryDirectory
+import System.Directory hiding (
+    canonicalizePath
+  , copyFile
+  , copyFileWithMetadata
+  , copyPermissions
+  , createDirectory
+  , createDirectoryIfMissing
+  , doesDirectoryExist
+  , doesFileExist
+  , doesPathExist
+  , findExecutable
+  , findExecutables
+  , findExecutablesInDirectories
+  , findFile
+  , findFileWith
+  , findFiles
+  , findFilesWith
+  , getAccessTime
+  , getAppUserDataDirectory
+  , getCurrentDirectory
+  , getDirectoryContents
+  , getFileSize
+  , getHomeDirectory
+  , getModificationTime
+  , getPermissions
+  , getTemporaryDirectory
+  , getUserDocumentsDirectory
+  , getXdgDirectory
+  , isSymbolicLink
+  , listDirectory
+  , makeAbsolute
+  , makeRelativeToCurrentDirectory
+  , pathIsSymbolicLink
+  , removeDirectory
+  , removeDirectoryRecursive
+  , removeFile
+  , removePathForcibly
+  , renameDirectory
+  , renameFile
+  , renamePath
+  , setAccessTime
+  , setCurrentDirectory
+  , setModificationTime
+  , setPermissions
+  , withCurrentDirectory
+  )
 
-    -- * Actions on files
-    , removeFile
-    , renameFile
-    , renamePath
-    , copyFile
-    , copyFileWithMetadata
+import qualified System.Directory as Directory
+import RIO
+import RIO.Time (UTCTime)
 
-    , canonicalizePath
-    , makeAbsolute
-    , makeRelativeToCurrentDirectory
-    , findExecutable
-    , findExecutables
-    , findExecutablesInDirectories
-    , findFile
-    , findFiles
-    , findFileWith
-    , findFilesWith
-    , System.Directory.exeExtension
-
-    , getFileSize
-
-    -- * Existence tests
-    , doesPathExist
-    , doesFileExist
-    , doesDirectoryExist
-
-    -- * Symbolic links
-    , pathIsSymbolicLink
-
-    -- * Permissions
-    , System.Directory.Permissions
-    , System.Directory.emptyPermissions
-    , System.Directory.readable
-    , System.Directory.writable
-    , System.Directory.executable
-    , System.Directory.searchable
-    , System.Directory.setOwnerReadable
-    , System.Directory.setOwnerWritable
-    , System.Directory.setOwnerExecutable
-    , System.Directory.setOwnerSearchable
-
-    , getPermissions
-    , setPermissions
-    , copyPermissions
-
-    -- * Timestamps
-
-    , getAccessTime
-    , getModificationTime
-    , setAccessTime
-    , setModificationTime
-   ) where
-
-import Data.Time.Clock(UTCTime)
-import qualified System.Directory
-import UnliftIO
-
--- | Lifted 'System.Directory.createDirectory'
-createDirectory :: MonadIO m => FilePath -> m ()
-createDirectory = liftIO . System.Directory.createDirectory
-
--- | Lifted 'System.Directory.createDirectoryIfMissing'
-createDirectoryIfMissing :: MonadIO m => Bool -> FilePath -> m ()
-createDirectoryIfMissing b = liftIO . System.Directory.createDirectoryIfMissing b
-
--- | Lifted 'System.Directory.removeDirectory'
-removeDirectory :: MonadIO m => FilePath -> m ()
-removeDirectory = liftIO . System.Directory.removeDirectory
-
--- | Lifted 'System.Directory.removeDirectoryRecursive'
-removeDirectoryRecursive :: MonadIO m => FilePath -> m ()
-removeDirectoryRecursive = liftIO . System.Directory.removeDirectoryRecursive
-
--- | Lifted 'System.Directory.removePathForcibly'
-removePathForcibly :: MonadIO m => FilePath -> m ()
-removePathForcibly = liftIO . System.Directory.removePathForcibly
-
--- | Lifted 'System.Directory.renameDirectory'
-renameDirectory :: MonadIO m => FilePath -> FilePath -> m ()
-renameDirectory from to = liftIO $ System.Directory.renameDirectory from to
-
--- | Lifted 'System.Directory.listDirectory'
-listDirectory :: MonadIO m => FilePath -> m [FilePath]
-listDirectory = liftIO . System.Directory.listDirectory
-
--- | Lifted 'System.Directory.getDirectoryContents'
-getDirectoryContents :: MonadIO m => FilePath -> m [FilePath]
-getDirectoryContents = liftIO . System.Directory.getDirectoryContents
-
--- | Lifted 'System.Directory.getCurrentDirectory'
-getCurrentDirectory :: MonadIO m => m FilePath
-getCurrentDirectory = liftIO System.Directory.getCurrentDirectory
-
--- | Lifted 'System.Directory.setCurrentDirectory'
-setCurrentDirectory :: MonadIO m => FilePath -> m ()
-setCurrentDirectory = liftIO . System.Directory.setCurrentDirectory
-
--- | Lifted 'System.Directory.withCurrentDirectory'
-withCurrentDirectory :: MonadUnliftIO m => FilePath -> m a -> m a
-withCurrentDirectory dir action = do
-    actionIO <- toIO action
-    liftIO $ System.Directory.withCurrentDirectory dir actionIO
-
--- | Lifted 'System.Directory.getHomeDirectory'
-getHomeDirectory :: MonadIO m => m FilePath
-getHomeDirectory = liftIO System.Directory.getHomeDirectory
-
--- | Lifted 'System.Directory.getXdgDirectory'
-getXdgDirectory :: MonadIO m => System.Directory.XdgDirectory -> FilePath -> m FilePath
-getXdgDirectory xdg = liftIO . System.Directory.getXdgDirectory xdg
-
--- | Lifted 'System.Directory.getAppUserDataDirectory'
-getAppUserDataDirectory :: MonadIO m => FilePath -> m FilePath
-getAppUserDataDirectory = liftIO . System.Directory.getAppUserDataDirectory
-
--- | Lifted 'System.Directory.getUserDocumentsDirectory'
-getUserDocumentsDirectory :: MonadIO m => m FilePath
-getUserDocumentsDirectory = liftIO System.Directory.getUserDocumentsDirectory
-
--- | Lifted 'System.Directory.getTemporaryDirectory'
-getTemporaryDirectory :: MonadIO m => m FilePath
-getTemporaryDirectory = liftIO System.Directory.getTemporaryDirectory
-
--- | Lifted 'System.Directory.removeFile'
-removeFile :: MonadIO m => FilePath -> m ()
-removeFile = liftIO . System.Directory.removeFile
-
--- | Lifted 'System.Directory.renameFile'
-renameFile :: MonadIO m => FilePath -> FilePath -> m ()
-renameFile from to = liftIO $ System.Directory.renameFile from to
-
--- | Lifted 'System.Directory.renamePath'
-renamePath :: MonadIO m => FilePath -> FilePath -> m ()
-renamePath from to = liftIO $ System.Directory.renamePath from to
-
--- | Lifted 'System.Directory.copyFile'
-copyFile :: MonadIO m => FilePath -> FilePath -> m ()
-copyFile from to = liftIO $ System.Directory.copyFile from to
-
--- | Lifted 'System.Directory.copyFileWithMetadata'
-copyFileWithMetadata :: MonadIO m => FilePath -> FilePath -> m ()
-copyFileWithMetadata from to = liftIO $ System.Directory.copyFileWithMetadata from to
-
--- | Lifted 'System.Directory.canonicalizePath'
+-- | Lifted 'Directory.canonicalizePath'
 canonicalizePath :: MonadIO m => FilePath -> m FilePath
-canonicalizePath = liftIO . System.Directory.canonicalizePath
+canonicalizePath = liftIO . Directory.canonicalizePath
 
--- | Lifted 'System.Directory.makeAbsolute'
-makeAbsolute :: MonadIO m => FilePath -> m FilePath
-makeAbsolute = liftIO . System.Directory.makeAbsolute
+-- | Lifted 'Directory.copyFile'
+copyFile :: MonadIO m => FilePath -> FilePath -> m ()
+copyFile fp1 fp2 = liftIO $ Directory.copyFile fp1 fp2
 
--- | Lifted 'System.Directory.makeRelativeToCurrentDirectory'
-makeRelativeToCurrentDirectory :: MonadIO m => FilePath -> m FilePath
-makeRelativeToCurrentDirectory = liftIO . System.Directory.makeRelativeToCurrentDirectory
+-- | Lifted 'Directory.copyFileWithMetadata'
+copyFileWithMetadata :: MonadIO m => FilePath -> FilePath -> m ()
+copyFileWithMetadata fp1 fp2 = liftIO $ Directory.copyFileWithMetadata fp1 fp2
 
--- | Lifted 'System.Directory.findExecutable'
-findExecutable :: MonadIO m => String -> m (Maybe FilePath)
-findExecutable = liftIO . System.Directory.findExecutable
-
--- | Lifted 'System.Directory.findExecutables'
-findExecutables :: MonadIO m => String -> m [FilePath]
-findExecutables = liftIO . System.Directory.findExecutables
-
--- | Lifted 'System.Directory.findExecutablesInDirectories'
-findExecutablesInDirectories :: MonadIO m => [FilePath] -> String -> m [FilePath]
-findExecutablesInDirectories dirs = liftIO . System.Directory.findExecutablesInDirectories dirs
-
--- | Lifted 'System.Directory.findFile'
-findFile :: MonadIO m => [FilePath] -> String -> m (Maybe FilePath)
-findFile dirs = liftIO . System.Directory.findFile dirs
-
--- | Lifted 'System.Directory.findFiles'
-findFiles :: MonadIO m => [FilePath] -> String -> m [FilePath]
-findFiles dirs = liftIO . System.Directory.findFiles dirs
-
--- | Lifted 'System.Directory.findFileWith'
-findFileWith :: MonadUnliftIO m => (FilePath -> m Bool) -> [FilePath] -> String -> m (Maybe FilePath)
-findFileWith prop dirs file =
-    withRunInIO $ \unlifter -> System.Directory.findFileWith (unlifter . prop) dirs file
-
--- | Lifted 'System.Directory.findFilesWith'
-findFilesWith :: MonadUnliftIO m => (FilePath -> m Bool) -> [FilePath] -> String -> m [FilePath]
-findFilesWith prop dirs file =
-    withRunInIO $ \unlifter -> System.Directory.findFilesWith (unlifter . prop) dirs file
-
--- | Lifted 'System.Directory.getFileSize'
-getFileSize :: MonadIO m => FilePath -> m Integer
-getFileSize = liftIO . System.Directory.getFileSize
-
--- | Lifted 'System.Directory.doesPathExist'
-doesPathExist :: MonadIO m => FilePath -> m Bool
-doesPathExist = liftIO . System.Directory.doesPathExist
-
--- | Lifted 'System.Directory.doesFileExist'
-doesFileExist :: MonadIO m => FilePath -> m Bool
-doesFileExist = liftIO . System.Directory.doesFileExist
-
--- | Lifted 'System.Directory.doesDirectoryExist'
-doesDirectoryExist :: MonadIO m => FilePath -> m Bool
-doesDirectoryExist = liftIO . System.Directory.doesDirectoryExist
-
--- | Lifted 'System.Directory.pathIsSymbolicLink'
-pathIsSymbolicLink :: MonadIO m => FilePath -> m Bool
-pathIsSymbolicLink = liftIO . System.Directory.pathIsSymbolicLink
-
--- | Lifted 'System.Directory.getPermissions'
-getPermissions :: MonadIO m => FilePath -> m System.Directory.Permissions
-getPermissions = liftIO . System.Directory.getPermissions
-
--- | Lifted 'System.Directory.setPermissions'
-setPermissions :: MonadIO m => FilePath -> System.Directory.Permissions -> m ()
-setPermissions path = liftIO . System.Directory.setPermissions path
-
--- | Lifted 'System.Directory.copyPermissions'
+-- | Lifted 'Directory.copyPermissions'
 copyPermissions :: MonadIO m => FilePath -> FilePath -> m ()
-copyPermissions from to = liftIO $ System.Directory.copyPermissions from to
+copyPermissions fp1 fp2 = liftIO $ Directory.copyPermissions fp1 fp2
 
--- | Lifted 'System.Directory.getAccessTime'
+-- | Lifted 'Directory.createDirectory'
+createDirectory :: MonadIO m => FilePath -> m ()
+createDirectory = liftIO . Directory.createDirectory
+
+-- | Lifted 'Directory.createDirectoryIfMissing'
+createDirectoryIfMissing :: MonadIO m => Bool -> FilePath -> m ()
+createDirectoryIfMissing b fp = liftIO $ Directory.createDirectoryIfMissing b fp
+
+-- | Lifted 'Directory.doesDirectoryExist'
+doesDirectoryExist :: MonadIO m => FilePath -> m Bool
+doesDirectoryExist = liftIO . Directory.doesDirectoryExist
+
+-- | Lifted 'Directory.doesFileExist'
+doesFileExist :: MonadIO m => FilePath -> m Bool
+doesFileExist = liftIO . Directory.doesFileExist
+
+-- | Lifted 'Directory.doesPathExist'
+doesPathExist :: MonadIO m => FilePath -> m Bool
+doesPathExist = liftIO . Directory.doesPathExist
+
+-- | Lifted 'Directory.findExecutable'
+findExecutable :: MonadIO m => String -> m (Maybe FilePath)
+findExecutable = liftIO . Directory.findExecutable
+
+-- | Lifted 'Directory.findExecutables'
+findExecutables :: MonadIO m => String -> m [FilePath]
+findExecutables = liftIO . Directory.findExecutables
+
+-- | Lifted 'Directory.findExecutablesInDirectories'
+findExecutablesInDirectories :: MonadIO m => [FilePath] -> String -> m [FilePath]
+findExecutablesInDirectories fpList str = liftIO $ Directory.findExecutablesInDirectories fpList str
+
+-- | Lifted 'Directory.findFile'
+findFile :: MonadIO m => [FilePath] -> String -> m (Maybe FilePath)
+findFile fpList str = liftIO $ Directory.findFile fpList str
+
+-- | Unlifted 'Directory.findFileWith'
+findFileWith
+  :: (MonadIO m, MonadUnliftIO m)
+  => (FilePath -> m Bool) -> [FilePath] -> String -> m (Maybe FilePath)
+findFileWith inner fpList s =
+  withRunInIO $ \run -> Directory.findFileWith (run . inner) fpList s
+
+-- | Lifted 'Directory.findFiles'
+findFiles :: MonadIO m => [FilePath] -> String -> m [FilePath]
+findFiles fpList s = liftIO $ Directory.findFiles fpList s
+
+-- | Unlifted 'Directory.findFilesWith'
+findFilesWith
+  :: (MonadIO m, MonadUnliftIO m)
+  => (FilePath -> m Bool) -> [FilePath] -> String -> m [FilePath]
+findFilesWith inner fpList s =
+  withRunInIO $ \run -> Directory.findFilesWith (run . inner) fpList s
+
+-- | Lifted 'Directory.getAccessTime'
 getAccessTime :: MonadIO m => FilePath -> m UTCTime
-getAccessTime = liftIO . System.Directory.getAccessTime
+getAccessTime = liftIO . Directory.getAccessTime
 
--- | Lifted 'System.Directory.getModificationTime'
+-- | Lifted 'Directory.getAppUserDataDirectory'
+getAppUserDataDirectory :: MonadIO m => FilePath -> m FilePath
+getAppUserDataDirectory = liftIO . Directory.getAppUserDataDirectory
+
+-- | Lifted 'Directory.getCurrentDirectory'
+getCurrentDirectory :: MonadIO m => m FilePath
+getCurrentDirectory = liftIO Directory.getCurrentDirectory
+
+-- | Lifted 'Directory.getDirectoryContents'
+getDirectoryContents :: MonadIO m => FilePath -> m [FilePath]
+getDirectoryContents = liftIO . Directory.getDirectoryContents
+
+-- | Lifted 'Directory.getFileSize'
+getFileSize :: MonadIO m => FilePath -> m Integer
+getFileSize = liftIO . Directory.getFileSize
+
+-- | Lifted 'Directory.getHomeDirectory'
+getHomeDirectory :: MonadIO m => m FilePath
+getHomeDirectory = liftIO Directory.getHomeDirectory
+
+-- | Lifted 'Directory.getModificationTime'
 getModificationTime :: MonadIO m => FilePath -> m UTCTime
-getModificationTime = liftIO . System.Directory.getModificationTime
+getModificationTime = liftIO . Directory.getModificationTime
 
--- | Lifted 'System.Directory.setAccessTime'
+-- | Lifted 'Directory.getPermissions'
+getPermissions :: MonadIO m => FilePath -> m Permissions
+getPermissions = liftIO . Directory.getPermissions
+
+-- | Lifted 'Directory.getTemporaryDirectory'
+getTemporaryDirectory :: MonadIO m => m FilePath
+getTemporaryDirectory = liftIO Directory.getTemporaryDirectory
+
+-- | Lifted 'Directory.getUserDocumentsDirectory'
+getUserDocumentsDirectory :: MonadIO m => m FilePath
+getUserDocumentsDirectory = liftIO Directory.getUserDocumentsDirectory
+
+-- | Lifted 'Directory.getXdgDirectory'
+getXdgDirectory :: MonadIO m => XdgDirectory -> FilePath -> m FilePath
+getXdgDirectory dir fp = liftIO $ Directory.getXdgDirectory dir fp
+
+-- | Lifted 'Directory.pathIsSymbolicLink'
+pathIsSymbolicLink :: MonadIO m => FilePath -> m Bool
+pathIsSymbolicLink = liftIO . Directory.pathIsSymbolicLink
+
+-- | Lifted 'Directory.listDirectory'
+listDirectory :: MonadIO m => FilePath -> m [FilePath]
+listDirectory = liftIO . Directory.listDirectory
+
+-- | Lifted 'Directory.makeAbsolute'
+makeAbsolute :: MonadIO m => FilePath -> m FilePath
+makeAbsolute = liftIO . Directory.makeAbsolute
+
+-- | Lifted 'Directory.makeRelativeToCurrentDirectory'
+makeRelativeToCurrentDirectory :: MonadIO m => FilePath -> m FilePath
+makeRelativeToCurrentDirectory = liftIO . Directory.makeRelativeToCurrentDirectory
+
+-- | Lifted 'Directory.removeDirectory'
+removeDirectory :: MonadIO m => FilePath -> m ()
+removeDirectory = liftIO . Directory.removeDirectory
+
+-- | Lifted 'Directory.removeDirectoryRecursive'
+removeDirectoryRecursive :: MonadIO m => FilePath -> m ()
+removeDirectoryRecursive = liftIO . Directory.removeDirectoryRecursive
+
+-- | Lifted 'Directory.removeFile'
+removeFile :: MonadIO m => FilePath -> m ()
+removeFile = liftIO . Directory.removeFile
+
+-- | Lifted 'Directory.removePathForcibly'
+removePathForcibly :: MonadIO m => FilePath -> m ()
+removePathForcibly = liftIO . Directory.removePathForcibly
+
+-- | Lifted 'Directory.renameDirectory'
+renameDirectory :: MonadIO m => FilePath -> FilePath -> m ()
+renameDirectory fp1 fp2 = liftIO $ Directory.renameDirectory fp1 fp2
+
+-- | Lifted 'Directory.renameFile'
+renameFile :: MonadIO m => FilePath -> FilePath -> m ()
+renameFile fp1 fp2 = liftIO $ Directory.renameFile fp1 fp2
+
+-- | Lifted 'Directory.renamePath'
+renamePath :: MonadIO m => FilePath -> FilePath -> m ()
+renamePath fp1 fp2 = liftIO $ Directory.renamePath fp1 fp2
+
+-- | Lifted 'Directory.setAccessTime'
 setAccessTime :: MonadIO m => FilePath -> UTCTime -> m ()
-setAccessTime path = liftIO . System.Directory.setAccessTime path
+setAccessTime fp timestamp = liftIO $ Directory.setAccessTime fp timestamp
 
--- | Lifted 'System.Directory.setModificationTime'
+-- | Lifted 'Directory.setCurrentDirectory'
+setCurrentDirectory :: MonadIO m => FilePath -> m ()
+setCurrentDirectory = liftIO . Directory.setCurrentDirectory
+
+-- | Lifted 'Directory.setModificationTime'
 setModificationTime :: MonadIO m => FilePath -> UTCTime -> m ()
-setModificationTime path = liftIO . System.Directory.setModificationTime path
+setModificationTime fp timestamp = liftIO $ Directory.setModificationTime fp timestamp
 
--- isSymbolicLink omitted as it is a deprecated alias of pathIsSymbolicLink
+-- | Lifted 'Directory.setPermissions'
+setPermissions :: MonadIO m => FilePath -> Permissions -> m ()
+setPermissions fp perms = liftIO $ Directory.setPermissions fp perms
+
+-- | Unlifted 'Directory.withCurrentDirectory'
+withCurrentDirectory :: (MonadIO m, MonadUnliftIO m) => FilePath -> m a -> m a
+withCurrentDirectory fp inner =
+  withRunInIO $ \run -> Directory.withCurrentDirectory fp (run inner)

@@ -1,119 +1,120 @@
 -- | Lazy @ByteString@. Import as:
 --
 -- > import qualified RIO.ByteString.Lazy as B.Lazy
+{-# LANGUAGE NoImplicitPrelude #-}
 module RIO.ByteString.Lazy
   (
   -- * The @ByteString@ type
     Data.ByteString.Lazy.ByteString
 
   -- * Introducing and eliminating 'ByteString's
-  , Data.ByteString.Lazy.empty
-  , Data.ByteString.Lazy.singleton
-  , Data.ByteString.Lazy.pack
-  , Data.ByteString.Lazy.unpack
-  , Data.ByteString.Lazy.fromStrict
-  , Data.ByteString.Lazy.toStrict
-  , Data.ByteString.Lazy.fromChunks
-  , Data.ByteString.Lazy.toChunks
-  , Data.ByteString.Lazy.foldrChunks
-  , Data.ByteString.Lazy.foldlChunks
+  , B.Lazy.empty
+  , B.Lazy.singleton
+  , B.Lazy.pack
+  , B.Lazy.unpack
+  , B.Lazy.fromStrict
+  , B.Lazy.toStrict
+  , B.Lazy.fromChunks
+  , B.Lazy.toChunks
+  , B.Lazy.foldrChunks
+  , B.Lazy.foldlChunks
 
   -- * Basic interface
-  , Data.ByteString.Lazy.cons
-  , Data.ByteString.Lazy.cons'
-  , Data.ByteString.Lazy.snoc
-  , Data.ByteString.Lazy.append
-  , Data.ByteString.Lazy.uncons
-  , Data.ByteString.Lazy.unsnoc
-  , Data.ByteString.Lazy.null
-  , Data.ByteString.Lazy.length
+  , B.Lazy.cons
+  , B.Lazy.cons'
+  , B.Lazy.snoc
+  , B.Lazy.append
+  , B.Lazy.uncons
+  , B.Lazy.unsnoc
+  , B.Lazy.null
+  , B.Lazy.length
 
   -- * Transforming ByteStrings
-  , Data.ByteString.Lazy.map
-  , Data.ByteString.Lazy.reverse
-  , Data.ByteString.Lazy.intersperse
-  , Data.ByteString.Lazy.intercalate
-  , Data.ByteString.Lazy.transpose
+  , B.Lazy.map
+  , B.Lazy.reverse
+  , B.Lazy.intersperse
+  , B.Lazy.intercalate
+  , B.Lazy.transpose
 
   -- * Reducing 'ByteString's (folds)
-  , Data.ByteString.Lazy.foldl
-  , Data.ByteString.Lazy.foldl'
-  , Data.ByteString.Lazy.foldr
+  , B.Lazy.foldl
+  , B.Lazy.foldl'
+  , B.Lazy.foldr
 
   -- ** Special folds
-  , Data.ByteString.Lazy.concat
-  , Data.ByteString.Lazy.concatMap
-  , Data.ByteString.Lazy.any
-  , Data.ByteString.Lazy.all
+  , B.Lazy.concat
+  , B.Lazy.concatMap
+  , B.Lazy.any
+  , B.Lazy.all
 
   -- * Building ByteStrings
   -- ** Scans
-  , Data.ByteString.Lazy.scanl
+  , B.Lazy.scanl
 
   -- ** Accumulating maps
-  , Data.ByteString.Lazy.mapAccumL
-  , Data.ByteString.Lazy.mapAccumR
+  , B.Lazy.mapAccumL
+  , B.Lazy.mapAccumR
 
   -- ** Infinite ByteStrings
-  , Data.ByteString.Lazy.repeat
-  , Data.ByteString.Lazy.replicate
-  , Data.ByteString.Lazy.cycle
-  , Data.ByteString.Lazy.iterate
+  , B.Lazy.repeat
+  , B.Lazy.replicate
+  , B.Lazy.cycle
+  , B.Lazy.iterate
 
   -- ** Unfolding ByteStrings
-  , Data.ByteString.Lazy.unfoldr
+  , B.Lazy.unfoldr
 
   -- * Substrings
   -- ** Breaking strings
-  , Data.ByteString.Lazy.take
-  , Data.ByteString.Lazy.drop
-  , Data.ByteString.Lazy.splitAt
-  , Data.ByteString.Lazy.takeWhile
-  , Data.ByteString.Lazy.dropWhile
-  , Data.ByteString.Lazy.span
-  , Data.ByteString.Lazy.break
-  , Data.ByteString.Lazy.group
-  , Data.ByteString.Lazy.groupBy
-  , Data.ByteString.Lazy.inits
-  , Data.ByteString.Lazy.tails
-  , Data.ByteString.Lazy.stripPrefix
-  , Data.ByteString.Lazy.stripSuffix
+  , B.Lazy.take
+  , B.Lazy.drop
+  , B.Lazy.splitAt
+  , B.Lazy.takeWhile
+  , B.Lazy.dropWhile
+  , B.Lazy.span
+  , B.Lazy.break
+  , B.Lazy.group
+  , B.Lazy.groupBy
+  , B.Lazy.inits
+  , B.Lazy.tails
+  , B.Lazy.stripPrefix
+  , B.Lazy.stripSuffix
 
   -- ** Breaking into many substrings
-  , Data.ByteString.Lazy.split
-  , Data.ByteString.Lazy.splitWith
+  , B.Lazy.split
+  , B.Lazy.splitWith
 
   -- * Predicates
-  , Data.ByteString.Lazy.isPrefixOf
-  , Data.ByteString.Lazy.isSuffixOf
+  , B.Lazy.isPrefixOf
+  , B.Lazy.isSuffixOf
 
   -- * Search ByteStrings
   -- ** Searching by equality
-  , Data.ByteString.Lazy.elem
-  , Data.ByteString.Lazy.notElem
+  , B.Lazy.elem
+  , B.Lazy.notElem
 
   -- ** Searching with a predicate
-  , Data.ByteString.Lazy.find
-  , Data.ByteString.Lazy.filter
-  , Data.ByteString.Lazy.partition
+  , B.Lazy.find
+  , B.Lazy.filter
+  , B.Lazy.partition
 
   -- * Indexing ByteStrings
-  , Data.ByteString.Lazy.index
-  , Data.ByteString.Lazy.elemIndex
-  , Data.ByteString.Lazy.elemIndexEnd
-  , Data.ByteString.Lazy.elemIndices
-  , Data.ByteString.Lazy.findIndex
-  , Data.ByteString.Lazy.findIndices
-  , Data.ByteString.Lazy.count
+  , B.Lazy.index
+  , B.Lazy.elemIndex
+  , B.Lazy.elemIndexEnd
+  , B.Lazy.elemIndices
+  , B.Lazy.findIndex
+  , B.Lazy.findIndices
+  , B.Lazy.count
 
   -- * Zipping and unzipping ByteStrings
-  , Data.ByteString.Lazy.zip
-  , Data.ByteString.Lazy.zipWith
-  , Data.ByteString.Lazy.unzip
+  , B.Lazy.zip
+  , B.Lazy.zipWith
+  , B.Lazy.unzip
 
   -- * Low level conversions
   -- ** Copying ByteStrings
-  , Data.ByteString.Lazy.copy
+  , B.Lazy.copy
 
   -- * I\/O with 'ByteString's
   -- ** Standard input and output
@@ -136,64 +137,75 @@ module RIO.ByteString.Lazy
   , hPutStr
   ) where
 
-import Prelude(FilePath, Int, (.))
+import Data.ByteString.Lazy hiding
+  (
+    getContents
+  , putStr
+  , putStrLn
+  , interact
+  , readFile
+  , writeFile
+  , appendFile
+  , hGetContents
+  , hGet
+  , hGetNonBlocking
+  , hPut
+  , hPutNonBlocking
+  , hPutStr
+  )
+import qualified Data.ByteString.Lazy as B.Lazy
+import qualified Data.ByteString.Lazy.Char8
+import RIO
 
-import Control.Monad.IO.Class(MonadIO(..))
-import Data.ByteString.Lazy(ByteString)
-import qualified Data.ByteString.Lazy
-import System.IO(Handle)
+-- | Lifted 'B.Lazy.getContents'
+getContents :: MonadIO m => m LByteString
+getContents = liftIO B.Lazy.getContents
 
--- | Lifted 'Data.ByteString.Lazy.getContents'
-getContents :: MonadIO m => m ByteString
-getContents = liftIO Data.ByteString.Lazy.getContents
+-- | Lifted 'B.Lazy.putStr'
+putStr :: MonadIO m => LByteString -> m ()
+putStr = liftIO . B.Lazy.putStr
 
--- | Lifted 'Data.ByteString.Lazy.putStr'
-putStr :: MonadIO m => ByteString -> m ()
-putStr = liftIO . Data.ByteString.Lazy.putStr
+-- | Lifted 'B.Lazy.putStrLn'
+putStrLn :: MonadIO m => LByteString -> m ()
+putStrLn = liftIO . Data.ByteString.Lazy.Char8.putStrLn
 
--- | Lifted 'Data.ByteString.Lazy.putStrLn'
-putStrLn :: MonadIO m => ByteString -> m ()
-putStrLn = liftIO . Data.ByteString.Lazy.putStrLn
+-- | Lifted 'B.Lazy.interact'
+interact :: MonadIO m => (LByteString -> LByteString) -> m ()
+interact = liftIO . B.Lazy.interact
 
--- TODO Maybe remove or replace putStrLn as it's deprecated
--- in favour of 'Data.ByteString.Char8.putStrLn'
+-- | Lifted 'B.Lazy.readFile'
+readFile :: MonadIO m => FilePath -> m LByteString
+readFile = liftIO . B.Lazy.readFile
 
--- | Lifted 'Data.ByteString.Lazy.interact'
-interact :: MonadIO m => (ByteString -> ByteString) -> m ()
-interact = liftIO . Data.ByteString.Lazy.interact
+-- | Lifted 'B.Lazy.writeFile'
+writeFile :: MonadIO m => FilePath -> LByteString -> m ()
+writeFile fp contents =
+  liftIO $ B.Lazy.writeFile fp contents
 
--- | Lifted 'Data.ByteString.Lazy.readFile'
-readFile :: MonadIO m => FilePath -> m ByteString
-readFile = liftIO . Data.ByteString.Lazy.readFile
+-- | Lifted 'B.Lazy.appendFile'
+appendFile :: MonadIO m => FilePath -> LByteString -> m ()
+appendFile fp = liftIO . B.Lazy.appendFile fp
 
--- | Lifted 'Data.ByteString.Lazy.writeFile'
-writeFile :: MonadIO m => FilePath -> ByteString -> m ()
-writeFile fp = liftIO . Data.ByteString.Lazy.writeFile fp
+-- | Lifted 'B.Lazy.hGet'
+hGet :: MonadIO m => Handle -> Int -> m LByteString
+hGet handle count = liftIO $ B.Lazy.hGet handle count
 
--- | Lifted 'Data.ByteString.Lazy.appendFile'
-appendFile :: MonadIO m => FilePath -> ByteString -> m ()
-appendFile fp = liftIO . Data.ByteString.Lazy.appendFile fp
+-- | Lifted 'B.Lazy.hGetContents'
+hGetContents :: MonadIO m => Handle -> m LByteString
+hGetContents = liftIO . B.Lazy.hGetContents
 
--- | Lifted 'Data.ByteString.Lazy.hGetContents'
-hGetContents :: MonadIO m => Handle -> m ByteString
-hGetContents = liftIO . Data.ByteString.Lazy.hGetContents
+-- | Lifted 'B.Lazy.hGetNonBlocking'
+hGetNonBlocking :: MonadIO m => Handle -> Int -> m LByteString
+hGetNonBlocking h = liftIO . B.Lazy.hGetNonBlocking h
 
--- | Lifted 'Data.ByteString.Lazy.hGet'
-hGet :: MonadIO m => Handle -> Int -> m ByteString
-hGet h = liftIO . Data.ByteString.Lazy.hGet h
+-- | Lifted 'B.Lazy.hPut'
+hPut :: MonadIO m => Handle -> LByteString -> m ()
+hPut h = liftIO . B.Lazy.hPut h
 
--- | Lifted 'Data.ByteString.Lazy.hGetNonBlocking'
-hGetNonBlocking :: MonadIO m => Handle -> Int -> m ByteString
-hGetNonBlocking h = liftIO . Data.ByteString.Lazy.hGetNonBlocking h
+-- | Lifted 'B.Lazy.hPutNonBlocking'
+hPutNonBlocking :: MonadIO m => Handle -> LByteString -> m LByteString
+hPutNonBlocking h = liftIO . B.Lazy.hPutNonBlocking h
 
--- | Lifted 'Data.ByteString.Lazy.hPut'
-hPut :: MonadIO m => Handle -> ByteString -> m ()
-hPut h = liftIO . Data.ByteString.Lazy.hPut h
-
--- | Lifted 'Data.ByteString.Lazy.hPutNonBlocking'
-hPutNonBlocking :: MonadIO m => Handle -> ByteString -> m ByteString
-hPutNonBlocking h = liftIO . Data.ByteString.Lazy.hPutNonBlocking h
-
--- | Lifted 'Data.ByteString.Lazy.hPutStr'
-hPutStr :: MonadIO m => Handle -> ByteString -> m ()
-hPutStr h = liftIO . Data.ByteString.Lazy.hPutStr h
+-- | Lifted 'B.Lazy.hPutStr'
+hPutStr :: MonadIO m => Handle -> LByteString -> m ()
+hPutStr h = liftIO . B.Lazy.hPutStr h
