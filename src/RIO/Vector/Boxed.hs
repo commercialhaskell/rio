@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 -- | Boxed @Vector@. Import as:
 --
--- > import qualified RIO.Vector.Boxed as V.Boxed
+-- > import qualified RIO.Vector.Boxed as VB
 module RIO.Vector.Boxed
   (
   -- * Boxed vectors

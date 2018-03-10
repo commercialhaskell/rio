@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 -- | Unboxed @Vector@. Import as:
 --
--- > import qualified RIO.Vector.Unboxed as V.Unboxed
+-- > import qualified RIO.Vector.Unboxed as VU
 module RIO.Vector.Unboxed
   (
   -- * Unboxed vectors

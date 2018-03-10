@@ -1,6 +1,6 @@
 -- | Lazy @Text@. Import as:
 --
--- > import qualified RIO.Text.Lazy as T.Lazy
+-- > import qualified RIO.Text.Lazy as TL
 --
 -- This module does not export any partial functions.  For those, see
 -- "RIO.Text.Lazy.Partial"

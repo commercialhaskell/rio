@@ -1,6 +1,6 @@
 -- | Lazy @ByteString@. Import as:
 --
--- > import qualified RIO.ByteString.Lazy as B.Lazy
+-- > import qualified RIO.ByteString.Lazy as BL
 {-# LANGUAGE NoImplicitPrelude #-}
 module RIO.ByteString.Lazy
   (

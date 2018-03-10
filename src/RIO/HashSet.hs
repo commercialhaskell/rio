@@ -1,6 +1,6 @@
 -- | @Set@ with hashed members. Import as:
 --
--- > import qualified RIO.HashSet as S.Hash
+-- > import qualified RIO.HashSet as HS
 module RIO.HashSet
   (
     Data.HashSet.HashSet
