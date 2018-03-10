@@ -1,6 +1,7 @@
 -- | Lazy @ByteString@. Import as:
 --
 -- > import qualified RIO.ByteString.Lazy as B.Lazy
+{-# LANGUAGE NoImplicitPrelude #-}
 module RIO.ByteString.Lazy
   (
   -- * The @ByteString@ type
@@ -117,25 +118,94 @@ module RIO.ByteString.Lazy
 
   -- * I\/O with 'ByteString's
   -- ** Standard input and output
-  , Data.ByteString.Lazy.getContents
-  , Data.ByteString.Lazy.putStr
-  , Data.ByteString.Lazy.putStrLn
-  , Data.ByteString.Lazy.interact
+  , getContents
+  , putStr
+  , putStrLn
+  , interact
 
   -- ** Files
-  , Data.ByteString.Lazy.readFile
-  , Data.ByteString.Lazy.writeFile
-  , Data.ByteString.Lazy.appendFile
+  , readFile
+  , writeFile
+  , appendFile
 
   -- ** I\/O with Handles
-  , Data.ByteString.Lazy.hGetContents
-  , Data.ByteString.Lazy.hGet
-  , Data.ByteString.Lazy.hGetNonBlocking
-  , Data.ByteString.Lazy.hPut
-  , Data.ByteString.Lazy.hPutNonBlocking
-  , Data.ByteString.Lazy.hPutStr
+  , hGetContents
+  , hGet
+  , hGetNonBlocking
+  , hPut
+  , hPutNonBlocking
+  , hPutStr
   ) where
 
--- TODO lifted versions of the above I/O functions
-
+import Data.ByteString.Lazy hiding
+  (
+    getContents
+  , putStr
+  , putStrLn
+  , interact
+  , readFile
+  , writeFile
+  , appendFile
+  , hGetContents
+  , hGet
+  , hGetNonBlocking
+  , hPut
+  , hPutNonBlocking
+  , hPutStr
+  )
 import qualified Data.ByteString.Lazy
+import qualified Data.ByteString.Lazy.Char8
+import RIO
+
+-- | Lifted 'Data.ByteString.Lazy.getContents'
+getContents :: MonadIO m => m LByteString
+getContents = liftIO Data.ByteString.Lazy.getContents
+
+-- | Lifted 'Data.ByteString.Lazy.putStr'
+putStr :: MonadIO m => LByteString -> m ()
+putStr = liftIO . Data.ByteString.Lazy.putStr
+
+-- | Lifted 'Data.ByteString.Lazy.putStrLn'
+putStrLn :: MonadIO m => LByteString -> m ()
+putStrLn = liftIO . Data.ByteString.Lazy.Char8.putStrLn
+
+-- | Lifted 'Data.ByteString.Lazy.interact'
+interact :: MonadIO m => (LByteString -> LByteString) -> m ()
+interact = liftIO . Data.ByteString.Lazy.interact
+
+-- | Lifted 'Data.ByteString.Lazy.readFile'
+readFile :: MonadIO m => FilePath -> m LByteString
+readFile = liftIO . Data.ByteString.Lazy.readFile
+
+-- | Lifted 'Data.ByteString.Lazy.writeFile'
+writeFile :: MonadIO m => FilePath -> LByteString -> m ()
+writeFile fp contents =
+  liftIO $ Data.ByteString.Lazy.writeFile fp contents
+
+-- | Lifted 'Data.ByteString.Lazy.appendFile'
+appendFile :: MonadIO m => FilePath -> LByteString -> m ()
+appendFile fp = liftIO . Data.ByteString.Lazy.appendFile fp
+
+-- | Lifted 'Data.ByteString.Lazy.hGet'
+hGet :: MonadIO m => Handle -> Int -> m LByteString
+hGet handle count = liftIO $ Data.ByteString.Lazy.hGet handle count
+
+-- | Lifted 'Data.ByteString.Lazy.hGetContents'
+hGetContents :: MonadIO m => Handle -> m LByteString
+hGetContents = liftIO . Data.ByteString.Lazy.hGetContents
+
+-- | Lifted 'Data.ByteString.Lazy.hGetNonBlocking'
+hGetNonBlocking :: MonadIO m => Handle -> Int -> m LByteString
+hGetNonBlocking h = liftIO . Data.ByteString.Lazy.hGetNonBlocking h
+
+-- | Lifted 'Data.ByteString.Lazy.hPut'
+hPut :: MonadIO m => Handle -> LByteString -> m ()
+hPut h = liftIO . Data.ByteString.Lazy.hPut h
+
+-- | Lifted 'Data.ByteString.Lazy.hPutNonBlocking'
+hPutNonBlocking :: MonadIO m => Handle -> LByteString -> m LByteString
+hPutNonBlocking h = liftIO . Data.ByteString.Lazy.hPutNonBlocking h
+
+-- | Lifted 'Data.ByteString.Lazy.hPutStr'
+hPutStr :: MonadIO m => Handle -> LByteString -> m ()
+hPutStr h = liftIO . Data.ByteString.Lazy.hPutStr h
