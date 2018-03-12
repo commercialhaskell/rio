@@ -58,8 +58,8 @@ traceEvent = Trace.traceEvent . Text.unpack
 
 {-# WARNING traceEventIO "Trace statement left in code" #-}
 -- Does this even need a warning?
-traceEventIO :: Text -> IO ()
-traceEventIO = Trace.traceEventIO . Text.unpack
+traceEventIO :: MonadIO m => Text -> m ()
+traceEventIO = liftIO . Trace.traceEventIO . Text.unpack
 
 {-# WARNING traceMarker "Trace statement left in code" #-}
 traceMarker :: Text -> a -> a
@@ -67,5 +67,5 @@ traceMarker = Trace.traceMarker . Text.unpack
 
 {-# WARNING traceMarkerIO "Trace statement left in code" #-}
 -- Does this even need a warning?
-traceMarkerIO :: Text -> IO ()
-traceMarkerIO = Trace.traceMarkerIO . Text.unpack
+traceMarkerIO :: MonadIO m => Text -> m ()
+traceMarkerIO = liftIO . Trace.traceMarkerIO . Text.unpack
