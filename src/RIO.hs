@@ -8,6 +8,7 @@ module RIO
   , module RIO.Prelude.Reexports
   , module RIO.Prelude.Renames
   , module RIO.Prelude.Text
+  , module RIO.Prelude.Trace
   , module RIO.Prelude.URef
   ) where
 
@@ -20,4 +21,5 @@ import RIO.Prelude.RIO
 import RIO.Prelude.Reexports
 import RIO.Prelude.Renames
 import RIO.Prelude.Text
+import RIO.Prelude.Trace
 import RIO.Prelude.URef
