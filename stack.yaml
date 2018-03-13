@@ -1,1 +1,4 @@
 resolver: lts-10.5
+packages:
+- rio
+- rio-orphans
