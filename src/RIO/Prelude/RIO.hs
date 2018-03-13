@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 module RIO.Prelude.RIO
   ( RIO (..)
   , runRIO
@@ -30,3 +31,7 @@ instance MonadUnliftIO (RIO env) where
     askUnliftIO = RIO $ ReaderT $ \r ->
                   withUnliftIO $ \u ->
                   return (UnliftIO (unliftIO u . flip runReaderT r . unRIO))
+
+instance PrimMonad (RIO env) where
+    type PrimState (RIO env) = PrimState IO
+    primitive = RIO . ReaderT . const . primitive
