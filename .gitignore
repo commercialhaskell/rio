@@ -1,4 +1,4 @@
-/rio.cabal
+*.cabal
 *~
-/tarballs/
-/.stack-work/
+tarballs/
+.stack-work/
