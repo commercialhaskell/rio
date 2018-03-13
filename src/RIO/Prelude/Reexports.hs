@@ -148,6 +148,7 @@ module RIO.Prelude.Reexports
   , Data.Monoid.Endo (..)
   , Data.Monoid.First (..)
   , Data.Monoid.Last (..)
+  , Data.Monoid.Alt (..)
   , Data.Monoid.Monoid (..)
   , Data.Monoid.Product (..)
   , Data.Monoid.Sum (..)
