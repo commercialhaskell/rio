@@ -2,6 +2,12 @@
 module RIO.Prelude.Reexports
   ( module UnliftIO
   -- List imports from UnliftIO?
+  , UnliftIO.Concurrent.ThreadId
+  , UnliftIO.Concurrent.myThreadId
+  , UnliftIO.Concurrent.isCurrentThreadBound
+  , UnliftIO.Concurrent.yield
+  , UnliftIO.Concurrent.threadWaitRead
+  , UnliftIO.Concurrent.threadWaitWrite
   , UnliftIO.Concurrent.threadDelay
   , Control.Applicative.Alternative
   , Control.Applicative.Applicative (..)
