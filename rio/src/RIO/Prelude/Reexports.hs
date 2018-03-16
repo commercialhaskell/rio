@@ -2,7 +2,13 @@
 module RIO.Prelude.Reexports
   ( module UnliftIO
   -- List imports from UnliftIO?
+  , UnliftIO.Concurrent.ThreadId
+  , UnliftIO.Concurrent.myThreadId
+  , UnliftIO.Concurrent.isCurrentThreadBound
+  , UnliftIO.Concurrent.threadWaitRead
+  , UnliftIO.Concurrent.threadWaitWrite
   , UnliftIO.Concurrent.threadDelay
+  , yieldThread
   , Control.Applicative.Alternative
   , Control.Applicative.Applicative (..)
   , Control.Applicative.liftA
@@ -299,3 +305,7 @@ import qualified GHC.Stack
 import qualified Prelude
 import qualified System.Exit
 import qualified Text.Read
+
+yieldThread :: MonadIO m => m ()
+yieldThread = UnliftIO.Concurrent.yield
+{-# INLINE yieldThread #-}
