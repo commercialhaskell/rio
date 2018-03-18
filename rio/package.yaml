@@ -26,7 +26,7 @@ dependencies:
 - text
 - time
 - typed-process >= 0.2.1.0
-- unliftio >= 0.2.4.0
+- unliftio >= 0.2.6.0
 - unordered-containers
 - vector
 

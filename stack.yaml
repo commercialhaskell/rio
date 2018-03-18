@@ -2,3 +2,5 @@ resolver: lts-10.5
 packages:
 - rio
 - rio-orphans
+extra-deps:
+- unliftio-0.2.6.0
