@@ -3,4 +3,5 @@ packages:
 - rio
 - rio-orphans
 extra-deps:
-- unliftio-0.2.6.0
+- unliftio-0.2.6.0@rev:0
+- typed-process-0.2.1.0@rev:0
