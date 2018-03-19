@@ -17,7 +17,8 @@ spec = do
       writeFileBinary fp bs1
       bs2 <- readFileBinary fp
       bs2 `shouldBe` bs1
-  prop "text file read/write" $ \(T.pack -> text1) ->
+  -- filter our \r for Windows
+  prop "text file read/write" $ \(T.pack . filter (/= '\r') -> text1) ->
     withSystemTempFile "binary-read-write" $ \fp h -> do
       hClose h
       writeFileUtf8 fp text1
