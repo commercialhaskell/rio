@@ -15,9 +15,9 @@ trace = Trace.trace . Text.unpack
 traceId :: Text -> Text
 traceId str = Trace.trace (Text.unpack str) str
 
-{-# WARNING traceDisplayBuilder "Trace statement left in code" #-}
-traceDisplayBuilder :: DisplayBuilder -> a -> a
-traceDisplayBuilder = trace . displayBuilderToText
+{-# WARNING traceUtf8Builder "Trace statement left in code" #-}
+traceUtf8Builder :: Utf8Builder -> a -> a
+traceUtf8Builder = trace . utf8BuilderToText
 
 {-# WARNING traceShow "Trace statement left in code" #-}
 traceShow :: Show a => a -> b -> b
@@ -29,7 +29,7 @@ traceShowId = Trace.traceShowId
 
 {-# WARNING traceDisplay "Trace statement left in code" #-}
 traceDisplay :: Display a => a -> b -> b
-traceDisplay = traceDisplayBuilder . display
+traceDisplay = traceUtf8Builder . display
 
 {-# WARNING traceDisplayId "Trace statement left in code" #-}
 traceDisplayId :: Display a => a -> a
