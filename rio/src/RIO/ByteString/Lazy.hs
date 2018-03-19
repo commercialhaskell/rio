@@ -188,7 +188,7 @@ appendFile fp = liftIO . Data.ByteString.Lazy.appendFile fp
 
 -- | Lifted 'Data.ByteString.Lazy.hGet'
 hGet :: MonadIO m => Handle -> Int -> m LByteString
-hGet handle count = liftIO $ Data.ByteString.Lazy.hGet handle count
+hGet handle' count' = liftIO $ Data.ByteString.Lazy.hGet handle' count'
 
 -- | Lifted 'Data.ByteString.Lazy.hGetContents'
 hGetContents :: MonadIO m => Handle -> m LByteString
