@@ -389,7 +389,7 @@ withProcessTimeLog mdir name args proc' = do
        ": " <> display cmdText)
   return x
 
-timeSpecMilliSecondText :: Double -> DisplayBuilder
+timeSpecMilliSecondText :: Double -> Utf8Builder
 timeSpecMilliSecondText d = display (round (d * 1000) :: Int) <> "ms"
 
 -- | Provide a 'ProcessConfig' based on the 'ProcessContext' in
