@@ -89,7 +89,7 @@ instance HasLogFunc LogFunc where
 --
 -- @since 0.0.0.0
 newtype LogFunc = LogFunc
-  { _unLogFunc :: CallStack -> LogSource -> LogLevel -> DisplayBuilder -> IO ()
+  { _unLogFunc :: CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
   }
 
 -- | Perform both sets of actions per log entry.
@@ -108,7 +108,7 @@ instance Monoid LogFunc where
 -- | Create a 'LogFunc' from the given function.
 --
 -- @since 0.0.0.0
-mkLogFunc :: (CallStack -> LogSource -> LogLevel -> DisplayBuilder -> IO ()) -> LogFunc
+mkLogFunc :: (CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()) -> LogFunc
 mkLogFunc = LogFunc
 
 -- | Generic, basic function for creating other logging functions.
@@ -118,7 +118,7 @@ logGeneric
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
   => LogSource
   -> LogLevel
-  -> DisplayBuilder
+  -> Utf8Builder
   -> m ()
 logGeneric src level str = do
   LogFunc logFunc <- view logFuncL
@@ -129,7 +129,7 @@ logGeneric src level str = do
 -- @since 0.0.0.0
 logDebug
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
-  => DisplayBuilder
+  => Utf8Builder
   -> m ()
 logDebug = logGeneric "" LevelDebug
 
@@ -138,7 +138,7 @@ logDebug = logGeneric "" LevelDebug
 -- @since 0.0.0.0
 logInfo
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
-  => DisplayBuilder
+  => Utf8Builder
   -> m ()
 logInfo = logGeneric "" LevelInfo
 
@@ -147,7 +147,7 @@ logInfo = logGeneric "" LevelInfo
 -- @since 0.0.0.0
 logWarn
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
-  => DisplayBuilder
+  => Utf8Builder
   -> m ()
 logWarn = logGeneric "" LevelWarn
 
@@ -156,7 +156,7 @@ logWarn = logGeneric "" LevelWarn
 -- @since 0.0.0.0
 logError
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
-  => DisplayBuilder
+  => Utf8Builder
   -> m ()
 logError = logGeneric "" LevelError
 
@@ -166,7 +166,7 @@ logError = logGeneric "" LevelError
 logOther
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
   => Text -- ^ level
-  -> DisplayBuilder
+  -> Utf8Builder
   -> m ()
 logOther = logGeneric "" . LevelOther
 
@@ -176,7 +176,7 @@ logOther = logGeneric "" . LevelOther
 logDebugS
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
   => LogSource
-  -> DisplayBuilder
+  -> Utf8Builder
   -> m ()
 logDebugS src = logGeneric src LevelDebug
 
@@ -186,7 +186,7 @@ logDebugS src = logGeneric src LevelDebug
 logInfoS
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
   => LogSource
-  -> DisplayBuilder
+  -> Utf8Builder
   -> m ()
 logInfoS src = logGeneric src LevelInfo
 
@@ -196,7 +196,7 @@ logInfoS src = logGeneric src LevelInfo
 logWarnS
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
   => LogSource
-  -> DisplayBuilder
+  -> Utf8Builder
   -> m ()
 logWarnS src = logGeneric src LevelWarn
 
@@ -206,7 +206,7 @@ logWarnS src = logGeneric src LevelWarn
 logErrorS
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
   => LogSource
-  -> DisplayBuilder
+  -> Utf8Builder
   -> m ()
 logErrorS src = logGeneric src LevelError
 
@@ -218,7 +218,7 @@ logOtherS
   :: (MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack)
   => Text -- ^ level
   -> LogSource
-  -> DisplayBuilder
+  -> Utf8Builder
   -> m ()
 logOtherS src = logGeneric src . LevelOther
 
@@ -234,7 +234,7 @@ logOtherS src = logGeneric src . LevelOther
 -- provided by this module does.
 --
 -- @since 0.0.0.0
-logSticky :: (MonadIO m, HasCallStack, MonadReader env m, HasLogFunc env) => DisplayBuilder -> m ()
+logSticky :: (MonadIO m, HasCallStack, MonadReader env m, HasLogFunc env) => Utf8Builder -> m ()
 logSticky = logOther "sticky"
 
 -- | This will print out the given message with a newline and disable
@@ -242,7 +242,7 @@ logSticky = logOther "sticky"
 -- happens.
 --
 -- @since 0.0.0.0
-logStickyDone :: (MonadIO m, HasCallStack, MonadReader env m, HasLogFunc env) => DisplayBuilder -> m ()
+logStickyDone :: (MonadIO m, HasCallStack, MonadReader env m, HasLogFunc env) => Utf8Builder -> m ()
 logStickyDone = logOther "sticky-done"
 
 -- TODO It might be better at some point to have a 'runSticky' function
@@ -420,7 +420,7 @@ setLogUseTime t options = options { logUseTime = t }
 setLogUseColor :: Bool -> LogOptions -> LogOptions
 setLogUseColor c options = options { logUseColor = c }
 
-simpleLogFunc :: LogOptions -> CallStack -> LogSource -> LogLevel -> DisplayBuilder -> IO ()
+simpleLogFunc :: LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
 simpleLogFunc lo cs _src level msg =
     when (level >= logMinLevel lo) $ do
       timestamp <- getTimestamp
@@ -441,11 +441,11 @@ simpleLogFunc lo cs _src level msg =
    setRed = "\ESC[31m"
    setMagenta = "\ESC[35m"
 
-   ansi :: DisplayBuilder -> DisplayBuilder
+   ansi :: Utf8Builder -> Utf8Builder
    ansi xs | logUseColor lo = xs
            | otherwise = mempty
 
-   getTimestamp :: IO DisplayBuilder
+   getTimestamp :: IO Utf8Builder
    getTimestamp
      | logVerboseFormat lo && logUseTime lo =
        do now <- getZonedTime
@@ -455,7 +455,7 @@ simpleLogFunc lo cs _src level msg =
        formatTime' =
            take timestampLength . formatTime defaultTimeLocale "%F %T.%q"
 
-   getLevel :: DisplayBuilder
+   getLevel :: Utf8Builder
    getLevel
      | logVerboseFormat lo =
          case level of
@@ -470,18 +470,18 @@ simpleLogFunc lo cs _src level msg =
              "] "
      | otherwise = mempty
 
-   getLoc :: DisplayBuilder
+   getLoc :: Utf8Builder
    getLoc
      | logVerboseFormat lo = ansi setBlack <> "\n@(" <> displayCallStack cs <> ")"
      | otherwise = mempty
 
--- | Convert a 'CallStack' value into a 'DisplayBuilder' indicating
+-- | Convert a 'CallStack' value into a 'Utf8Builder' indicating
 -- the first source location.
 --
 -- TODO Consider showing the entire call stack instead.
 --
 -- @since 0.0.0.0
-displayCallStack :: CallStack -> DisplayBuilder
+displayCallStack :: CallStack -> Utf8Builder
 displayCallStack cs =
      case reverse $ getCallStack cs of
        [] -> "<no call stack found>"
@@ -501,8 +501,8 @@ timestampLength =
 
 stickyImpl
     :: MVar ByteString -> LogOptions
-    -> (CallStack -> LogSource -> LogLevel -> DisplayBuilder -> IO ())
-    -> CallStack -> LogSource -> LogLevel -> DisplayBuilder -> IO ()
+    -> (CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ())
+    -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
 stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> do
   let backSpaceChar = '\8'
       repeating = mconcat . replicate (B.length sticky) . char7
