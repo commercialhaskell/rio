@@ -44,6 +44,9 @@ class Display a where
   display :: a -> Utf8Builder
 
 -- | @since 0.1.0.0
+instance Display Utf8Builder where
+  display = id
+-- | @since 0.1.0.0
 instance Display Text where
   display = Utf8Builder . encodeUtf8Builder
 -- | @since 0.1.0.0
