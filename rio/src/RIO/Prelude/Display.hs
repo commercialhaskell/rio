@@ -23,6 +23,7 @@ import           Data.Text.Encoding       (decodeUtf8With, encodeUtf8Builder)
 import           Data.Text.Encoding.Error (lenientDecode)
 import           Data.Int
 import           Data.Word
+import           System.Process.Typed     (ProcessConfig, setEnvInherit)
 
 -- | A builder of binary data, with the invariant that the underlying
 -- data is supposed to be UTF-8 encoded.
@@ -96,6 +97,17 @@ instance Display Word32 where
 -- | @since 0.1.0.0
 instance Display Word64 where
   display = Utf8Builder . BB.word64Dec
+
+-- | @since 0.1.0.0
+instance Display SomeException where
+  display = fromString . displayException
+-- | @since 0.1.0.0
+instance Display IOException where
+  display = fromString . displayException
+
+-- | @since 0.1.0.0
+instance Display (ProcessConfig a b c) where
+  display = displayShow . setEnvInherit
 
 -- | Use the 'Show' instance for a value to convert it to a
 -- 'Utf8Builder'.
