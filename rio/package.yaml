@@ -45,6 +45,18 @@ when:
 
 library:
   source-dirs: src/
+  other-modules:
+    - RIO.Prelude.Display
+    - RIO.Prelude.Extra
+    - RIO.Prelude.IO
+    - RIO.Prelude.Lens
+    - RIO.Prelude.Logger
+    - RIO.Prelude.Reexports
+    - RIO.Prelude.Renames
+    - RIO.Prelude.RIO
+    - RIO.Prelude.Text
+    - RIO.Prelude.Trace
+    - RIO.Prelude.URef
 
 tests:
   spec:
