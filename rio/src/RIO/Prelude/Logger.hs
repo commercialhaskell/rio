@@ -258,8 +258,8 @@ canUseUtf8 h = liftIO $ wantWritableHandle "canUseUtf8" h $ \h_ -> do
 -- return both a 'LogOptions' value and an 'IORef' containing the
 -- resulting 'Builder' value.
 --
--- This will default to non-verbose settings and assume there is a
--- terminal attached. These assumptions can be overridden using the
+-- This will default to non-verbose settings, use utf8, and assume there
+-- is a terminal attached. These assumptions can be overridden using the
 -- appropriate @set@ functions.
 --
 -- @since 0.0.0.0
@@ -272,6 +272,7 @@ logOptionsMemory = do
         , logTerminal = True
         , logUseTime = False
         , logUseColor = False
+        , logUseUtf8 = True
         , logSend = \new -> atomicModifyIORef' ref $ \old -> (old <> new, ())
         }
   return (ref, options)
@@ -287,40 +288,17 @@ logOptionsHandle
   -> Bool -- ^ verbose?
   -> m LogOptions
 logOptionsHandle handle' verbose = liftIO $ do
-  terminal <- hIsTerminalDevice handle'
   useUtf8 <- canUseUtf8 handle'
-  unicode <- if useUtf8 then return True else getCanUseUnicode
+  terminal <- hIsTerminalDevice handle'
   return LogOptions
     { logMinLevel = if verbose then LevelDebug else LevelInfo
     , logVerboseFormat = verbose
     , logTerminal = terminal
     , logUseTime = verbose
     , logUseColor = verbose && terminal
-    , logSend = \builder ->
-        if useUtf8 && unicode
-          then hPutBuilder handle' (builder <> flush)
-          else do
-            let lbs = toLazyByteString builder
-                bs = toStrictBytes lbs
-            case decodeUtf8' bs of
-              Left e -> error $ "mkLogOptions: invalid UTF8 sequence: " ++ show (e, bs)
-              Right text -> do
-                let text'
-                      | unicode = text
-                      | otherwise = T.map replaceUnicode text
-                TIO.hPutStr handle' text'
-                hFlush handle'
+    , logUseUtf8 = useUtf8
+    , logSend = \builder -> hPutBuilder handle' (builder <> flush)
     }
-
--- | Taken from GHC: determine if we should use Unicode syntax
-getCanUseUnicode :: IO Bool
-getCanUseUnicode = do
-    let enc = localeEncoding
-        str = "\x2018\x2019"
-        test = withCString enc str $ \cstr -> do
-            str' <- peekCString enc cstr
-            return (str == str')
-    test `catchIO` \_ -> return False
 
 -- | Given a 'LogOptions' value, run the given function with the
 -- specified 'LogFunc'. A common way to use this function is:
@@ -353,12 +331,6 @@ withLogFunc options inner = withRunInIO $ \run -> do
       run $ inner $ LogFunc $ \cs src level str ->
       simpleLogFunc options cs src (noSticky level) str
 
--- | Replace Unicode characters with non-Unicode equivalents
-replaceUnicode :: Char -> Char
-replaceUnicode '\x2018' = '`'
-replaceUnicode '\x2019' = '\''
-replaceUnicode c = c
-
 noSticky :: LogLevel -> LogLevel
 noSticky (LevelOther "sticky-done") = LevelInfo
 noSticky (LevelOther "sticky") = LevelInfo
@@ -374,6 +346,7 @@ data LogOptions = LogOptions
   , logTerminal :: !Bool
   , logUseTime :: !Bool
   , logUseColor :: !Bool
+  , logUseUtf8 :: !Bool
   , logSend :: !(Builder -> IO ())
   }
 
