@@ -1,13 +1,20 @@
 {-# LANGUAGE CPP #-}
 module RIO.Prelude.Reexports
-  ( module UnliftIO
-  -- List imports from UnliftIO?
+  ( module Control.Monad.IO.Unlift
+  , module UnliftIO.Async
   , UnliftIO.Concurrent.ThreadId
   , UnliftIO.Concurrent.myThreadId
   , UnliftIO.Concurrent.isCurrentThreadBound
   , UnliftIO.Concurrent.threadWaitRead
   , UnliftIO.Concurrent.threadWaitWrite
   , UnliftIO.Concurrent.threadDelay
+  , module UnliftIO.Exception
+  , module UnliftIO.IO
+  , module UnliftIO.IORef
+  , module UnliftIO.MVar
+  , module UnliftIO.STM
+  , module UnliftIO.Temporary
+  , module UnliftIO.Timeout
   , yieldThread
   , Control.Applicative.Alternative
   , Control.Applicative.Applicative (..)
@@ -237,6 +244,7 @@ module RIO.Prelude.Reexports
 import           Control.Applicative      (Applicative)
 import           Control.Monad            (Monad (..), liftM, (<=<))
 import           Control.Monad.Catch      (MonadThrow)
+import           Control.Monad.IO.Unlift
 import           Control.Monad.Primitive  (PrimMonad (..))
 import           Control.Monad.Reader     (MonadReader, ReaderT (..), ask, asks)
 import           Data.Bool                (otherwise)
@@ -257,14 +265,22 @@ import           Data.Text.Encoding       (decodeUtf8', decodeUtf8With,
                                            encodeUtf8, encodeUtf8Builder)
 import           Data.Text.Encoding.Error (UnicodeException, lenientDecode)
 import           Data.Traversable         (Traversable (..))
-import           Prelude                  (FilePath, IO, Show (..))
-import           UnliftIO
-import qualified UnliftIO.Concurrent
-
 import           Data.Vector.Unboxed.Mutable (Unbox)
+import           Prelude                  (FilePath, IO, Show (..))
+import qualified UnliftIO.Concurrent
+import           UnliftIO.Async
+import           UnliftIO.Exception
+import           UnliftIO.IO
+import           UnliftIO.IORef
+import           UnliftIO.MVar
+import           UnliftIO.Temporary
+import           UnliftIO.Timeout
 
-
-
+-- Omit TChan / TQueue (see issue#76)
+import           UnliftIO.STM             ( STM, atomically, retrySTM, checkSTM
+                                          , TVar, newTVarIO, readTVarIO, newTVar, readTVar, writeTVar, modifyTVar, modifyTVar', swapTVar, registerDelay, mkWeakTVar
+                                          , TMVar, newTMVar, newEmptyTMVar, newTMVarIO, newEmptyTMVarIO, takeTMVar, putTMVar, readTMVar, tryReadTMVar, swapTMVar, tryTakeTMVar, isEmptyTMVar, mkWeakTMVar
+                                          , TBQueue, newTBQueue, newTBQueueIO, readTBQueue, tryReadTBQueue, peekTBQueue, tryPeekTBQueue, writeTBQueue, unGetTBQueue, isEmptyTBQueue, isEmptyTBQueue, isFullTBQueue)
 
 -- Reexports
 import qualified Control.Applicative
