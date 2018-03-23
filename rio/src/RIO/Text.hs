@@ -1,4 +1,5 @@
 {-# LANGUAGE MagicHash #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- | Strict @Text@. Import as:
 --
@@ -162,3 +163,12 @@ dropSuffix :: Text -- ^ suffix
            -> Text
            -> Text
 dropSuffix suffix t = fromMaybe t (stripSuffix suffix t)
+
+-- | 'linesCR' breaks a 'Text' up into a list of `Text`s at newline
+-- 'Char's. It is very similar to 'Data.Text.lines', but it also removes
+-- any trailing @'\r'@ characters. The resulting 'Text' values do not
+-- contain newlines or trailing @'\r'@ characters.
+--
+-- @since 0.1.0.0
+linesCR :: Text -> [Text]
+linesCR = map (dropSuffix "\r") . Data.Text.lines
