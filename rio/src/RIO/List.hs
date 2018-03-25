@@ -135,6 +135,7 @@ module RIO.List
 
   -- ** Functions on strings
   , Data.List.lines
+  , linesCR
   , Data.List.words
   , Data.List.unlines
   , Data.List.unwords
@@ -225,3 +226,12 @@ dropSuffix :: Eq a
            -> [a]
            -> [a]
 dropSuffix suffix t = fromMaybe t (stripSuffix suffix t)
+
+-- | 'linesCR' breaks a 'String' up into a list of `String`s at newline
+-- 'Char's. It is very similar to 'lines', but it also removes any
+-- trailing @'\r'@ 'Char's. The resulting 'String' values do not contain
+-- newlines or trailing @'\r'@ characters.
+--
+-- @since 0.1.0.0
+linesCR :: String -> [String]
+linesCR = map (dropSuffix "\r") . lines
