@@ -90,6 +90,8 @@ module RIO.Prelude.Reexports
   , Data.Foldable.for_
   , Data.Foldable.length
   , Data.Foldable.mapM_
+  , Data.Foldable.maximum
+  , Data.Foldable.minimum
   , Data.Foldable.msum
   , Data.Foldable.notElem
   , Data.Foldable.null
