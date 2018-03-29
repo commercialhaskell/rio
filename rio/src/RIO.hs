@@ -7,6 +7,7 @@ module RIO
   , module RIO.Prelude.RIO
   , module RIO.Prelude.Reexports
   , module RIO.Prelude.Renames
+  , module RIO.Prelude.Safe
   , module RIO.Prelude.Text
   , module RIO.Prelude.Trace
   , module RIO.Prelude.URef
@@ -20,6 +21,7 @@ import RIO.Prelude.Logger
 import RIO.Prelude.RIO
 import RIO.Prelude.Reexports
 import RIO.Prelude.Renames
+import RIO.Prelude.Safe
 import RIO.Prelude.Text
 import RIO.Prelude.Trace
 import RIO.Prelude.URef
