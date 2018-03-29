@@ -23,6 +23,7 @@ dependencies:
 - microlens
 - mtl
 - primitive
+- safe
 - text
 - time
 - typed-process >= 0.2.2.0
