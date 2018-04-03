@@ -149,15 +149,7 @@ module RIO.Prelude.Reexports
   , Data.Maybe.mapMaybe
   , Data.Maybe.maybe
   , Data.Maybe.maybeToList
-  , Data.Monoid.All (..)
-  , Data.Monoid.Any (..)
-  , Data.Monoid.Endo (..)
-  , Data.Monoid.First (..)
-  , Data.Monoid.Last (..)
-  , Data.Monoid.Alt (..)
   , Data.Monoid.Monoid (..)
-  , Data.Monoid.Product (..)
-  , Data.Monoid.Sum (..)
   , (Data.Monoid.<>)
   , Data.Ord.Ord(..)
   , Data.Ord.Ordering(..)
