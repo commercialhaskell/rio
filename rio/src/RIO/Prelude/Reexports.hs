@@ -239,7 +239,7 @@ import           Data.Function            (flip, ($), (.))
 import           Data.Functor             (Functor (..))
 import           Data.Int                 (Int)
 import           Data.Maybe               (Maybe, catMaybes, fromMaybe)
-import           Data.Monoid              (First (..), Monoid (..))
+import           Data.Monoid              (Monoid (..))
 import           Data.Ord                 (Ord)
 import           Data.Semigroup           (Semigroup (..))
 import           Data.String              (IsString (..))
@@ -282,7 +282,6 @@ import qualified Data.IntSet
 import qualified Data.List
 import qualified Data.Map.Strict
 import qualified Data.Maybe
-import qualified Data.Monoid
 import qualified Data.Ord
 import qualified Data.Set
 import qualified Data.Text.Encoding.Error

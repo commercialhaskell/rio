@@ -102,6 +102,7 @@ module RIO.Text
 
     -- ** Breaking into lines and words
     , Data.Text.lines
+    , linesCR
     , Data.Text.words
     , Data.Text.unlines
     , Data.Text.unwords
