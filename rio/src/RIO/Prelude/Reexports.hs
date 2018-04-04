@@ -150,11 +150,10 @@ module RIO.Prelude.Reexports
   , Data.Maybe.maybe
   , Data.Maybe.maybeToList
   , Data.Monoid.Monoid (..)
-  , (Data.Monoid.<>)
   , Data.Ord.Ord(..)
   , Data.Ord.Ordering(..)
   , Data.Ord.comparing
-  , Data.Semigroup.Semigroup
+  , Data.Semigroup.Semigroup (..)
   , Data.Set.Set
   , Data.String.IsString(..)
   , Data.Text.Text
@@ -242,7 +241,7 @@ import           Data.Int                 (Int)
 import           Data.Maybe               (Maybe, catMaybes, fromMaybe)
 import           Data.Monoid              (First (..), Monoid (..))
 import           Data.Ord                 (Ord)
-import           Data.Semigroup           (Semigroup)
+import           Data.Semigroup           (Semigroup (..))
 import           Data.String              (IsString (..))
 import           Data.Text                (Text)
 import           Data.Text.Encoding       (decodeUtf8', decodeUtf8With,
