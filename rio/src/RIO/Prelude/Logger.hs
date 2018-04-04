@@ -40,6 +40,8 @@ module RIO.Prelude.Logger
   , CallStack
     -- * Convenience functions
   , displayCallStack
+    -- * Accessors
+  , logFuncUseColorL
   ) where
 
 import RIO.Prelude.Reexports hiding ((<>))
@@ -88,28 +90,32 @@ instance HasLogFunc LogFunc where
 -- including printing to standard output or no action at all.
 --
 -- @since 0.0.0.0
-newtype LogFunc = LogFunc
-  { _unLogFunc :: CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
+data LogFunc = LogFunc
+  { unLogFunc :: !(CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ())
+  , lfOptions :: !(Maybe LogOptions)
   }
 
 -- | Perform both sets of actions per log entry.
 --
 -- @since 0.0.0.0
 instance Semigroup LogFunc where
-  LogFunc f <> LogFunc g = LogFunc $ \a b c d -> f a b c d *> g a b c d
+  LogFunc f o1 <> LogFunc g o2 = LogFunc
+    { unLogFunc = \a b c d -> f a b c d *> g a b c d
+    , lfOptions = o1 `mplus` o2
+    }
 
 -- | 'mempty' peforms no logging.
 --
 -- @since 0.0.0.0
 instance Monoid LogFunc where
-  mempty = LogFunc $ \_ _ _ _ -> return ()
+  mempty = mkLogFunc $ \_ _ _ _ -> return ()
   mappend = (<>)
 
 -- | Create a 'LogFunc' from the given function.
 --
 -- @since 0.0.0.0
 mkLogFunc :: (CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()) -> LogFunc
-mkLogFunc = LogFunc
+mkLogFunc f = LogFunc f Nothing
 
 -- | Generic, basic function for creating other logging functions.
 --
@@ -121,7 +127,7 @@ logGeneric
   -> Utf8Builder
   -> m ()
 logGeneric src level str = do
-  LogFunc logFunc <- view logFuncL
+  LogFunc logFunc _ <- view logFuncL
   liftIO $ logFunc callStack src level str
 
 -- | Log a debug level message with no source.
@@ -348,10 +354,17 @@ withLogFunc options inner = withRunInIO $ \run -> do
             (\var -> do
                 state <- takeMVar var
                 unless (B.null state) (logSend options "\n"))
-            (\var -> run $ inner $ LogFunc $ stickyImpl var options (simpleLogFunc options))
+            (\var -> run $ inner $ LogFunc
+                { unLogFunc = stickyImpl var options (simpleLogFunc options)
+                , lfOptions = Just options
+                }
+            )
     else
-      run $ inner $ LogFunc $ \cs src level str ->
-      simpleLogFunc options cs src (noSticky level) str
+      run $ inner $ LogFunc
+        { unLogFunc = \cs src level str ->
+             simpleLogFunc options cs src (noSticky level) str
+        , lfOptions = Just options
+        }
 
 -- | Replace Unicode characters with non-Unicode equivalents
 replaceUnicode :: Char -> Char
@@ -528,3 +541,12 @@ stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> d
           unless (B.null sticky) $ logSend lo (byteString sticky <> flush)
           return sticky
       | otherwise -> return sticky
+
+-- | Is the log func configured to use color output?
+--
+-- Intended for use by code which wants to optionally add additional color to
+-- its log messages.
+--
+-- @since 0.1.0.0
+logFuncUseColorL :: HasLogFunc env => SimpleGetter env Bool
+logFuncUseColorL = logFuncL.to (maybe False logUseColor . lfOptions)

@@ -379,13 +379,12 @@ withProcessTimeLog mdir name args proc' = do
   x <- proc'
   end <- getMonotonicTime
   let diff = end - start
-  -- useAnsi <- asks getAnsiTerminal FIXME
-  let useAnsi = True
+  useColor <- view logFuncUseColorL
   logDebug
       ("Process finished in " <>
-      (if useAnsi then "\ESC[92m" else "") <> -- green
+      (if useColor then "\ESC[92m" else "") <> -- green
       timeSpecMilliSecondText diff <>
-      (if useAnsi then "\ESC[0m" else "") <> -- reset
+      (if useColor then "\ESC[0m" else "") <> -- reset
        ": " <> display cmdText)
   return x
 
