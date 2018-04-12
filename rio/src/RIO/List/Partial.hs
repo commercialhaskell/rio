@@ -14,6 +14,8 @@ module RIO.List.Partial
   -- ** Special folds
   , Data.List.maximum
   , Data.List.minimum
+  , Data.List.maximumBy
+  , Data.List.minimumBy
 
   -- * Building lists
 

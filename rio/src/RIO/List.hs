@@ -178,8 +178,6 @@ module RIO.List
   -- | The function is assumed to define a total ordering.
   , Data.List.sortBy
   , Data.List.insertBy
-  , Data.List.maximumBy
-  , Data.List.minimumBy
 
   -- ** The \"@generic@\" operations
   -- | The prefix \`@generic@\' indicates an overloaded function that
