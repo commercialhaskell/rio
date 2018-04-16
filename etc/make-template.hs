@@ -15,6 +15,8 @@ import qualified RIO.ByteString.Lazy as BL
 import RIO.FilePath
 import RIO.Process
 import qualified RIO.Text as T
+import qualified RIO.Text.Partial as T (replace)
+import RIO.Time
 import Text.ProjectTemplate
 
 data App = App
@@ -45,6 +47,24 @@ decode bs =
   case decodeUtf8' bs of
     Left e -> throwIO e
     Right x -> return $ T.unpack x
+
+readReplace :: MonadIO m => FilePath -> m ByteString
+readReplace fp = do
+  (year, _, _) <- toGregorian . utctDay <$> getCurrentTime
+  (encodeUtf8 . replaces year) <$> readFileUtf8 fp
+  where
+    replaces year
+      = T.replace "PROJECTNAME" "{{name}}"
+      . T.replace "AUTHOR" "{{author-name}}{{^author-name}}Author name here{{/author-name}}"
+      . T.replace "MAINTAINER" "{{author-email}}{{^author-email}}example@example.com{{/author-email}}"
+      . T.replace "GITHUB" "{{github-username}}{{^github-username}}githubuser{{/github-username}}/{{name}}"
+      . T.replace "DESCRIPTION" "Please see the README on Github at <https://github.com/{{github-username}}{{^github-username}}githubuser{{/github-username}}/{{name}}#readme>"
+      . T.replace "COPYRIGHT"
+          (T.concat
+             [ "{{copyright}}{{^copyright}}{{year}}{{^year}}"
+             , T.pack $ show year
+             , "{{/year}} {{author-name}}{{^author-name}}Author name here{{/author-name}}{{/copyright}}"
+             ])
 
 main :: IO ()
 main = start $ do
