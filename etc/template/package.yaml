@@ -20,7 +20,8 @@ extra-source-files:
 description:         DESCRIPTION
 
 dependencies:
-- base >= 4.7 && < 5
+- base >= 4.10 && < 5
+- rio >= 0.1.1.0 && < 0.2
 
 library:
   source-dirs: src
@@ -35,6 +36,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - PROJECTNAME
+    - optparse-simple
 
 tests:
   PROJECTNAME-test:
@@ -46,3 +48,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - PROJECTNAME
+    - hspec
