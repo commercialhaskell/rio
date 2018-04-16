@@ -1,0 +1,5 @@
+*.cabal
+*~
+*.swp
+tarballs/
+.stack-work/
