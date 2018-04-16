@@ -20,8 +20,8 @@ extra-source-files:
 description:         DESCRIPTION
 
 dependencies:
-- base >= 4.10 && < 5
-- rio >= 0.1.1.0 && < 0.2
+- base >= 4.10 && < 10
+- rio >= 0.1.1.0
 
 library:
   source-dirs: src
