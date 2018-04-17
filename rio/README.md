@@ -152,6 +152,7 @@ GeneralizedNewtypeDeriving
 InstanceSigs
 KindSignatures
 LambdaCase
+MonadFailDesugaring
 MultiParamTypeClasses
 MultiWayIf
 NamedFieldPuns
@@ -178,6 +179,8 @@ Notes on some surprising choices:
 * Despite the fact that `OverloadedStrings` can break existing code,
   we recommend its usage to encourage avoidance of the `String` data
   type. Also, for new code, the risk of breakage is much lower.
+* `MonadFailDesugaring` helps prevent partial pattern matches in your
+  code, see [#85](https://github.com/commercialhaskell/rio/issues/85)
 
 __TODO__ Do we recommend setting in `package.yaml` or in the source
 files themselves? Need to discuss and come to a conclusion on this
