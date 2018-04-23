@@ -497,8 +497,7 @@ simpleLogFunc lo cs _src level msg =
 
    getLoc :: Utf8Builder
    getLoc
-     | logVerboseFormat lo && logUseLoc lo =
-         ansi setBlack <> "\n@(" <> displayCallStack cs <> ")"
+     | logUseLoc lo = ansi setBlack <> "\n@(" <> displayCallStack cs <> ")"
      | otherwise = mempty
 
 -- | Convert a 'CallStack' value into a 'Utf8Builder' indicating
