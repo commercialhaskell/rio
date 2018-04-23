@@ -1,4 +1,7 @@
 # Changelog for rio
+## 0.1.2.0
+
+* Allow setting usage of code location in the log output
 
 ## 0.1.1.0
 

@@ -19,6 +19,7 @@ module RIO.Prelude.Logger
   , setLogTerminal
   , setLogUseTime
   , setLogUseColor
+  , setLogUseLoc
     -- * Advanced logging functions
     -- ** Sticky logging
   , logSticky
@@ -278,6 +279,7 @@ logOptionsMemory = do
         , logTerminal = True
         , logUseTime = False
         , logUseColor = False
+        , logUseLoc = False
         , logSend = \new -> atomicModifyIORef' ref $ \old -> (old <> new, ())
         }
   return (ref, options)
@@ -302,6 +304,7 @@ logOptionsHandle handle' verbose = liftIO $ do
     , logTerminal = terminal
     , logUseTime = verbose
     , logUseColor = verbose && terminal
+    , logUseLoc = verbose
     , logSend = \builder ->
         if useUtf8 && unicode
           then hPutBuilder handle' (builder <> flush)
@@ -387,6 +390,7 @@ data LogOptions = LogOptions
   , logTerminal :: !Bool
   , logUseTime :: !Bool
   , logUseColor :: !Bool
+  , logUseLoc :: !Bool
   , logSend :: !(Builder -> IO ())
   }
 
@@ -432,6 +436,14 @@ setLogUseTime t options = options { logUseTime = t }
 -- @since 0.0.0.0
 setLogUseColor :: Bool -> LogOptions -> LogOptions
 setLogUseColor c options = options { logUseColor = c }
+
+-- | Use code location in the log output.
+--
+-- Default: true if in verbose mode, false otherwise.
+--
+-- @since 0.1.2.0
+setLogUseLoc :: Bool -> LogOptions -> LogOptions
+setLogUseLoc l options = options { logUseLoc = l }
 
 simpleLogFunc :: LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
 simpleLogFunc lo cs _src level msg =
@@ -485,7 +497,7 @@ simpleLogFunc lo cs _src level msg =
 
    getLoc :: Utf8Builder
    getLoc
-     | logVerboseFormat lo = ansi setBlack <> "\n@(" <> displayCallStack cs <> ")"
+     | logUseLoc lo = ansi setBlack <> "\n@(" <> displayCallStack cs <> ")"
      | otherwise = mempty
 
 -- | Convert a 'CallStack' value into a 'Utf8Builder' indicating
