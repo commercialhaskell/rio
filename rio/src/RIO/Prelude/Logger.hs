@@ -351,23 +351,29 @@ getCanUseUnicode = do
 -- @since 0.0.0.0
 withLogFunc :: MonadUnliftIO m => LogOptions -> (LogFunc -> m a) -> m a
 withLogFunc options inner = withRunInIO $ \run -> do
-  if logTerminal options
-    then bracket
-            (newMVar mempty)
-            (\var -> do
-                state <- takeMVar var
-                unless (B.null state) (logSend options "\n"))
-            (\var -> run $ inner $ LogFunc
-                { unLogFunc = stickyImpl var options (simpleLogFunc options)
-                , lfOptions = Just options
-                }
-            )
-    else
-      run $ inner $ LogFunc
-        { unLogFunc = \cs src level str ->
-             simpleLogFunc options cs src (noSticky level) str
-        , lfOptions = Just options
-        }
+  bracket (newLogFunc options)
+          snd
+          (run . inner . fst)
+
+newLogFunc :: MonadIO m => LogOptions -> m (LogFunc, m ())
+newLogFunc options =
+  if logTerminal options then do
+    var <- newMVar mempty
+    return (LogFunc
+             { unLogFunc = stickyImpl var options (simpleLogFunc options)
+             , lfOptions = Just options
+             }
+           , do state <- takeMVar var
+                unless (B.null state) (liftIO $ logSend options "\n")
+           )
+  else
+    return (LogFunc
+            { unLogFunc = \cs src level str ->
+                simpleLogFunc options cs src (noSticky level) str
+            , lfOptions = Just options
+            }
+           , return ()
+           )
 
 -- | Replace Unicode characters with non-Unicode equivalents
 replaceUnicode :: Char -> Char
