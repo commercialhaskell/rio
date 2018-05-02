@@ -30,10 +30,6 @@ ghc-options:
 - -Wincomplete-uni-patterns
 - -Wredundant-constraints
 
-- -threaded
-- -rtsopts
-- -with-rtsopts=-N
-
 library:
   source-dirs: src
 
@@ -45,6 +41,11 @@ executables:
     - PROJECTNAME
     - optparse-simple
 
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
 tests:
   PROJECTNAME-test:
     main:                Spec.hs
@@ -52,3 +53,8 @@ tests:
     dependencies:
     - PROJECTNAME
     - hspec
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N

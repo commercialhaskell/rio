@@ -55,6 +55,7 @@ readReplace fp = do
   where
     replaces year
       = T.replace "PROJECTNAME" "{{name}}"
+      . T.replace "Paths_PROJECTNAME" "Paths_{{name-as-varid}}"
       . T.replace "AUTHOR" "{{author-name}}{{^author-name}}Author name here{{/author-name}}"
       . T.replace "MAINTAINER" "{{author-email}}{{^author-email}}example@example.com{{/author-email}}"
       . T.replace "GITHUB" "{{github-username}}{{^github-username}}githubuser{{/github-username}}/{{name}}"
@@ -77,5 +78,5 @@ main = start $ do
           $ proc "git" ["ls-files", "-z"]
             readProcessStdout_
   files <- mapM decode $ splitNulls $ BL.toStrict rawout
-  let src = forM_ files $ \fp -> yield (fp, readFileBinary $ templatedir </> fp)
+  let src = forM_ files $ \fp -> yield (fp, readReplace $ templatedir </> fp)
   runConduitRes $ src .| createTemplate .| sinkFile "rio.hsfiles"
