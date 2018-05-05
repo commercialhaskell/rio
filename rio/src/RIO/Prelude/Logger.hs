@@ -64,6 +64,9 @@ import qualified Data.ByteString as B
 import           System.IO                  (localeEncoding)
 import           GHC.Foreign                (peekCString, withCString)
 import Data.Semigroup (Semigroup (..))
+import System.Console.ANSI (Color (Black, Blue, Green, Magenta, Red, Yellow),
+         ColorIntensity (Dull, Vivid), ConsoleLayer (Foreground),
+         SGR (Reset, SetColor), setSGRCode)
 
 -- | The log level of a message.
 --
@@ -458,13 +461,13 @@ simpleLogFunc lo cs _src level msg =
         ansi reset <>
         "\n"
   where
-   reset = "\ESC[0m"
-   setBlack = "\ESC[90m"
-   setGreen = "\ESC[32m"
-   setBlue = "\ESC[34m"
-   setYellow = "\ESC[33m"
-   setRed = "\ESC[31m"
-   setMagenta = "\ESC[35m"
+   reset = fromString $ setSGRCode [Reset]
+   setBlack = fromString $ setSGRCode [SetColor Foreground Vivid Black]
+   setGreen = fromString $ setSGRCode [SetColor Foreground Dull Green]
+   setBlue = fromString $ setSGRCode [SetColor Foreground Dull Blue]
+   setYellow = fromString $ setSGRCode [SetColor Foreground Dull Yellow]
+   setRed = fromString $ setSGRCode [SetColor Foreground Dull Red]
+   setMagenta = fromString $ setSGRCode [SetColor Foreground Dull Magenta]
 
    ansi :: Utf8Builder -> Utf8Builder
    ansi xs | logUseColor lo = xs
