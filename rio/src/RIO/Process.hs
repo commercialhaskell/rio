@@ -132,6 +132,8 @@ import           System.Exit (exitWith)
 import qualified System.FilePath as FP
 import qualified System.Process.Typed as P
 import           System.Process.Typed hiding (withProcess, withProcess_, proc)
+import System.Console.ANSI (Color (Green), ColorIntensity (Vivid), ConsoleLayer
+         (Foreground), SGR (Reset, SetColor), setSGRCode)
 
 #ifndef WINDOWS
 import           System.Directory (setCurrentDirectory)
@@ -382,11 +384,14 @@ withProcessTimeLog mdir name args proc' = do
   useColor <- view logFuncUseColorL
   logDebug
       ("Process finished in " <>
-      (if useColor then "\ESC[92m" else "") <> -- green
+      (if useColor then setGreen else "") <>
       timeSpecMilliSecondText diff <>
-      (if useColor then "\ESC[0m" else "") <> -- reset
+      (if useColor then reset else "") <>
        ": " <> display cmdText)
   return x
+ where
+  setGreen = fromString $ setSGRCode [SetColor Foreground Vivid Green]
+  reset = fromString $ setSGRCode [Reset]
 
 timeSpecMilliSecondText :: Double -> Utf8Builder
 timeSpecMilliSecondText d = display (round (d * 1000) :: Int) <> "ms"
