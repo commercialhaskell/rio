@@ -1,5 +1,5 @@
 name:        rio-orphans
-version:     0.1.0.0
+version:     0.1.1.0
 synopsis:    Orphan instances for the RIO type in the rio package
 description: See README and Haddocks at <https://www.stackage.org/package/rio-orphans>
 license:     MIT
