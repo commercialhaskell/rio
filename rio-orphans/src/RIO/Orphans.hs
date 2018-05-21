@@ -39,11 +39,11 @@ instance MonadBaseControl IO (RIO env) where
   liftBaseWith = withRunInIO
   restoreM = return
 
--- | @since 0.1.3.0
+-- | @since 0.1.1.0
 instance Display LogStr where
   display = displayBytesUtf8 . fromLogStr
 
--- | @since 0.1.3.0
+-- | @since 0.1.1.0
 instance HasLogFunc env => MonadLogger (RIO env) where
   monadLoggerLog loc source level msg =
       logGeneric source rioLogLevel (display $ LegacyLogger.toLogStr msg)
