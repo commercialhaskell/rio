@@ -19,6 +19,10 @@ import Control.Monad.Trans.Resource.Internal (MonadResource (..), ReleaseMap, Re
 import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 
+import qualified Control.Monad.Logger as LegacyLogger
+import Control.Monad.Logger (MonadLogger (..), LogStr)
+import System.Log.FastLogger (fromLogStr)
+
 -- | @since 0.1.0.0
 deriving instance MonadCatch (RIO env)
 
@@ -34,6 +38,23 @@ instance MonadBaseControl IO (RIO env) where
 
   liftBaseWith = withRunInIO
   restoreM = return
+
+-- | @since 0.1.3.0
+instance Display LogStr where
+  display = displayBytesUtf8 . fromLogStr
+
+-- | @since 0.1.3.0
+instance HasLogFunc env => MonadLogger (RIO env) where
+  monadLoggerLog loc source level msg =
+      logGeneric source rioLogLevel (display $ LegacyLogger.toLogStr msg)
+    where
+      rioLogLevel =
+        case level of
+          LegacyLogger.LevelDebug -> LevelDebug
+          LegacyLogger.LevelInfo  -> LevelInfo
+          LegacyLogger.LevelWarn  -> LevelWarn
+          LegacyLogger.LevelError  -> LevelError
+          LegacyLogger.LevelOther name -> LevelOther name
 
 -- | A collection of all of the registered resource cleanup actions.
 --
@@ -56,4 +77,3 @@ instance HasResourceMap (IORef ReleaseMap) where
   resourceMapL = id
 instance HasResourceMap env => MonadResource (RIO env) where
   liftResourceT (ResourceT f) = view resourceMapL >>= liftIO . f
-

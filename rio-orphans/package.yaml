@@ -18,6 +18,8 @@ dependencies:
 - resourcet
 - rio
 - monad-control
+- monad-logger
+- fast-logger
 - transformers-base
 
 library:
