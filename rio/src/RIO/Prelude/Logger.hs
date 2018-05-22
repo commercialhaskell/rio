@@ -8,7 +8,10 @@ module RIO.Prelude.Logger
   , logError
   , logOther
     -- * Running with logging
+  , newLogFunc
   , withLogFunc
+  , newReloadableLogFunc
+  , withReloadableLogFunc
   , LogFunc
   , HasLogFunc (..)
   , logOptionsHandle
@@ -82,8 +85,15 @@ type LogSource = Text
 -- @since 0.0.0.0
 class HasLogFunc env where
   logFuncL :: Lens' env LogFunc
+
 instance HasLogFunc LogFunc where
   logFuncL = id
+
+instance HasLogFunc ReloadableLogFunc  where
+  logFuncL =
+    lens rlfLogFunc
+         (\(ReloadableLogFunc _logFunc reload dispose) lf ->
+              ReloadableLogFunc lf reload dispose)
 
 -- | A logging function, wrapped in a newtype for better error messages.
 --
@@ -94,6 +104,13 @@ instance HasLogFunc LogFunc where
 data LogFunc = LogFunc
   { unLogFunc :: !(CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ())
   , lfOptions :: !(Maybe LogOptions)
+  }
+
+-- | Pending documentation
+data ReloadableLogFunc = ReloadableLogFunc
+  { rlfLogFunc        :: !LogFunc
+  , rlfReloadLogFunc  :: !(LogOptions -> IO ())
+  , rlfDispose        :: !(IO ())
   }
 
 -- | Perform both sets of actions per log entry.
@@ -331,6 +348,27 @@ getCanUseUnicode = do
             return (str == str')
     test `catchIO` \_ -> return False
 
+-- | Pending documentation
+newLogFunc :: (MonadIO m, MonadIO m1) => LogOptions -> m (LogFunc, m1 ())
+newLogFunc options =
+  if logTerminal options then do
+    var <- newMVar mempty
+    return (LogFunc
+             { unLogFunc = stickyImpl var options (simpleLogFunc options)
+             , lfOptions = Just options
+             }
+           , do state <- takeMVar var
+                unless (B.null state) (liftIO $ logSend options "\n")
+           )
+  else
+    return (LogFunc
+            { unLogFunc = \cs src level str ->
+                simpleLogFunc options cs src (noSticky level) str
+            , lfOptions = Just options
+            }
+           , return ()
+           )
+
 -- | Given a 'LogOptions' value, run the given function with the
 -- specified 'LogFunc'. A common way to use this function is:
 --
@@ -351,23 +389,74 @@ getCanUseUnicode = do
 -- @since 0.0.0.0
 withLogFunc :: MonadUnliftIO m => LogOptions -> (LogFunc -> m a) -> m a
 withLogFunc options inner = withRunInIO $ \run -> do
-  if logTerminal options
-    then bracket
-            (newMVar mempty)
-            (\var -> do
-                state <- takeMVar var
-                unless (B.null state) (logSend options "\n"))
-            (\var -> run $ inner $ LogFunc
-                { unLogFunc = stickyImpl var options (simpleLogFunc options)
-                , lfOptions = Just options
-                }
-            )
-    else
-      run $ inner $ LogFunc
-        { unLogFunc = \cs src level str ->
-             simpleLogFunc options cs src (noSticky level) str
-        , lfOptions = Just options
+  bracket (newLogFunc options)
+          snd
+          (run . inner . fst)
+
+-- | Pending Documentation
+newReloadableLogFunc
+  :: (MonadIO m, MonadIO m1, MonadIO m2)
+  => LogOptions
+  -> m (LogFunc, LogOptions -> m1 (), m2 ())
+newReloadableLogFunc options0 = do
+    optionsRef  <- newIORef options0
+    var <- newMVar mempty
+    let
+      logFunc =
+        ReloadableLogFunc {
+          rlfLogFunc =
+            LogFunc { unLogFunc =
+                        reloadableImpl
+                            optionsRef
+                            (\options -> stickyImpl var options (simpleLogFunc options))
+                    , lfOptions = Just options0
+                    }
+        , rlfReloadLogFunc = reloadLog optionsRef
+        , rlfDispose = disposeLog optionsRef var
         }
+    return ( rlfLogFunc logFunc
+           , liftIO . rlfReloadLogFunc logFunc
+           , liftIO $ rlfDispose logFunc
+           )
+  where
+    disposeLog optionsRef var =
+      if logTerminal options0 then do
+        state <- takeMVar var
+        unless (B.null state) (liftIO $ logSend options0 "\n")
+      else
+        return ()
+
+    reloadLog optionsRef options =
+      atomicWriteIORef optionsRef options
+
+    -- IMPORTANT: if we change the logger with setLogTerminal, we are open
+    -- to trouble; need to discuss this with RIO authors
+    reloadableImpl
+      :: IORef LogOptions
+      -> (LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ())
+      -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
+    reloadableImpl optionsRef logFunc loc src level msgOrig = do
+      options <- readIORef optionsRef
+      (logFunc options) loc src level msgOrig
+
+-- | Pending Documentation
+reloadLogFunc :: MonadIO m => ReloadableLogFunc -> LogOptions -> m ()
+reloadLogFunc logFunc = liftIO . rlfReloadLogFunc logFunc
+
+-- | Pending Documentation
+disposeReloadableLogFunc :: MonadIO m => ReloadableLogFunc -> m ()
+disposeReloadableLogFunc = liftIO . rlfDispose
+
+withReloadableLogFunc
+  :: (MonadIO m, MonadUnliftIO m, MonadIO m1)
+  => LogOptions
+  -> ((LogFunc, LogOptions -> m1 ()) -> m a)
+  -> m a
+withReloadableLogFunc options inner =
+  bracket (newReloadableLogFunc options)
+          (\(_,_,dispose) -> liftIO dispose)
+          (\(logFunc, reloadFn, _) -> inner (logFunc, reloadFn))
+
 
 -- | Replace Unicode characters with non-Unicode equivalents
 replaceUnicode :: Char -> Char

@@ -2,3 +2,4 @@
 *~
 tarballs/
 .stack-work/
+.dir-locals.el
