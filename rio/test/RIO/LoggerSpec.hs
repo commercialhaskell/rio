@@ -24,3 +24,13 @@ spec = do
       logStickyDone "XYZ"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "ABC\b\b\b   \b\b\bshould appear\nABC\b\b\b   \b\b\bXYZ\n"
+  it "updateLogMinLevel" $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc (options & setLogMinLevel LevelDebug)
+      $ \lf -> runRIO lf $ do
+        logDebug "should appear"
+        -- reset log min level to info
+        updateLogMinLevel lf LevelInfo
+        logDebug "should not appear"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "should appear\n"
