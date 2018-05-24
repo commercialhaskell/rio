@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 module RIO.Prelude.Logger
@@ -20,6 +21,8 @@ module RIO.Prelude.Logger
   , setLogUseTime
   , setLogUseColor
   , setLogUseLoc
+  , updateLogMinLevel
+  , updateLogVerboseFormat
     -- * Advanced logging functions
     -- ** Sticky logging
   , logSticky
@@ -94,16 +97,20 @@ instance HasLogFunc LogFunc where
 data LogFunc = LogFunc
   { unLogFunc :: !(CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ())
   , lfOptions :: !(Maybe LogOptions)
+  , lfUpdateLogOptions :: !((LogOptions -> LogOptions) -> IO ())
   }
 
 -- | Perform both sets of actions per log entry.
 --
 -- @since 0.0.0.0
 instance Semigroup LogFunc where
-  LogFunc f o1 <> LogFunc g o2 = LogFunc
+
+  LogFunc f o1 update1 <> LogFunc g o2 update2 = LogFunc
     { unLogFunc = \a b c d -> f a b c d *> g a b c d
     , lfOptions = o1 `mplus` o2
+    , lfUpdateLogOptions = \optionMod -> update1 optionMod *> update2 optionMod
     }
+
 
 -- | 'mempty' peforms no logging.
 --
@@ -116,7 +123,7 @@ instance Monoid LogFunc where
 --
 -- @since 0.0.0.0
 mkLogFunc :: (CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()) -> LogFunc
-mkLogFunc f = LogFunc f Nothing
+mkLogFunc f = LogFunc f Nothing (\_ -> return ())
 
 -- | Generic, basic function for creating other logging functions.
 --
@@ -128,8 +135,8 @@ logGeneric
   -> Utf8Builder
   -> m ()
 logGeneric src level str = do
-  LogFunc logFunc _ <- view logFuncL
-  liftIO $ logFunc callStack src level str
+  LogFunc {unLogFunc} <- view logFuncL
+  liftIO $ unLogFunc callStack src level str
 
 -- | Log a debug level message with no source.
 --
@@ -331,6 +338,10 @@ getCanUseUnicode = do
             return (str == str')
     test `catchIO` \_ -> return False
 
+updateLogOptions :: IORef LogOptions -> ((LogOptions -> LogOptions) -> IO ())
+updateLogOptions loRef = \logModFn ->
+  atomicModifyIORef' loRef (\lo -> (logModFn lo, ()))
+
 -- | Given a 'LogOptions' value, run the given function with the
 -- specified 'LogFunc'. A common way to use this function is:
 --
@@ -350,23 +361,26 @@ getCanUseUnicode = do
 --
 -- @since 0.0.0.0
 withLogFunc :: MonadUnliftIO m => LogOptions -> (LogFunc -> m a) -> m a
-withLogFunc options inner = withRunInIO $ \run -> do
-  if logTerminal options
+withLogFunc options0 inner = withRunInIO $ \run -> do
+  optionsRef <- newIORef options0
+  if logTerminal options0
     then bracket
             (newMVar mempty)
             (\var -> do
                 state <- takeMVar var
-                unless (B.null state) (logSend options "\n"))
+                unless (B.null state) (logSend options0 "\n"))
             (\var -> run $ inner $ LogFunc
-                { unLogFunc = stickyImpl var options (simpleLogFunc options)
-                , lfOptions = Just options
+                { unLogFunc = stickyImpl var optionsRef (simpleLogFunc optionsRef)
+                , lfOptions = Just options0
+                , lfUpdateLogOptions = updateLogOptions optionsRef
                 }
             )
     else
       run $ inner $ LogFunc
         { unLogFunc = \cs src level str ->
-             simpleLogFunc options cs src (noSticky level) str
-        , lfOptions = Just options
+             simpleLogFunc optionsRef cs src (noSticky level) str
+        , lfOptions = Just options0
+        , lfUpdateLogOptions = updateLogOptions optionsRef
         }
 
 -- | Replace Unicode characters with non-Unicode equivalents
@@ -445,17 +459,18 @@ setLogUseColor c options = options { logUseColor = c }
 setLogUseLoc :: Bool -> LogOptions -> LogOptions
 setLogUseLoc l options = options { logUseLoc = l }
 
-simpleLogFunc :: LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
-simpleLogFunc lo cs _src level msg =
+simpleLogFunc :: IORef LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
+simpleLogFunc loRef cs _src level msg = do
+    lo <- readIORef loRef
     when (level >= logMinLevel lo) $ do
-      timestamp <- getTimestamp
+      timestamp <- getTimestamp lo
       logSend lo $ getUtf8Builder $
         timestamp <>
-        getLevel <>
-        ansi reset <>
+        getLevel lo <>
+        ansi lo reset <>
         msg <>
-        getLoc <>
-        ansi reset <>
+        getLoc lo <>
+        ansi lo reset <>
         "\n"
   where
    reset = "\ESC[0m"
@@ -466,38 +481,38 @@ simpleLogFunc lo cs _src level msg =
    setRed = "\ESC[31m"
    setMagenta = "\ESC[35m"
 
-   ansi :: Utf8Builder -> Utf8Builder
-   ansi xs | logUseColor lo = xs
-           | otherwise = mempty
+   ansi :: LogOptions -> Utf8Builder -> Utf8Builder
+   ansi lo xs | logUseColor lo = xs
+              | otherwise = mempty
 
-   getTimestamp :: IO Utf8Builder
-   getTimestamp
+   getTimestamp :: LogOptions -> IO Utf8Builder
+   getTimestamp lo
      | logVerboseFormat lo && logUseTime lo =
        do now <- getZonedTime
-          return $ ansi setBlack <> fromString (formatTime' now) <> ": "
+          return $ ansi lo setBlack <> fromString (formatTime' now) <> ": "
      | otherwise = return mempty
      where
        formatTime' =
            take timestampLength . formatTime defaultTimeLocale "%F %T.%q"
 
-   getLevel :: Utf8Builder
-   getLevel
+   getLevel :: LogOptions -> Utf8Builder
+   getLevel lo
      | logVerboseFormat lo =
          case level of
-           LevelDebug -> ansi setGreen <> "[debug] "
-           LevelInfo -> ansi setBlue <> "[info] "
-           LevelWarn -> ansi setYellow <> "[warn] "
-           LevelError -> ansi setRed <> "[error] "
+           LevelDebug -> ansi lo setGreen <> "[debug] "
+           LevelInfo -> ansi lo setBlue <> "[info] "
+           LevelWarn -> ansi lo setYellow <> "[warn] "
+           LevelError -> ansi lo setRed <> "[error] "
            LevelOther name ->
-             ansi setMagenta <>
+             ansi lo setMagenta <>
              "[" <>
              display name <>
              "] "
      | otherwise = mempty
 
-   getLoc :: Utf8Builder
-   getLoc
-     | logUseLoc lo = ansi setBlack <> "\n@(" <> displayCallStack cs <> ")"
+   getLoc :: LogOptions -> Utf8Builder
+   getLoc lo
+     | logVerboseFormat lo = ansi lo setBlack <> "\n@(" <> displayCallStack cs <> ")"
      | otherwise = mempty
 
 -- | Convert a 'CallStack' value into a 'Utf8Builder' indicating
@@ -524,11 +539,26 @@ timestampLength :: Int
 timestampLength =
   length (formatTime defaultTimeLocale "%F %T.000000" (UTCTime (ModifiedJulianDay 0) 0))
 
+-- | Allows to update the 'LogLevel' of an existing 'LogFunc' record
+--
+-- @since 0.1.2.0
+updateLogMinLevel :: MonadIO m => LogFunc -> LogLevel -> m ()
+updateLogMinLevel (LogFunc {lfUpdateLogOptions}) level =
+  liftIO $ lfUpdateLogOptions (setLogMinLevel level)
+
+-- | Allows to update the verbose format of an existing 'LogFunc' record
+--
+-- @since 0.1.2.0
+updateLogVerboseFormat :: MonadIO m => LogFunc -> Bool -> m ()
+updateLogVerboseFormat (LogFunc {lfUpdateLogOptions}) isVerbose =
+  liftIO $ lfUpdateLogOptions (setLogVerboseFormat isVerbose)
+
 stickyImpl
-    :: MVar ByteString -> LogOptions
+    :: MVar ByteString -> IORef LogOptions
     -> (CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ())
     -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
-stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> do
+stickyImpl ref loRef logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> do
+  lo <- readIORef loRef
   let backSpaceChar = '\8'
       repeating = mconcat . replicate (B.length sticky) . char7
       clear = logSend lo
