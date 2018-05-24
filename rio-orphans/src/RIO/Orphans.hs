@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -22,6 +23,7 @@ import Control.Monad.Trans.Control (MonadBaseControl (..))
 import qualified Control.Monad.Logger as LegacyLogger
 import Control.Monad.Logger (MonadLogger (..), LogStr)
 import System.Log.FastLogger (fromLogStr)
+import qualified GHC.Stack as GS
 
 -- | @since 0.1.0.0
 deriving instance MonadCatch (RIO env)
@@ -46,7 +48,16 @@ instance Display LogStr where
 -- | @since 0.1.1.0
 instance HasLogFunc env => MonadLogger (RIO env) where
   monadLoggerLog loc source level msg =
-      logGeneric source rioLogLevel (display $ LegacyLogger.toLogStr msg)
+      let ?callStack = GS.fromCallSiteList [("", GS.SrcLoc
+            { GS.srcLocPackage = LegacyLogger.loc_package loc
+            , GS.srcLocModule = LegacyLogger.loc_module loc
+            , GS.srcLocFile = LegacyLogger.loc_filename loc
+            , GS.srcLocStartLine = fst $ LegacyLogger.loc_start loc
+            , GS.srcLocStartCol = snd $ LegacyLogger.loc_start loc
+            , GS.srcLocEndLine = fst $ LegacyLogger.loc_end loc
+            , GS.srcLocEndCol = snd $ LegacyLogger.loc_end loc
+            })]
+       in logGeneric source rioLogLevel (display $ LegacyLogger.toLogStr msg)
     where
       rioLogLevel =
         case level of
