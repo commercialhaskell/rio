@@ -405,13 +405,12 @@ data LogOptions = LogOptions
 setLogMinLevel :: LogLevel -> LogOptions -> LogOptions
 setLogMinLevel level options = options { logMinLevel = return level }
 
--- | Set the minimum log level. Messages below this level will not be
--- printed.This modifier allows to alter the verbose format value dynamically at
--- runtime.
+-- | Refer to 'setLogMinLevel'. This modifier allows to alter the verbose format
+-- value dynamically at runtime.
 --
 -- Default: in verbose mode, 'LevelDebug'. Otherwise, 'LevelInfo'.
 --
--- @since 0.1.2.0
+-- @since 0.1.3.0
 setLogMinLevelIO :: IO LogLevel -> LogOptions -> LogOptions
 setLogMinLevelIO getLevel options = options { logMinLevel = getLevel }
 
@@ -423,12 +422,12 @@ setLogMinLevelIO getLevel options = options { logMinLevel = getLevel }
 setLogVerboseFormat :: Bool -> LogOptions -> LogOptions
 setLogVerboseFormat v options = options { logVerboseFormat = return v }
 
--- | Use the verbose format for printing log messages. This modifier allows to
---   alter the verbose format value dynamically at runtime.
+-- | Refer to 'setLogVerboseFormat'. This modifier allows to alter the verbose
+--   format value dynamically at runtime.
 --
 -- Default: follows the value of the verbose flag.
 --
--- @since 0.1.2.0
+-- @since 0.1.3.0
 setLogVerboseFormatIO :: IO Bool -> LogOptions -> LogOptions
 setLogVerboseFormatIO getVerboseLevel options =
   options { logVerboseFormat = getVerboseLevel }
