@@ -15,7 +15,9 @@ module RIO.Prelude.Logger
     -- ** Log options
   , LogOptions
   , setLogMinLevel
+  , setLogMinLevelIO
   , setLogVerboseFormat
+  , setLogVerboseFormatIO
   , setLogTerminal
   , setLogUseTime
   , setLogUseColor
@@ -274,8 +276,8 @@ logOptionsMemory :: MonadIO m => m (IORef Builder, LogOptions)
 logOptionsMemory = do
   ref <- newIORef mempty
   let options = LogOptions
-        { logMinLevel = LevelInfo
-        , logVerboseFormat = False
+        { logMinLevel = return LevelInfo
+        , logVerboseFormat = return False
         , logTerminal = True
         , logUseTime = False
         , logUseColor = False
@@ -299,8 +301,8 @@ logOptionsHandle handle' verbose = liftIO $ do
   useUtf8 <- canUseUtf8 handle'
   unicode <- if useUtf8 then return True else getCanUseUnicode
   return LogOptions
-    { logMinLevel = if verbose then LevelDebug else LevelInfo
-    , logVerboseFormat = verbose
+    { logMinLevel = return $ if verbose then LevelDebug else LevelInfo
+    , logVerboseFormat = return verbose
     , logTerminal = terminal
     , logUseTime = verbose
     , logUseColor = verbose && terminal
@@ -385,8 +387,8 @@ noSticky level = level
 --
 -- @since 0.0.0.0
 data LogOptions = LogOptions
-  { logMinLevel :: !LogLevel
-  , logVerboseFormat :: !Bool
+  { logMinLevel :: !(IO LogLevel)
+  , logVerboseFormat :: !(IO Bool)
   , logTerminal :: !Bool
   , logUseTime :: !Bool
   , logUseColor :: !Bool
@@ -401,7 +403,16 @@ data LogOptions = LogOptions
 --
 -- @since 0.0.0.0
 setLogMinLevel :: LogLevel -> LogOptions -> LogOptions
-setLogMinLevel level options = options { logMinLevel = level }
+setLogMinLevel level options = options { logMinLevel = return level }
+
+-- | Refer to 'setLogMinLevel'. This modifier allows to alter the verbose format
+-- value dynamically at runtime.
+--
+-- Default: in verbose mode, 'LevelDebug'. Otherwise, 'LevelInfo'.
+--
+-- @since 0.1.3.0
+setLogMinLevelIO :: IO LogLevel -> LogOptions -> LogOptions
+setLogMinLevelIO getLevel options = options { logMinLevel = getLevel }
 
 -- | Use the verbose format for printing log messages.
 --
@@ -409,7 +420,17 @@ setLogMinLevel level options = options { logMinLevel = level }
 --
 -- @since 0.0.0.0
 setLogVerboseFormat :: Bool -> LogOptions -> LogOptions
-setLogVerboseFormat v options = options { logVerboseFormat = v }
+setLogVerboseFormat v options = options { logVerboseFormat = return v }
+
+-- | Refer to 'setLogVerboseFormat'. This modifier allows to alter the verbose
+--   format value dynamically at runtime.
+--
+-- Default: follows the value of the verbose flag.
+--
+-- @since 0.1.3.0
+setLogVerboseFormatIO :: IO Bool -> LogOptions -> LogOptions
+setLogVerboseFormatIO getVerboseLevel options =
+  options { logVerboseFormat = getVerboseLevel }
 
 -- | Do we treat output as a terminal. If @True@, we will enabled
 -- sticky logging functionality.
@@ -446,12 +467,15 @@ setLogUseLoc :: Bool -> LogOptions -> LogOptions
 setLogUseLoc l options = options { logUseLoc = l }
 
 simpleLogFunc :: LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
-simpleLogFunc lo cs _src level msg =
-    when (level >= logMinLevel lo) $ do
-      timestamp <- getTimestamp
+simpleLogFunc lo cs _src level msg = do
+    logLevel   <- logMinLevel lo
+    logVerbose <- logVerboseFormat lo
+
+    when (level >= logLevel) $ do
+      timestamp <- getTimestamp logVerbose
       logSend lo $ getUtf8Builder $
         timestamp <>
-        getLevel <>
+        getLevel logVerbose <>
         ansi reset <>
         msg <>
         getLoc <>
@@ -470,9 +494,9 @@ simpleLogFunc lo cs _src level msg =
    ansi xs | logUseColor lo = xs
            | otherwise = mempty
 
-   getTimestamp :: IO Utf8Builder
-   getTimestamp
-     | logVerboseFormat lo && logUseTime lo =
+   getTimestamp :: Bool -> IO Utf8Builder
+   getTimestamp logVerbose
+     | logVerbose && logUseTime lo =
        do now <- getZonedTime
           return $ ansi setBlack <> fromString (formatTime' now) <> ": "
      | otherwise = return mempty
@@ -480,9 +504,9 @@ simpleLogFunc lo cs _src level msg =
        formatTime' =
            take timestampLength . formatTime defaultTimeLocale "%F %T.%q"
 
-   getLevel :: Utf8Builder
-   getLevel
-     | logVerboseFormat lo =
+   getLevel :: Bool -> Utf8Builder
+   getLevel logVerbose
+     | logVerbose =
          case level of
            LevelDebug -> ansi setGreen <> "[debug] "
            LevelInfo -> ansi setBlue <> "[info] "
@@ -536,6 +560,8 @@ stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> d
         repeating ' ' <>
         repeating backSpaceChar)
 
+  logLevel <- logMinLevel lo
+
   case level of
     LevelOther "sticky-done" -> do
       clear
@@ -547,7 +573,7 @@ stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> d
       logSend lo (byteString bs <> flush)
       return bs
     _
-      | level >= logMinLevel lo -> do
+      | level >= logLevel -> do
           clear
           logFunc loc src level msgOrig
           unless (B.null sticky) $ logSend lo (byteString sticky <> flush)

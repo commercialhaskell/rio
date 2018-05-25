@@ -1,4 +1,9 @@
 # Changelog for rio
+
+## 0.1.3.0
+
+* Allow dynamic reloading of `logMinLevel` and `logVerboseFormat` for the `LogOptions` record
+
 ## 0.1.2.0
 
 * Allow setting usage of code location in the log output
