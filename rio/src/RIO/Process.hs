@@ -123,7 +123,11 @@ module RIO.Process
   , P.unsafeProcessHandle
   ) where
 
-import           RIO
+import           RIO.Prelude.Display
+import           RIO.Prelude.Reexports
+import           RIO.Prelude.Logger
+import           RIO.Prelude.RIO
+import           RIO.Prelude.Lens
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified System.Directory as D
