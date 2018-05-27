@@ -6,6 +6,7 @@ module RIO.Prelude.Extra
   , mapMaybeM
   , forMaybeA
   , forMaybeM
+  , foldMapM
   , nubOrd
   , whenM
   , unlessM
@@ -39,6 +40,23 @@ mapMaybeM f = liftM catMaybes . mapM f
 -- | @'forMaybeM' '==' 'flip' 'mapMaybeM'@
 forMaybeM :: Monad m => [a] -> (a -> m (Maybe b)) -> m [b]
 forMaybeM = flip mapMaybeM
+
+-- | Extend 'foldMap' to allow side effects.
+--
+-- @since 0.1.3.0
+foldMapM
+  :: (Applicative f, Monoid m, Foldable t)
+  => (a -> f m)
+  -> t a
+  -> f m
+foldMapM f = runFMHelper . foldMap (FMHelper . f)
+
+newtype FMHelper f a = FMHelper { runFMHelper :: f a }
+instance (Applicative f, Semigroup a) => Semigroup (FMHelper f a) where
+  FMHelper x <> FMHelper y = FMHelper (liftA2 (<>) x y)
+instance (Applicative f, Monoid a) => Monoid (FMHelper f a) where
+  mempty = FMHelper (pure mempty)
+  mappend (FMHelper x) (FMHelper y) = FMHelper (liftA2 mappend x y)
 
 -- | Strip out duplicates
 nubOrd :: Ord a => [a] -> [a]
