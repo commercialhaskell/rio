@@ -8,8 +8,8 @@ module RIO.Prelude.Logger
   , logError
   , logOther
     -- * Running with logging
-  , newLogFunc
   , withLogFunc
+  , newLogFunc
   , LogFunc
   , HasLogFunc (..)
   , logOptionsHandle
