@@ -3,6 +3,11 @@
 ## 0.1.3.0
 
 * Add `newLogFunc` function to create `LogFunc` records outside of a callback scope
+* Add `ThreadId` parameter to the `LogFunc` function
+* Add `logGenericFromThread` to be able to register a log entry `CallStack` from a
+  different thread
+* Add `getLogMinLevel` to gather what is the log min level from `LogOptions`
+* Add `setLogUseThread` to add thread id to log lines
 * Allow dynamic reloading of `logMinLevel` and `logVerboseFormat` for the `LogOptions` record
 
 ## 0.1.2.0

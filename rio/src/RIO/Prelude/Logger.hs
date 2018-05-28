@@ -15,6 +15,7 @@ module RIO.Prelude.Logger
   , logOptionsHandle
     -- ** Log options
   , LogOptions
+  , getLogMinLevel
   , setLogMinLevel
   , setLogMinLevelIO
   , setLogVerboseFormat
@@ -35,6 +36,7 @@ module RIO.Prelude.Logger
   , logOtherS
     -- ** Generic log function
   , logGeneric
+  , logGenericCallStack
     -- * Advanced running functions
   , mkLogFunc
   , logOptionsMemory
@@ -133,6 +135,21 @@ logGeneric
 logGeneric src level str = do
   LogFunc logFunc _ <- view logFuncL
   liftIO $ logFunc callStack src level str
+
+-- | Generic, basic function for registering logging attributes from
+-- other sources
+--
+-- @since 0.1.3.0
+logGenericCallStack
+  :: (MonadIO m, MonadReader env m, HasLogFunc env)
+  => CallStack
+  -> LogSource
+  -> LogLevel
+  -> Utf8Builder
+  -> m ()
+logGenericCallStack cs src level str = do
+  LogFunc logFunc _ <- view logFuncL
+  liftIO $ logFunc cs src level str
 
 -- | Log a debug level message with no source.
 --
@@ -344,23 +361,23 @@ getCanUseUnicode = do
 --  @since  0.1.3.0
 newLogFunc :: (MonadIO n, MonadIO m) => LogOptions -> n (LogFunc, m ())
 newLogFunc options =
-  if logTerminal options then do
-    var <- newMVar mempty
-    return (LogFunc
-             { unLogFunc = stickyImpl var options (simpleLogFunc options)
-             , lfOptions = Just options
-             }
-           , do state <- takeMVar var
-                unless (B.null state) (liftIO $ logSend options "\n")
-           )
-  else
-    return (LogFunc
-            { unLogFunc = \cs src level str ->
-                simpleLogFunc options cs src (noSticky level) str
-            , lfOptions = Just options
-            }
-           , return ()
-           )
+    if logTerminal options then do
+          var <- newMVar mempty
+          return (LogFunc
+                   { unLogFunc = stickyImpl var options (simpleLogFunc options)
+                   , lfOptions = Just options
+                   }
+                 , do state <- takeMVar var
+                      unless (B.null state) (liftIO $ logSend options "\n")
+                 )
+    else
+      return (LogFunc
+              { unLogFunc = \cs src level str ->
+                  simpleLogFunc options cs src (noSticky level) str
+              , lfOptions = Just options
+              }
+             , return ()
+             )
 
 -- | Given a 'LogOptions' value, run the given function with the
 -- specified 'LogFunc'. A common way to use this function is:
@@ -411,6 +428,13 @@ data LogOptions = LogOptions
   , logUseLoc :: !Bool
   , logSend :: !(Builder -> IO ())
   }
+
+-- | Get the minimum log level.
+--
+--
+-- @since 0.1.3.0
+getLogMinLevel :: MonadIO m => LogOptions -> m LogLevel
+getLogMinLevel = liftIO . logMinLevel
 
 -- | Set the minimum log level. Messages below this level will not be
 -- printed.
