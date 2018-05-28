@@ -9,6 +9,7 @@ module RIO.Prelude.Logger
   , logOther
     -- * Running with logging
   , withLogFunc
+  , newLogFunc
   , LogFunc
   , HasLogFunc (..)
   , logOptionsHandle
@@ -333,6 +334,34 @@ getCanUseUnicode = do
             return (str == str')
     test `catchIO` \_ -> return False
 
+
+-- | Given a 'LogOptions' value, returns both a new 'LogFunc' and a sub-routine that
+-- disposes it.
+--
+-- Intended for use if you want to deal with the teardown of 'LogFunc' yourself,
+-- otherwise prefer the 'withLogFunc' function instead.
+--
+--  @since  0.1.3.0
+newLogFunc :: (MonadIO n, MonadIO m) => LogOptions -> n (LogFunc, m ())
+newLogFunc options =
+  if logTerminal options then do
+    var <- newMVar mempty
+    return (LogFunc
+             { unLogFunc = stickyImpl var options (simpleLogFunc options)
+             , lfOptions = Just options
+             }
+           , do state <- takeMVar var
+                unless (B.null state) (liftIO $ logSend options "\n")
+           )
+  else
+    return (LogFunc
+            { unLogFunc = \cs src level str ->
+                simpleLogFunc options cs src (noSticky level) str
+            , lfOptions = Just options
+            }
+           , return ()
+           )
+
 -- | Given a 'LogOptions' value, run the given function with the
 -- specified 'LogFunc'. A common way to use this function is:
 --
@@ -353,23 +382,10 @@ getCanUseUnicode = do
 -- @since 0.0.0.0
 withLogFunc :: MonadUnliftIO m => LogOptions -> (LogFunc -> m a) -> m a
 withLogFunc options inner = withRunInIO $ \run -> do
-  if logTerminal options
-    then bracket
-            (newMVar mempty)
-            (\var -> do
-                state <- takeMVar var
-                unless (B.null state) (logSend options "\n"))
-            (\var -> run $ inner $ LogFunc
-                { unLogFunc = stickyImpl var options (simpleLogFunc options)
-                , lfOptions = Just options
-                }
-            )
-    else
-      run $ inner $ LogFunc
-        { unLogFunc = \cs src level str ->
-             simpleLogFunc options cs src (noSticky level) str
-        , lfOptions = Just options
-        }
+  bracket (newLogFunc options)
+          snd
+          (run . inner . fst)
+
 
 -- | Replace Unicode characters with non-Unicode equivalents
 replaceUnicode :: Char -> Char
