@@ -22,7 +22,6 @@ module RIO.Prelude.Logger
   , setLogVerboseFormatIO
   , setLogTerminal
   , setLogUseTime
-  , setLogUseThreadId
   , setLogUseColor
   , setLogUseLoc
     -- * Advanced logging functions
@@ -37,7 +36,7 @@ module RIO.Prelude.Logger
   , logOtherS
     -- ** Generic log function
   , logGeneric
-  , logGenericFromThread
+  , logGenericCallStack
     -- * Advanced running functions
   , mkLogFunc
   , logOptionsMemory
@@ -98,7 +97,7 @@ instance HasLogFunc LogFunc where
 --
 -- @since 0.0.0.0
 data LogFunc = LogFunc
-  { unLogFunc :: !(CallStack -> ThreadId -> LogSource -> LogLevel -> Utf8Builder -> IO ())
+  { unLogFunc :: !(CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ())
   , lfOptions :: !(Maybe LogOptions)
   }
 
@@ -107,7 +106,7 @@ data LogFunc = LogFunc
 -- @since 0.0.0.0
 instance Semigroup LogFunc where
   LogFunc f o1 <> LogFunc g o2 = LogFunc
-    { unLogFunc = \a b c d e -> f a b c d e *> g a b c d e
+    { unLogFunc = \a b c d -> f a b c d *> g a b c d
     , lfOptions = o1 `mplus` o2
     }
 
@@ -115,13 +114,13 @@ instance Semigroup LogFunc where
 --
 -- @since 0.0.0.0
 instance Monoid LogFunc where
-  mempty = mkLogFunc $ \_ _ _ _ _ -> return ()
+  mempty = mkLogFunc $ \_ _ _ _ -> return ()
   mappend = (<>)
 
 -- | Create a 'LogFunc' from the given function.
 --
 -- @since 0.0.0.0
-mkLogFunc :: (CallStack -> ThreadId -> LogSource -> LogLevel -> Utf8Builder -> IO ()) -> LogFunc
+mkLogFunc :: (CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()) -> LogFunc
 mkLogFunc f = LogFunc f Nothing
 
 -- | Generic, basic function for creating other logging functions.
@@ -135,24 +134,22 @@ logGeneric
   -> m ()
 logGeneric src level str = do
   LogFunc logFunc _ <- view logFuncL
-  tid <- myThreadId
-  liftIO $ logFunc callStack tid src level str
+  liftIO $ logFunc callStack src level str
 
 -- | Generic, basic function for registering logging attributes from
 -- other sources
 --
 -- @since 0.1.3.0
-logGenericFromThread
+logGenericCallStack
   :: (MonadIO m, MonadReader env m, HasLogFunc env)
   => CallStack
-  -> ThreadId
   -> LogSource
   -> LogLevel
   -> Utf8Builder
   -> m ()
-logGenericFromThread cs tid src level str = do
+logGenericCallStack cs src level str = do
   LogFunc logFunc _ <- view logFuncL
-  liftIO $ logFunc cs tid src level str
+  liftIO $ logFunc cs src level str
 
 -- | Log a debug level message with no source.
 --
@@ -301,7 +298,6 @@ logOptionsMemory = do
         , logVerboseFormat = return False
         , logTerminal = True
         , logUseTime = False
-        , logUseThread = False
         , logUseColor = False
         , logUseLoc = False
         , logSend = \new -> atomicModifyIORef' ref $ \old -> (old <> new, ())
@@ -327,7 +323,6 @@ logOptionsHandle handle' verbose = liftIO $ do
     , logVerboseFormat = return verbose
     , logTerminal = terminal
     , logUseTime = verbose
-    , logUseThread = verbose
     , logUseColor = verbose && terminal
     , logUseLoc = verbose
     , logSend = \builder ->
@@ -366,23 +361,23 @@ getCanUseUnicode = do
 --  @since  0.1.3.0
 newLogFunc :: (MonadIO n, MonadIO m) => LogOptions -> n (LogFunc, m ())
 newLogFunc options =
-  if logTerminal options
-    then bracket
-            (newMVar mempty)
-            (\var -> do
-                state <- takeMVar var
-                unless (B.null state) (logSend options "\n"))
-            (\var -> run $ inner $ LogFunc
-                { unLogFunc = stickyImpl var options (simpleLogFunc options)
-                , lfOptions = Just options
-                }
-            )
+    if logTerminal options then do
+          var <- newMVar mempty
+          return (LogFunc
+                   { unLogFunc = stickyImpl var options (simpleLogFunc options)
+                   , lfOptions = Just options
+                   }
+                 , do state <- takeMVar var
+                      unless (B.null state) (liftIO $ logSend options "\n")
+                 )
     else
-      run $ inner $ LogFunc
-        { unLogFunc = \cs tid src level str ->
-             simpleLogFunc options cs tid src (noSticky level) str
-        , lfOptions = Just options
-        }
+      return (LogFunc
+              { unLogFunc = \cs src level str ->
+                  simpleLogFunc options cs src (noSticky level) str
+              , lfOptions = Just options
+              }
+             , return ()
+             )
 
 -- | Given a 'LogOptions' value, run the given function with the
 -- specified 'LogFunc'. A common way to use this function is:
@@ -429,7 +424,6 @@ data LogOptions = LogOptions
   , logVerboseFormat :: !(IO Bool)
   , logTerminal :: !Bool
   , logUseTime :: !Bool
-  , logUseThread :: !Bool
   , logUseColor :: !Bool
   , logUseLoc :: !Bool
   , logSend :: !(Builder -> IO ())
@@ -496,14 +490,6 @@ setLogTerminal t options = options { logTerminal = t }
 setLogUseTime :: Bool -> LogOptions -> LogOptions
 setLogUseTime t options = options { logUseTime = t }
 
--- | Include the thread id when printing log messages.
---
--- Default: true in debug mode, false otherwise.
---
--- @since 0.1.3.0
-setLogUseThreadId :: Bool -> LogOptions -> LogOptions
-setLogUseThreadId t options = options { logUseThread = t }
-
 -- | Use ANSI color codes in the log output.
 --
 -- Default: true if in verbose mode /and/ the 'Handle' is a terminal device.
@@ -520,8 +506,8 @@ setLogUseColor c options = options { logUseColor = c }
 setLogUseLoc :: Bool -> LogOptions -> LogOptions
 setLogUseLoc l options = options { logUseLoc = l }
 
-simpleLogFunc :: LogOptions -> CallStack -> ThreadId -> LogSource -> LogLevel -> Utf8Builder -> IO ()
-simpleLogFunc lo cs tid _src level msg = do
+simpleLogFunc :: LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
+simpleLogFunc lo cs _src level msg = do
     logLevel   <- logMinLevel lo
     logVerbose <- logVerboseFormat lo
 
@@ -529,7 +515,6 @@ simpleLogFunc lo cs tid _src level msg = do
       timestamp <- getTimestamp logVerbose
       logSend lo $ getUtf8Builder $
         timestamp <>
-        getThreadId logVerbose <>
         getLevel logVerbose <>
         ansi reset <>
         msg <>
@@ -548,16 +533,6 @@ simpleLogFunc lo cs tid _src level msg = do
    ansi :: Utf8Builder -> Utf8Builder
    ansi xs | logUseColor lo = xs
            | otherwise = mempty
-
-   getThreadId :: Bool -> Utf8Builder
-   getThreadId logVerbose
-     | logVerbose && logUseThread lo =
-        case T.words (T.pack $ show tid) of
-          (_:tidNumber:_) ->
-            ansi setGreen <> "[" <> display tidNumber <> "] " <> ansi setBlack
-          _ ->
-            mempty
-     | otherwise = mempty
 
    getTimestamp :: Bool -> IO Utf8Builder
    getTimestamp logVerbose
@@ -615,9 +590,9 @@ timestampLength =
 
 stickyImpl
     :: MVar ByteString -> LogOptions
-    -> (CallStack -> ThreadId -> LogSource -> LogLevel -> Utf8Builder -> IO ())
-    -> CallStack -> ThreadId -> LogSource -> LogLevel -> Utf8Builder -> IO ()
-stickyImpl ref lo logFunc loc tid src level msgOrig = modifyMVar_ ref $ \sticky -> do
+    -> (CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ())
+    -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
+stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> do
   let backSpaceChar = '\8'
       repeating = mconcat . replicate (B.length sticky) . char7
       clear = logSend lo
@@ -630,7 +605,7 @@ stickyImpl ref lo logFunc loc tid src level msgOrig = modifyMVar_ ref $ \sticky 
   case level of
     LevelOther "sticky-done" -> do
       clear
-      logFunc loc tid src LevelInfo msgOrig
+      logFunc loc src LevelInfo msgOrig
       return mempty
     LevelOther "sticky" -> do
       clear
@@ -640,7 +615,7 @@ stickyImpl ref lo logFunc loc tid src level msgOrig = modifyMVar_ ref $ \sticky 
     _
       | level >= logLevel -> do
           clear
-          logFunc loc tid src level msgOrig
+          logFunc loc src level msgOrig
           unless (B.null sticky) $ logSend lo (byteString sticky <> flush)
           return sticky
       | otherwise -> return sticky
