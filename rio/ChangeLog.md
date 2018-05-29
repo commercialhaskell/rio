@@ -3,6 +3,8 @@
 ## 0.1.3.0
 
 * Add `newLogFunc` function to create `LogFunc` records outside of a callback scope
+* Add `logGenericCallStack` to be able to register a log entry `CallStack` from a
+  different thread
 * Allow dynamic reloading of `logMinLevel` and `logVerboseFormat` for the `LogOptions` record
 
 ## 0.1.2.0

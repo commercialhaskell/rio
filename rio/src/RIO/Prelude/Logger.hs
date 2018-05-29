@@ -35,6 +35,7 @@ module RIO.Prelude.Logger
   , logOtherS
     -- ** Generic log function
   , logGeneric
+  , logGenericCallStack
     -- * Advanced running functions
   , mkLogFunc
   , logOptionsMemory
@@ -133,6 +134,21 @@ logGeneric
 logGeneric src level str = do
   LogFunc logFunc _ <- view logFuncL
   liftIO $ logFunc callStack src level str
+
+-- | Generic, basic function for registering logging attributes from
+-- other sources
+--
+-- @since 0.1.3.0
+logGenericCallStack
+  :: (MonadIO m, MonadReader env m, HasLogFunc env)
+  => CallStack
+  -> LogSource
+  -> LogLevel
+  -> Utf8Builder
+  -> m ()
+logGenericCallStack cs src level str = do
+  LogFunc logFunc _ <- view logFuncL
+  liftIO $ logFunc cs src level str
 
 -- | Log a debug level message with no source.
 --
