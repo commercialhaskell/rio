@@ -15,6 +15,7 @@ module RIO.Prelude.Logger
   , logOptionsHandle
     -- ** Log options
   , LogOptions
+  , getLogMinLevel
   , setLogMinLevel
   , setLogMinLevelIO
   , setLogVerboseFormat
@@ -427,6 +428,12 @@ data LogOptions = LogOptions
   , logUseLoc :: !Bool
   , logSend :: !(Builder -> IO ())
   }
+
+-- | Get the minimum log level.
+--
+-- @since 0.1.3.0
+getLogMinLevel :: MonadIO m => LogOptions -> m LogLevel
+getLogMinLevel = liftIO . logMinLevel
 
 -- | Set the minimum log level. Messages below this level will not be
 -- printed.
