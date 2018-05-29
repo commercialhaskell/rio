@@ -3,7 +3,7 @@
 ## 0.1.3.0
 
 * Allow dynamic reloading of `logMinLevel` and `logVerboseFormat` for the `LogOptions` record
-* Add `SimpleApp` and `runRIOSimple`
+* Add `SimpleApp` and `runSimpleApp`
 * Add `asIO`
 
 ## 0.1.2.0

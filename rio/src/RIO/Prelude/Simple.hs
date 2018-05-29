@@ -7,7 +7,7 @@
 -- @since 0.1.3.0
 module RIO.Prelude.Simple
   ( SimpleApp
-  , runRIOSimple
+  , runSimpleApp
   ) where
 
 import RIO.Prelude.Reexports
@@ -41,8 +41,8 @@ instance HasProcessContext SimpleApp where
 -- * Default process context
 --
 -- @since 0.1.3.0
-runRIOSimple :: MonadIO m => RIO SimpleApp a -> m a
-runRIOSimple m = liftIO $ do
+runSimpleApp :: MonadIO m => RIO SimpleApp a -> m a
+runSimpleApp m = liftIO $ do
   verbose <- isJust <$> lookupEnv "RIO_VERBOSE"
   lo <- logOptionsHandle stderr verbose
   pc <- mkDefaultProcessContext
