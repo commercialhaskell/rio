@@ -43,6 +43,8 @@ module RIO.List
   , Data.List.scanl
   , Data.List.scanl'
   , Data.List.scanr
+  , Data.List.scanl1
+  , Data.List.scanr1
 
   -- ** Accumulating maps
   , Data.List.mapAccumL
