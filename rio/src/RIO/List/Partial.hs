@@ -20,6 +20,9 @@ module RIO.List.Partial
   -- * Building lists
 
   -- ** Scans
+  --
+  -- These functions are not partial, they are being exported here for legacy
+  -- reasons, they may be removed from this module on a future major release
   , Data.List.scanl1
   , Data.List.scanr1
 
@@ -28,4 +31,3 @@ module RIO.List.Partial
   ) where
 
 import qualified Data.List
-
