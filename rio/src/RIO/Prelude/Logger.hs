@@ -15,7 +15,7 @@ module RIO.Prelude.Logger
   , logOptionsHandle
     -- ** Log options
   , LogOptions
-  , getLogMinLevel
+  , checkShouldLog
   , setLogMinLevel
   , setLogMinLevelIO
   , setLogVerboseFormat
@@ -429,11 +429,35 @@ data LogOptions = LogOptions
   , logSend :: !(Builder -> IO ())
   }
 
--- | Get the minimum log level.
+-- | Using a 'LogOptions' record and all the parameters in the 'LogFunc'
+-- function, check if the given entry should be logged. This function is useful
+-- when building decorators for an already created 'LogFunc'.
+--
+-- Example:
+--
+-- @
+-- appendThreadIdLogFunc :: LogOptions -> LogFunc -> LogFunc
+-- appendThreadIdLogFunc logOptions logFunc = mkLogFunc $ \cs src level msg -> do
+--   tid <- myThreadId
+--   shouldLog <- checkShouldLog logOptions cs src level msg
+--   -- halt logging at the upper level
+--   when shouldLog $ do
+--     let msgWithThreadId = displayShow tid <> " " <> msg
+--     runRIO logFunc $ logGeneric cs src level msgWithThreadId
+-- @
 --
 -- @since 0.1.3.0
-getLogMinLevel :: MonadIO m => LogOptions -> m LogLevel
-getLogMinLevel = liftIO . logMinLevel
+checkShouldLog
+  :: MonadIO m
+  => LogOptions
+  -> CallStack
+  -> LogSource
+  -> LogLevel
+  -> Utf8Builder
+  -> m Bool
+checkShouldLog lo _cs _ls currentLevel _payload = do
+  minLevel <- liftIO $ logMinLevel lo
+  return $ currentLevel >= minLevel
 
 -- | Set the minimum log level. Messages below this level will not be
 -- printed.
