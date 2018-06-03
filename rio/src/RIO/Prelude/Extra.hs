@@ -15,6 +15,7 @@ module RIO.Prelude.Extra
 
 import qualified Data.Set as Set
 import Data.Monoid (First (..))
+import Data.Foldable (foldlM)
 import RIO.Prelude.Reexports
 
 -- | Apply a function to a 'Left' constructor
@@ -44,20 +45,23 @@ forMaybeM = flip mapMaybeM
 
 -- | Extend 'foldMap' to allow side effects.
 --
+-- Internally, this is implemented using a strict left fold. This is used for
+-- performance reasons. It also necessitates that this function has a @Monad@
+-- constraint and not just an @Applicative@ constraint. For more information,
+-- see
+-- <https://github.com/commercialhaskell/rio/pull/99#issuecomment-394179757>.
+--
 -- @since 0.1.3.0
 foldMapM
-  :: (Applicative f, Monoid m, Foldable t)
-  => (a -> f m)
+  :: (Monad m, Monoid w, Foldable t)
+  => (a -> m w)
   -> t a
-  -> f m
-foldMapM f = runFMHelper . foldMap (FMHelper . f)
-
-newtype FMHelper f a = FMHelper { runFMHelper :: f a }
-instance (Applicative f, Semigroup a) => Semigroup (FMHelper f a) where
-  FMHelper x <> FMHelper y = FMHelper (liftA2 (<>) x y)
-instance (Applicative f, Monoid a) => Monoid (FMHelper f a) where
-  mempty = FMHelper (pure mempty)
-  mappend (FMHelper x) (FMHelper y) = FMHelper (liftA2 mappend x y)
+  -> m w
+foldMapM f = foldlM
+  (\acc a -> do
+    w <- f a
+    return $! mappend acc w)
+  mempty
 
 -- | Strip out duplicates
 nubOrd :: Ord a => [a] -> [a]
