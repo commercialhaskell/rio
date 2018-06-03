@@ -7,6 +7,8 @@
 * Add `headMaybe`, `lastMaybe`, `tailMaybe`, `initMaybe`, `maximumMaybe`, `minimumMaybe`,
   `maximumByMaybe`, `minimumByMaybe` functions to `RIO.List` module (issue #82)
 * Move non partial functions `scanr1` and `scanl1` from `RIO.List.Partial` to `RIO.List` (issue #82)
+* Add `SimpleApp` and `runSimpleApp`
+* Add `asIO`
 
 ## 0.1.2.0
 

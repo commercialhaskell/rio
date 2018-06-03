@@ -10,6 +10,7 @@ module RIO
   , module RIO.Prelude.Text
   , module RIO.Prelude.Trace
   , module RIO.Prelude.URef
+  , module RIO.Prelude.Simple
   ) where
 
 import RIO.Prelude.Display
@@ -23,3 +24,4 @@ import RIO.Prelude.Renames
 import RIO.Prelude.Text
 import RIO.Prelude.Trace
 import RIO.Prelude.URef
+import RIO.Prelude.Simple
