@@ -8,6 +8,10 @@ module RIO.List
   , Data.List.uncons
   , Data.List.null
   , Data.List.length
+  , headMaybe
+  , lastMaybe
+  , tailMaybe
+  , initMaybe
 
   -- * List transformations
   , Data.List.map
@@ -36,6 +40,10 @@ module RIO.List
   , Data.List.all
   , Data.List.sum
   , Data.List.product
+  , maximumMaybe
+  , minimumMaybe
+  , maximumByMaybe
+  , minimumByMaybe
 
   -- * Building lists
 
@@ -43,6 +51,8 @@ module RIO.List
   , Data.List.scanl
   , Data.List.scanl'
   , Data.List.scanr
+  , Data.List.scanl1
+  , Data.List.scanr1
 
   -- ** Accumulating maps
   , Data.List.mapAccumL
@@ -233,3 +243,40 @@ dropSuffix suffix t = fromMaybe t (stripSuffix suffix t)
 -- @since 0.1.0.0
 linesCR :: String -> [String]
 linesCR = map (dropSuffix "\r") . lines
+
+safeListCall :: Foldable t => (t a -> b) -> t a -> Maybe b
+safeListCall f xs
+  | Data.List.null xs = Nothing
+  | otherwise = Just $ f xs
+
+-- | @since 0.1.3.0
+headMaybe :: [a] -> Maybe a
+headMaybe = safeListCall Data.List.head
+
+-- | @since 0.1.3.0
+lastMaybe :: [a] -> Maybe a
+lastMaybe = safeListCall Data.List.last
+
+-- | @since 0.1.3.0
+tailMaybe :: [a] -> Maybe [a]
+tailMaybe = safeListCall Data.List.tail
+
+-- | @since 0.1.3.0
+initMaybe :: [a] -> Maybe [a]
+initMaybe = safeListCall Data.List.init
+
+-- | @since 0.1.3.0
+maximumMaybe :: (Ord a, Foldable t) => t a -> Maybe a
+maximumMaybe = safeListCall Data.List.maximum
+
+-- | @since 0.1.3.0
+minimumMaybe :: (Ord a, Foldable t) => t a -> Maybe a
+minimumMaybe = safeListCall Data.List.minimum
+
+-- | @since 0.1.3.0
+maximumByMaybe :: (Ord a, Foldable t) => (a -> a -> Ordering) -> t a -> Maybe a
+maximumByMaybe f = safeListCall (Data.List.maximumBy f)
+
+-- | @since 0.1.3.0
+minimumByMaybe :: (Ord a, Foldable t) => (a -> a -> Ordering) -> t a -> Maybe a
+minimumByMaybe f = safeListCall (Data.List.minimumBy f)

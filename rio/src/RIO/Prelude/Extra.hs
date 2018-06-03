@@ -10,6 +10,7 @@ module RIO.Prelude.Extra
   , nubOrd
   , whenM
   , unlessM
+  , asIO
   ) where
 
 import qualified Data.Set as Set
@@ -79,3 +80,10 @@ unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM boolM action = do
   x <- boolM
   if x then return () else action
+
+-- | Helper function to force an action to run in 'IO'. Especially
+-- useful for overly general contexts, like hspec tests.
+--
+-- @since 0.1.3.0
+asIO :: IO a -> IO a
+asIO = id
