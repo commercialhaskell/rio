@@ -15,6 +15,7 @@ module RIO.Prelude.Logger
   , logOptionsHandle
     -- ** Log options
   , LogOptions
+  , checkShouldLog
   , setLogMinLevel
   , setLogMinLevelIO
   , setLogVerboseFormat
@@ -35,6 +36,7 @@ module RIO.Prelude.Logger
   , logOtherS
     -- ** Generic log function
   , logGeneric
+  , logGenericCallStack
     -- * Advanced running functions
   , mkLogFunc
   , logOptionsMemory
@@ -133,6 +135,21 @@ logGeneric
 logGeneric src level str = do
   LogFunc logFunc _ <- view logFuncL
   liftIO $ logFunc callStack src level str
+
+-- | Generic, basic function for registering logging attributes from
+-- other sources
+--
+-- @since 0.1.3.0
+logGenericCallStack
+  :: (MonadIO m, MonadReader env m, HasLogFunc env)
+  => CallStack
+  -> LogSource
+  -> LogLevel
+  -> Utf8Builder
+  -> m ()
+logGenericCallStack cs src level str = do
+  LogFunc logFunc _ <- view logFuncL
+  liftIO $ logFunc cs src level str
 
 -- | Log a debug level message with no source.
 --
@@ -411,6 +428,36 @@ data LogOptions = LogOptions
   , logUseLoc :: !Bool
   , logSend :: !(Builder -> IO ())
   }
+
+-- | Using a 'LogOptions' record and all the parameters in the 'LogFunc'
+-- function, check if the given entry should be logged. This function is useful
+-- when building decorators for an already created 'LogFunc'.
+--
+-- Example:
+--
+-- @
+-- appendThreadIdLogFunc :: LogOptions -> LogFunc -> LogFunc
+-- appendThreadIdLogFunc logOptions logFunc = mkLogFunc $ \cs src level msg -> do
+--   tid <- myThreadId
+--   shouldLog <- checkShouldLog logOptions cs src level msg
+--   -- halt logging at the upper level
+--   when shouldLog $ do
+--     let msgWithThreadId = displayShow tid <> " " <> msg
+--     runRIO logFunc $ logGeneric cs src level msgWithThreadId
+-- @
+--
+-- @since 0.1.3.0
+checkShouldLog
+  :: MonadIO m
+  => LogOptions
+  -> CallStack
+  -> LogSource
+  -> LogLevel
+  -> Utf8Builder
+  -> m Bool
+checkShouldLog lo _cs _ls currentLevel _payload = do
+  minLevel <- liftIO $ logMinLevel lo
+  return $ currentLevel >= minLevel
 
 -- | Set the minimum log level. Messages below this level will not be
 -- printed.
