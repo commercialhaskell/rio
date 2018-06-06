@@ -50,6 +50,8 @@ module RIO.Prelude.Reexports
   , Control.Monad.Reader.MonadReader
   , Control.Monad.Reader.MonadTrans(..)
   , Control.Monad.Reader.ReaderT(..)
+  , Control.Monad.State.MonadState(..)
+  , Control.Monad.Writer.MonadWriter(..)
   , Control.Monad.Reader.ask
   , Control.Monad.Reader.asks
   , Control.Monad.Reader.local
@@ -230,6 +232,8 @@ import           Control.Monad            (Monad (..), liftM, (<=<))
 import           Control.Monad.Catch      (MonadThrow)
 import           Control.Monad.Primitive  (PrimMonad (..))
 import           Control.Monad.Reader     (MonadReader, ReaderT (..), ask, asks)
+import           Control.Monad.State      (MonadState(..))
+import           Control.Monad.Writer     (MonadWriter (..))
 import           Data.Bool                (otherwise)
 import           Data.ByteString          (ByteString)
 import           Data.ByteString.Builder  (Builder)
