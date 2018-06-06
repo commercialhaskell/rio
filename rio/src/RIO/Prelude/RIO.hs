@@ -1,8 +1,9 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE UndecidableInstances #-}
 module RIO.Prelude.RIO
   ( RIO (..)
   , runRIO
@@ -16,10 +17,10 @@ module RIO.Prelude.RIO
   , modifySomeRef
   ) where
 
-import GHC.Exts (Constraint)
+import GHC.Exts (RealWorld)
 
-import RIO.Prelude.URef
 import RIO.Prelude.Lens
+import RIO.Prelude.URef
 import RIO.Prelude.Reexports
 
 -- | The Reader+IO monad. This is different from a 'ReaderT' because:
@@ -51,67 +52,55 @@ instance PrimMonad (RIO env) where
     primitive = RIO . ReaderT . const . primitive
 
 data SomeRef a
-  = SomeRef { readSomeRef :: !(IO a)
-            , writeSomeRef :: !(a -> IO ())
-            }
+  = SomeRef !(IO a) !(a -> IO ())
+
+readSomeRef :: SomeRef a -> IO a
+readSomeRef (SomeRef x _) = x
+
+writeSomeRef :: SomeRef a -> a -> IO ()
+writeSomeRef (SomeRef _ x) = x
 
 modifySomeRef :: SomeRef a -> (a -> a) -> IO ()
 modifySomeRef (SomeRef read write) f =
   (f <$> read) >>= write
 
-{-
-
-NOTE:
-
-I believe there is still some merit to this idea, leaving for now
-to assess and discuss
-
-class ToSomeRef (ref :: * -> *) where
-  type RefConstraints ref a ::  Constraint
-  toSomeRef :: RefConstraints ref a => ref a -> SomeRef a
-
-instance ToSomeRef IORef where
-  type RefConstraints IORef a = (() :: Constraint)
-  toSomeRef = ioRefToSomeRef
-
-instance (PrimState IO ~ base) => ToSomeRef (URef base) where
-  type RefConstraints (URef base) a = Unbox a
-  toSomeRef = uRefToSomeRef
-
-runRIORef
-  :: (ToSomeRef ref, MonadIO m, RefConstraints ref a)
-  => ref a -> RIO (SomeRef a) b -> m b
-runRIORef env action = runRIO (toSomeRef env) action
-
--- ref <- newURef 0
--- runRIORef ref $ do
---   modify (+1)
--- readURef ref ==> 1
-
--}
-
+ioRefToSomeRef :: IORef a -> SomeRef a
 ioRefToSomeRef ref = do
   SomeRef (readIORef ref)
           (\val -> atomicModifyIORef' ref (\old -> (val, ())))
 
-
+uRefToSomeRef :: Unbox a => URef RealWorld a -> SomeRef a
 uRefToSomeRef ref = do
   SomeRef (readURef ref) (writeURef ref)
 
+class HasStateRef s env | env -> s where
+  stateRefL :: Lens' env (SomeRef s)
 
-instance MonadState s (RIO (SomeRef s)) where
-  get = ask >>= liftIO . readSomeRef
+instance HasStateRef a (SomeRef a) where
+  stateRefL = lens id (\_ x -> x)
+
+instance HasStateRef s env => MonadState s (RIO env) where
+  get = do
+    ref <- view stateRefL
+    liftIO $ readSomeRef ref
   put st = do
-    ref <- ask
+    ref <- view stateRefL
     liftIO $ writeSomeRef ref st
 
-instance Monoid w => MonadWriter w (RIO (SomeRef w)) where
+instance (Monoid w) => MonadWriter w (RIO (SomeRef w)) where
   tell value = do
     ref <- ask
     liftIO $ modifySomeRef ref (`mappend` value)
 
   listen action = do
-    (,) <$> action <*> (ask >>= liftIO . readSomeRef)
+    w1 <- ask >>= liftIO . readSomeRef
+    a <- action
+    w2 <- do
+      refEnv <- ask
+      v <- liftIO $ readSomeRef refEnv
+      _ <- liftIO $ writeSomeRef refEnv w1
+      return v
+    return (a, w2)
 
   pass action = do
     (a, transF) <- action
@@ -126,11 +115,3 @@ newSomeRef a = do
 newUnboxedSomeRef :: (MonadIO m, Unbox a) => a -> m (SomeRef a)
 newUnboxedSomeRef a =
   uRefToSomeRef <$> (liftIO $ newURef a)
-
--- acc <- newIORef mempty
--- runRIO (ioRefToSomeRef acc) $ do
--- ref <- newUnboxedSomeRef mempty
--- runRIO ref $ do
---   tell "Hello World"
---   tell "Hola Mundo"
--- readSomeRef ref ==> "Hello WorldHola Mundo"
