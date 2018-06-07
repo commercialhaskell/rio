@@ -51,15 +51,27 @@ instance PrimMonad (RIO env) where
     type PrimState (RIO env) = PrimState IO
     primitive = RIO . ReaderT . const . primitive
 
+-- | Abstraction over how to read from and write to a reference
+--
+-- @since 0.1.3.0
 data SomeRef a
   = SomeRef !(IO a) !(a -> IO ())
 
+-- | read from a SomeRef
+--
+-- @since 0.1.3.0
 readSomeRef :: SomeRef a -> IO a
 readSomeRef (SomeRef x _) = x
 
+-- | write to a SomeRef
+--
+-- @since 0.1.3.0
 writeSomeRef :: SomeRef a -> a -> IO ()
 writeSomeRef (SomeRef _ x) = x
 
+-- | modify a SomeRef
+--
+-- @since 0.1.3.0
 modifySomeRef :: SomeRef a -> (a -> a) -> IO ()
 modifySomeRef (SomeRef read write) f =
   (f <$> read) >>= write
@@ -73,15 +85,27 @@ uRefToSomeRef :: Unbox a => URef RealWorld a -> SomeRef a
 uRefToSomeRef ref = do
   SomeRef (readURef ref) (writeURef ref)
 
+-- | Environment values with stateful capabilities to SomeRef
+--
+-- @since 0.1.3.0
 class HasStateRef s env | env -> s where
   stateRefL :: Lens' env (SomeRef s)
 
+-- | Identity state reference where the SomeRef is the env
+--
+-- @since 0.1.3.0
 instance HasStateRef a (SomeRef a) where
   stateRefL = lens id (\_ x -> x)
 
+-- | Environment values with writing capabilities to SomeRef
+--
+-- @since 0.1.3.0
 class HasWriteRef w env | env -> w where
   writeRefL :: Lens' env (SomeRef w)
 
+-- | Identity write reference where the SomeRef is the env
+--
+-- @since 0.1.3.0
 instance HasWriteRef a (SomeRef a) where
   writeRefL = lens id (\_ x -> x)
 
@@ -114,10 +138,16 @@ instance (Monoid w, HasWriteRef w env) => MonadWriter w (RIO env) where
     liftIO $ modifySomeRef ref transF
     return a
 
+-- | create a new boxed SomeRef
+--
+-- @since 0.1.3.0
 newSomeRef :: MonadIO m => a -> m (SomeRef a)
 newSomeRef a = do
   ioRefToSomeRef <$> newIORef a
 
+-- | create a new unboxed SomeRef
+--
+-- @since 0.1.3.0
 newUnboxedSomeRef :: (MonadIO m, Unbox a) => a -> m (SomeRef a)
 newUnboxedSomeRef a =
   uRefToSomeRef <$> (liftIO $ newURef a)
