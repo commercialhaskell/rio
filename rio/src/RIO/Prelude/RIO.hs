@@ -67,7 +67,7 @@ modifySomeRef (SomeRef read write) f =
 ioRefToSomeRef :: IORef a -> SomeRef a
 ioRefToSomeRef ref = do
   SomeRef (readIORef ref)
-          (\val -> atomicModifyIORef' ref (\old -> (val, ())))
+          (\val -> modifyIORef' ref (\_ -> val))
 
 uRefToSomeRef :: Unbox a => URef RealWorld a -> SomeRef a
 uRefToSomeRef ref = do
@@ -79,6 +79,12 @@ class HasStateRef s env | env -> s where
 instance HasStateRef a (SomeRef a) where
   stateRefL = lens id (\_ x -> x)
 
+class HasWriteRef w env | env -> w where
+  writeRefL :: Lens' env (SomeRef w)
+
+instance HasWriteRef a (SomeRef a) where
+  writeRefL = lens id (\_ x -> x)
+
 instance HasStateRef s env => MonadState s (RIO env) where
   get = do
     ref <- view stateRefL
@@ -87,16 +93,16 @@ instance HasStateRef s env => MonadState s (RIO env) where
     ref <- view stateRefL
     liftIO $ writeSomeRef ref st
 
-instance (Monoid w) => MonadWriter w (RIO (SomeRef w)) where
+instance (Monoid w, HasWriteRef w env) => MonadWriter w (RIO env) where
   tell value = do
-    ref <- ask
+    ref <- view writeRefL
     liftIO $ modifySomeRef ref (`mappend` value)
 
   listen action = do
-    w1 <- ask >>= liftIO . readSomeRef
+    w1 <- view writeRefL >>= liftIO . readSomeRef
     a <- action
     w2 <- do
-      refEnv <- ask
+      refEnv <- view writeRefL
       v <- liftIO $ readSomeRef refEnv
       _ <- liftIO $ writeSomeRef refEnv w1
       return v
@@ -104,7 +110,7 @@ instance (Monoid w) => MonadWriter w (RIO (SomeRef w)) where
 
   pass action = do
     (a, transF) <- action
-    ref <- ask
+    ref <- view writeRefL
     liftIO $ modifySomeRef ref transF
     return a
 
