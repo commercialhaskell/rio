@@ -179,6 +179,7 @@ module RIO.Prelude.Reexports
   , Data.Word.byteSwap64
   , Foreign.Storable.Storable
   , GHC.Generics.Generic
+  , GHC.Records.HasField(..)
   , GHC.Stack.HasCallStack
   , Prelude.Bounded (..)
   , Prelude.Double
@@ -291,6 +292,7 @@ import qualified Data.Void
 import qualified Data.Word
 import qualified Foreign.Storable
 import qualified GHC.Generics
+import qualified GHC.Records
 import qualified GHC.Stack
 import qualified Prelude
 import qualified System.Exit
