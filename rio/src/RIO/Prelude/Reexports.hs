@@ -54,6 +54,7 @@ module RIO.Prelude.Reexports
   , Control.Monad.Reader.ask
   , Control.Monad.Reader.asks
   , Control.Monad.Reader.local
+  , Control.Monad.Reader.runReader
   , Data.Bool.Bool(..)
   , Data.Bool.bool
   , Data.Bool.not
