@@ -3,6 +3,7 @@
 ## 0.1.4.0
 
 * Add `Const` and `Identity`
+* Add `Reader` and `runReader`
 
 ## 0.1.3.0
 
