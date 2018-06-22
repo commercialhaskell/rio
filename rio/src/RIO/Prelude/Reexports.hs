@@ -49,10 +49,12 @@ module RIO.Prelude.Reexports
   , Control.Monad.Catch.MonadThrow(..)
   , Control.Monad.Reader.MonadReader
   , Control.Monad.Reader.MonadTrans(..)
+  , Control.Monad.Reader.Reader
   , Control.Monad.Reader.ReaderT(..)
   , Control.Monad.Reader.ask
   , Control.Monad.Reader.asks
   , Control.Monad.Reader.local
+  , Control.Monad.Reader.runReader
   , Data.Bool.Bool(..)
   , Data.Bool.bool
   , Data.Bool.not
