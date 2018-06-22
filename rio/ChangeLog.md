@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.4.0
+
+* Add `Const` and `Identity`
+
 ## 0.1.3.0
 
 * Add `newLogFunc` function to create `LogFunc` records outside of a callback scope

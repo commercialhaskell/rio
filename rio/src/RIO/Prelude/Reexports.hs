@@ -112,6 +112,8 @@ module RIO.Prelude.Reexports
   , Data.Functor.void
   , (Data.Functor.$>)
   , (Data.Functor.<$>)
+  , Data.Functor.Const.Const(..)
+  , Data.Functor.Identity.Identity(..)
   , Data.Hashable.Hashable
   , Data.HashMap.Strict.HashMap
   , Data.HashSet.HashSet
@@ -273,6 +275,8 @@ import qualified Data.Eq
 import qualified Data.Foldable
 import qualified Data.Function
 import qualified Data.Functor
+import qualified Data.Functor.Const
+import qualified Data.Functor.Identity
 import qualified Data.Hashable
 import qualified Data.HashMap.Strict
 import qualified Data.HashSet
