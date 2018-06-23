@@ -10,6 +10,8 @@ module RIO.Prelude.RIO
   , liftRIO
   -- * SomeRef for Writer/State interfaces
   , SomeRef
+  , HasStateRef
+  , HasWriteRef
   , newSomeRef
   , newUnboxedSomeRef
   , readSomeRef
@@ -51,25 +53,25 @@ instance PrimMonad (RIO env) where
     type PrimState (RIO env) = PrimState IO
     primitive = RIO . ReaderT . const . primitive
 
--- | Abstraction over how to read from and write to a reference
+-- | Abstraction over how to read from and write to a mutable reference
 --
 -- @since 0.1.3.0
 data SomeRef a
   = SomeRef !(IO a) !(a -> IO ())
 
--- | read from a SomeRef
+-- | Read from a SomeRef
 --
 -- @since 0.1.3.0
 readSomeRef :: SomeRef a -> IO a
 readSomeRef (SomeRef x _) = x
 
--- | write to a SomeRef
+-- | Write to a SomeRef
 --
 -- @since 0.1.3.0
 writeSomeRef :: SomeRef a -> a -> IO ()
 writeSomeRef (SomeRef _ x) = x
 
--- | modify a SomeRef
+-- | Modify a SomeRef
 --
 -- @since 0.1.3.0
 modifySomeRef :: SomeRef a -> (a -> a) -> IO ()
