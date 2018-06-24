@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## Unreleased
+
+* Expose `Data.Text.replace` and `Data.Text.Lazy.replace`
+
 ## 0.1.4.0
 
 * Add `Const` and `Identity`

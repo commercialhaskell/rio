@@ -33,6 +33,7 @@ module RIO.Text
     , Data.Text.intersperse
     , Data.Text.transpose
     , Data.Text.reverse
+    , Data.Text.replace
 
     -- ** Case conversion
     , Data.Text.toCaseFold

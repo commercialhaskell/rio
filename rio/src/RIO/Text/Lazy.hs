@@ -36,6 +36,7 @@ module RIO.Text.Lazy
     , Data.Text.Lazy.intersperse
     , Data.Text.Lazy.transpose
     , Data.Text.Lazy.reverse
+    , Data.Text.Lazy.replace
 
     -- ** Case conversion
     , Data.Text.Lazy.toCaseFold
