@@ -10,8 +10,8 @@ module RIO.Prelude.RIO
   , liftRIO
   -- * SomeRef for Writer/State interfaces
   , SomeRef
-  , HasStateRef
-  , HasWriteRef
+  , HasStateRef (..)
+  , HasWriteRef (..)
   , newSomeRef
   , newUnboxedSomeRef
   , readSomeRef
@@ -62,21 +62,22 @@ data SomeRef a
 -- | Read from a SomeRef
 --
 -- @since 0.1.3.0
-readSomeRef :: SomeRef a -> IO a
-readSomeRef (SomeRef x _) = x
+readSomeRef :: MonadIO m => SomeRef a -> m a
+readSomeRef (SomeRef x _) = liftIO x
 
 -- | Write to a SomeRef
 --
 -- @since 0.1.3.0
-writeSomeRef :: SomeRef a -> a -> IO ()
-writeSomeRef (SomeRef _ x) = x
+writeSomeRef :: MonadIO m => SomeRef a -> a -> m ()
+writeSomeRef (SomeRef _ x) = liftIO . x
 
 -- | Modify a SomeRef
+-- This function is subject to change due to the lack of atomic operations
 --
 -- @since 0.1.3.0
-modifySomeRef :: SomeRef a -> (a -> a) -> IO ()
+modifySomeRef :: MonadIO m => SomeRef a -> (a -> a) -> m ()
 modifySomeRef (SomeRef read write) f =
-  (f <$> read) >>= write
+  liftIO $ (f <$> read) >>= write
 
 ioRefToSomeRef :: IORef a -> SomeRef a
 ioRefToSomeRef ref = do
