@@ -9,7 +9,6 @@ import RIO.Writer
 import Test.Hspec
 import Test.Hspec.QuickCheck
 
-
 spec = do
   describe "RIO writer instance" $ do
     it "tell works" $ do
