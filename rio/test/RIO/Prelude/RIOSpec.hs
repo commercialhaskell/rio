@@ -4,6 +4,8 @@
 module RIO.Prelude.RIOSpec (spec) where
 
 import RIO
+import RIO.State
+import RIO.Writer
 import Test.Hspec
 import Test.Hspec.QuickCheck
 

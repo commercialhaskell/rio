@@ -24,6 +24,8 @@ import GHC.Exts (RealWorld)
 import RIO.Prelude.Lens
 import RIO.Prelude.URef
 import RIO.Prelude.Reexports
+import Control.Monad.State (MonadState(..))
+import Control.Monad.Writer (MonadWriter(..))
 
 -- | The Reader+IO monad. This is different from a 'ReaderT' because:
 --
