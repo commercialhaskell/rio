@@ -50,8 +50,6 @@ module RIO.Prelude.Reexports
   , Control.Monad.Reader.MonadReader
   , Control.Monad.Reader.MonadTrans(..)
   , Control.Monad.Reader.ReaderT(..)
-  , Control.Monad.State.MonadState(..)
-  , Control.Monad.Writer.MonadWriter(..)
   , Control.Monad.Reader.ask
   , Control.Monad.Reader.asks
   , Control.Monad.Reader.local
