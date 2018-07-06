@@ -4,6 +4,7 @@
 
 * Add `Const` and `Identity`
 * Add `Reader` and `runReader`
+* Add instances for `MonadWriter` and `MonadState` to `RIO` via mutable reference [#103](https://github.com/commercialhaskell/rio/issues/103)
 
 ## 0.1.3.0
 

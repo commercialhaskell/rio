@@ -57,26 +57,26 @@ instance PrimMonad (RIO env) where
 
 -- | Abstraction over how to read from and write to a mutable reference
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 data SomeRef a
   = SomeRef !(IO a) !(a -> IO ())
 
 -- | Read from a SomeRef
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 readSomeRef :: MonadIO m => SomeRef a -> m a
 readSomeRef (SomeRef x _) = liftIO x
 
 -- | Write to a SomeRef
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 writeSomeRef :: MonadIO m => SomeRef a -> a -> m ()
 writeSomeRef (SomeRef _ x) = liftIO . x
 
 -- | Modify a SomeRef
 -- This function is subject to change due to the lack of atomic operations
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 modifySomeRef :: MonadIO m => SomeRef a -> (a -> a) -> m ()
 modifySomeRef (SomeRef read write) f =
   liftIO $ (f <$> read) >>= write
@@ -92,25 +92,25 @@ uRefToSomeRef ref = do
 
 -- | Environment values with stateful capabilities to SomeRef
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 class HasStateRef s env | env -> s where
   stateRefL :: Lens' env (SomeRef s)
 
 -- | Identity state reference where the SomeRef is the env
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 instance HasStateRef a (SomeRef a) where
   stateRefL = lens id (\_ x -> x)
 
 -- | Environment values with writing capabilities to SomeRef
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 class HasWriteRef w env | env -> w where
   writeRefL :: Lens' env (SomeRef w)
 
 -- | Identity write reference where the SomeRef is the env
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 instance HasWriteRef a (SomeRef a) where
   writeRefL = lens id (\_ x -> x)
 
@@ -145,14 +145,14 @@ instance (Monoid w, HasWriteRef w env) => MonadWriter w (RIO env) where
 
 -- | create a new boxed SomeRef
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 newSomeRef :: MonadIO m => a -> m (SomeRef a)
 newSomeRef a = do
   ioRefToSomeRef <$> newIORef a
 
 -- | create a new unboxed SomeRef
 --
--- @since 0.1.3.0
+-- @since 0.1.4.0
 newUnboxedSomeRef :: (MonadIO m, Unbox a) => a -> m (SomeRef a)
 newUnboxedSomeRef a =
   uRefToSomeRef <$> (liftIO $ newURef a)
