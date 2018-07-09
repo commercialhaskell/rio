@@ -211,6 +211,7 @@ module RIO.Prelude.Reexports
   , Prelude.curry
   , Prelude.error
   , Prelude.even
+  , Prelude.fromEnum
   , Prelude.fromIntegral
   , Prelude.fst
   , Prelude.gcd
