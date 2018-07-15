@@ -184,6 +184,7 @@ module RIO.Prelude.Reexports
   , Foreign.Storable.Storable
   , GHC.Generics.Generic
   , GHC.Stack.HasCallStack
+  , Numeric.Natural.Natural
   , Prelude.Bounded (..)
   , Prelude.Double
   , Prelude.Enum
@@ -300,6 +301,7 @@ import qualified Data.Word
 import qualified Foreign.Storable
 import qualified GHC.Generics
 import qualified GHC.Stack
+import qualified Numeric.Natural
 import qualified Prelude
 import qualified System.Exit
 import qualified Text.Read
