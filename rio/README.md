@@ -283,7 +283,7 @@ and here just give recommendations.
     configL = id
 
   data Env = Env { envLogFunc :: !LogFunc, envConfig :: !Config }
-  class (HasLogFunc env, HasConfig env) => HasEnv Env where
+  class (HasLogFunc env, HasConfig env) => HasEnv env where
     envL :: Lens' env Env
   instance HasLogFunc Env where
     logFuncL = lens envLogFunc (\x y -> x { envLogFunc = y })
