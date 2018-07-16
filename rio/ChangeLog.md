@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.5.0
+
+* Re-export `Numeric.Natural.Natural` [#119](https://github.com/commercialhaskell/rio/issues/119)
+
 ## 0.1.4.0
 
 * Add `Const` and `Identity`
