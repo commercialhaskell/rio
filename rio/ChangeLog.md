@@ -3,6 +3,7 @@
 ## 0.1.5.0
 
 * Re-export `Numeric.Natural.Natural` [#119](https://github.com/commercialhaskell/rio/issues/119)
+* Re-export `Data.Functor.<&>` from GHC 8.4+, falling back local definition for `base < 4.11` [#117](https://github.com/commercialhaskell/rio/issues/117)
 
 ## 0.1.4.0
 

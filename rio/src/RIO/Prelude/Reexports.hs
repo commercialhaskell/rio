@@ -114,6 +114,11 @@ module RIO.Prelude.Reexports
   , Data.Functor.void
   , (Data.Functor.$>)
   , (Data.Functor.<$>)
+#if MIN_VERSION_base(4, 11, 0)
+  , (Data.Functor.<&>)
+#else
+  , (<&>)
+#endif
   , Data.Functor.Const.Const(..)
   , Data.Functor.Identity.Identity(..)
   , Data.Hashable.Hashable
@@ -309,3 +314,10 @@ import qualified Text.Read
 yieldThread :: MonadIO m => m ()
 yieldThread = UnliftIO.Concurrent.yield
 {-# INLINE yieldThread #-}
+
+#if !MIN_VERSION_base(4, 11, 0)
+(<&>) :: Functor f => f a -> (a -> b) -> f b
+as <&> f = f Data.Functor.<$> as
+
+infixl 1 <&>
+#endif
