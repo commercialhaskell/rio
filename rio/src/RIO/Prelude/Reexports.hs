@@ -162,6 +162,7 @@ module RIO.Prelude.Reexports
   , Data.Ord.Ord(..)
   , Data.Ord.Ordering(..)
   , Data.Ord.comparing
+  , Data.Proxy.Proxy(..)
   , Data.Semigroup.Semigroup (..)
   , Data.Set.Set
   , Data.String.IsString(..)
@@ -298,6 +299,7 @@ import qualified Data.List
 import qualified Data.Map.Strict
 import qualified Data.Maybe
 import qualified Data.Ord
+import qualified Data.Proxy
 import qualified Data.Set
 import qualified Data.Text.Encoding.Error
 import qualified Data.Traversable
