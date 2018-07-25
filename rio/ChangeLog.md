@@ -4,6 +4,7 @@
 
 * Re-export `Numeric.Natural.Natural` [#119](https://github.com/commercialhaskell/rio/issues/119)
 * Re-export `Data.Functor.<&>` from GHC 8.4+, falling back local definition for `base < 4.11` [#117](https://github.com/commercialhaskell/rio/issues/117)
+* Re-export `Data.Proxy.Proxy(..)`
 * Re-export `fromEnum` from RIO, export `toEnum`, `read` and `fromJust` from RIO.Partial
 * Add `noLogging` function to skip logging on specific sub-routines
 
