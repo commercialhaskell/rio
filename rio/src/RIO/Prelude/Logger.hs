@@ -44,6 +44,7 @@ module RIO.Prelude.Logger
   , CallStack
     -- * Convenience functions
   , displayCallStack
+  , noLogging
     -- * Accessors
   , logFuncUseColorL
   ) where
@@ -604,3 +605,12 @@ stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> d
 -- @since 0.1.0.0
 logFuncUseColorL :: HasLogFunc env => SimpleGetter env Bool
 logFuncUseColorL = logFuncL.to (maybe False logUseColor . lfOptions)
+
+-- | Disable logging capabilities in a given sub-routine
+--
+-- Intended to skip logging in general purpose implementations, where secrets
+-- might be logged accidently.
+--
+-- @since 0.1.5.0
+noLogging :: (HasLogFunc env, MonadReader env m) => m a -> m a
+noLogging = local (set logFuncL mempty)

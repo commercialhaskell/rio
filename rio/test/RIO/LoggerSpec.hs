@@ -46,3 +46,10 @@ spec = do
         logInfo "no verbose log"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "[info] verbose log\nno verbose log\n"
+  it "noLogging" $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc (options & setLogVerboseFormat True) $ \lf -> runRIO lf $ do
+      logInfo "should appear"
+      noLogging $ logInfo "should not appear"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "[info] should appear\n"
