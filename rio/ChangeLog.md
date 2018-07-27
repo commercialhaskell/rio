@@ -7,6 +7,7 @@
 * Re-export `Data.Proxy.Proxy(..)`
 * Re-export `fromEnum` from RIO, export `toEnum`, `read` and `fromJust` from RIO.Partial
 * Add `noLogging` function to skip logging on specific sub-routines
+* Re-export `Control.Category.>>>`
 
 ## 0.1.4.0
 
