@@ -24,6 +24,7 @@ module RIO.Prelude.Reexports
   , Control.Arrow.second
   , (Control.Arrow.&&&)
   , (Control.Arrow.***)
+  , (Control.Category.>>>)
   , Control.DeepSeq.NFData(..)
   , Control.DeepSeq.force
   , (Control.DeepSeq.$!!)
@@ -274,6 +275,7 @@ import           Data.Vector.Unboxed.Mutable (Unbox)
 -- Reexports
 import qualified Control.Applicative
 import qualified Control.Arrow
+import qualified Control.Category
 import qualified Control.DeepSeq
 import qualified Control.Monad
 import qualified Control.Monad.Catch
