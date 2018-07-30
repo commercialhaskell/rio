@@ -25,10 +25,10 @@
 --   value (this time 'ProcessContext'), and include it in your 'RIO'
 --   environment. See 'mkProcessContext'.
 --
--- * Instead of using the 'proc' function for creating a
---   'ProcessConfig', use the 'proc' function, which will handle
---   overriding environment variables, looking up paths, performing
---   logging, etc.
+-- * Instead of using the 'System.Process.Typed.proc' function from
+--   "System.Process.Typed" for creating a 'ProcessConfig', use the
+--   locally defined 'proc' function, which will handle overriding
+--   environment variables, looking up paths, performing logging, etc.
 --
 -- Once you have your 'ProcessConfig', use the standard functions from
 -- 'System.Process.Typed' (reexported here for convenient) for running
