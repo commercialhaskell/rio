@@ -292,11 +292,19 @@ logOptionsMemory = do
 -- to perform verbose logging or not. Individiual settings can be
 -- overridden using appropriate @set@ functions.
 --
+-- When Verbose Flag is @True@, the following happens:
+--
+--     * @setLogVerboseFormat@ is called with @True@
+--     * @setLogUseColor@ is called with @True@
+--     * @setLogUseLoc@ is called with @True@
+--     * @setLogUseTime@ is called with @True@
+--     * @setLogMinLevel@ is called with 'Debug' log level
+--
 -- @since 0.0.0.0
 logOptionsHandle
   :: MonadIO m
   => Handle
-  -> Bool -- ^ verbose?
+  -> Bool -- ^ Verbose Flag
   -> m LogOptions
 logOptionsHandle handle' verbose = liftIO $ do
   terminal <- hIsTerminalDevice handle'
