@@ -68,6 +68,7 @@ import qualified Data.ByteString as B
 import           System.IO                  (localeEncoding)
 import           GHC.Foreign                (peekCString, withCString)
 import Data.Semigroup (Semigroup (..))
+import System.Info (os)
 
 -- | The log level of a message.
 --
@@ -295,7 +296,7 @@ logOptionsMemory = do
 -- When Verbose Flag is @True@, the following happens:
 --
 --     * @setLogVerboseFormat@ is called with @True@
---     * @setLogUseColor@ is called with @True@
+--     * @setLogUseColor@ is called with @True@ (except on Windows)
 --     * @setLogUseLoc@ is called with @True@
 --     * @setLogUseTime@ is called with @True@
 --     * @setLogMinLevel@ is called with 'Debug' log level
@@ -315,7 +316,7 @@ logOptionsHandle handle' verbose = liftIO $ do
     , logVerboseFormat = return verbose
     , logTerminal = terminal
     , logUseTime = verbose
-    , logUseColor = verbose && terminal
+    , logUseColor = verbose && terminal && os /= "mingw32"
     , logUseLoc = verbose
     , logSend = \builder ->
         if useUtf8 && unicode
