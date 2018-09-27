@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 module RIO.Prelude.Logger
@@ -68,7 +69,6 @@ import qualified Data.ByteString as B
 import           System.IO                  (localeEncoding)
 import           GHC.Foreign                (peekCString, withCString)
 import Data.Semigroup (Semigroup (..))
-import System.Info (os)
 
 -- | The log level of a message.
 --
@@ -316,7 +316,11 @@ logOptionsHandle handle' verbose = liftIO $ do
     , logVerboseFormat = return verbose
     , logTerminal = terminal
     , logUseTime = verbose
-    , logUseColor = verbose && terminal && os /= "mingw32"
+#if WINDOWS
+    , logUseColor = False
+#else
+    , logUseColor = verbose && terminal
+#endif
     , logUseLoc = verbose
     , logSend = \builder ->
         if useUtf8 && unicode
