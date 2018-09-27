@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## Unreleased
+
+* Changed `logUseColor` to default to `False` on Windows, even when verbose and on the terminal
+
 ## 0.1.5.0
 
 * Re-export `Numeric.Natural.Natural` [#119](https://github.com/commercialhaskell/rio/issues/119)

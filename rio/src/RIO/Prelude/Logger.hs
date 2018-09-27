@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 module RIO.Prelude.Logger
@@ -295,7 +296,7 @@ logOptionsMemory = do
 -- When Verbose Flag is @True@, the following happens:
 --
 --     * @setLogVerboseFormat@ is called with @True@
---     * @setLogUseColor@ is called with @True@
+--     * @setLogUseColor@ is called with @True@ (except on Windows)
 --     * @setLogUseLoc@ is called with @True@
 --     * @setLogUseTime@ is called with @True@
 --     * @setLogMinLevel@ is called with 'Debug' log level
@@ -315,7 +316,11 @@ logOptionsHandle handle' verbose = liftIO $ do
     , logVerboseFormat = return verbose
     , logTerminal = terminal
     , logUseTime = verbose
+#if WINDOWS
+    , logUseColor = False
+#else
     , logUseColor = verbose && terminal
+#endif
     , logUseLoc = verbose
     , logSend = \builder ->
         if useUtf8 && unicode
