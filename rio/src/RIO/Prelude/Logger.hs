@@ -383,7 +383,7 @@ newLogFunc options =
 -- let isVerbose = False -- get from the command line instead
 -- logOptions' <- logOptionsHandle stderr isVerbose
 -- let logOptions = setLogUseTime True logOptions'
--- withLogFunc logOptions $ \lf -> do
+-- withLogFunc logOptions $ \\lf -> do
 --   let app = App -- application specific environment
 --         { appLogFunc = lf
 --         , appOtherStuff = ...
