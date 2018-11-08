@@ -8,21 +8,23 @@ module RIO.File
   , writeFileBinaryDurableAtomic
   , withFileDurable
   , withFileDurableAtomic
+  , ensureFileDurable
   )
   where
 
 import           RIO.ByteString         (hPut)
 import           RIO.Prelude.Reexports
-import           RIO.Prelude.Trace
 
 import           Data.Bits              ((.|.))
 import           Foreign.C              (CInt (..), throwErrnoIfMinus1Retry)
 import           GHC.IO.Device          (IODeviceType (RegularFile))
 import qualified GHC.IO.Device          as Device
 import qualified GHC.IO.FD              as FD
-import           GHC.IO.Handle.FD       (mkHandleFromFD, fdToHandle, handleToFd)
-import           System.FilePath        (takeDirectory, takeFileName)
-import           System.Posix.Internals (CFilePath, c_safe_open, c_close, withFilePath)
+import           GHC.IO.Handle.FD       (handleToFd, mkHandleFromFD)
+import           System.Directory       (copyFile)
+import           System.FilePath        ((</>), takeDirectory, takeFileName)
+import           System.Posix.Internals (CFilePath, c_close, c_safe_open,
+                                         withFilePath)
 import           System.Posix.Types     (CMode (..))
 
 -- NOTE: System.Posix.Internal doesn't re-export this constants
@@ -52,10 +54,10 @@ append_flags = write_flags  .|. o_APPEND
 ioModeToFlags :: IOMode -> CInt
 ioModeToFlags iomode =
   case iomode of
-    ReadMode -> read_flags
-    WriteMode -> write_flags
+    ReadMode      -> read_flags
+    WriteMode     -> write_flags
     ReadWriteMode -> rw_flags
-    AppendMode -> append_flags
+    AppendMode    -> append_flags
 
 openDirFD :: MonadIO m => FilePath -> m CInt
 openDirFD fp
@@ -131,36 +133,40 @@ closeSwapFileFromDir swp orig dirFdCInt h =
         c_safe_fsync dirFdCInt
       void $ throwErrnoIfMinus1Retry "closeFileFromDir" $ c_close dirFdCInt
 
--- |
+
+-- | After a file is closed, it opens it again and executes fsync internally on
+-- both the file and the directory it contains it.
+--
+-- @since 0.1.6
+ensureFileDurable :: MonadUnliftIO m => FilePath -> m ()
+ensureFileDurable absFp = do
+  let dir = takeDirectory absFp
+      fp = takeFileName absFp
+  bracket (do dirFd <- openDirFD dir
+              fileHandle <- openFileFromDir dirFd fp ReadMode
+              return (dirFd, fileHandle))
+          (uncurry closeFileFromDir)
+          (const $ return ())
+
+
+-- | Similar to 'writeFileBinary', but it also ensures that changes executed to
+-- the file are guaranteed to be durable. It internally uses fsync and makes
+-- sure it synchronizes the file on disk.
+--
 -- @since 0.1.6
 writeFileBinaryDurable :: MonadUnliftIO m => FilePath -> ByteString -> m ()
 writeFileBinaryDurable absFp bytes =
   withFileDurable absFp WriteMode (liftIO . (`hPut` bytes))
-  -- liftIO $ do
-  --   let dir = takeDirectory absFp
-  --       fp = takeFileName absFp
-  --   bracket
-  --     (do dirFd <- openDirFD dir WriteMode
-  --         fileHandle <- openFileFromDir dirFd fp WriteMode
-  --         return (dirFd, fileHandle))
-  --     (uncurry closeFileFromDir)
-  --     (\(_, h) -> hPut h bytes)
 
--- |
+-- | Similar to 'writeFileBinary', but it also guarantes that changes executed
+-- to the file are durable, also, in case of failure, the modified file is never
+-- going to get corrupted. It internally uses fsync and makes sure it
+-- synchronizes the file on disk.
+--
 -- @since 0.1.6
 writeFileBinaryDurableAtomic :: MonadUnliftIO m => FilePath -> ByteString -> m ()
 writeFileBinaryDurableAtomic absFp bytes =
   withFileDurableAtomic absFp WriteMode (liftIO . (`hPut` bytes))
-  -- liftIO $ do
-  --   let dir = takeDirectory absFp
-  --       origFp = takeFileName absFp
-  --       swpFp = origFp <> ".swp"
-  --   bracket
-  --     (do dirFd <- openDirFD dir WriteMode
-  --         fileHandle <- openFileFromDir dirFd swpFp WriteMode
-  --         return (dirFd, fileHandle))
-  --     (uncurry $ closeSwapFileFromDir swpFp origFp)
-  --     (\(_, h) -> hPut h bytes)
 
 -- |
 -- @since 0.1.6
@@ -175,26 +181,32 @@ withFileDurable absFp iomode cb =
           fileHandle <- openFileFromDir dirFd fp iomode
           return (dirFd, fileHandle))
       (uncurry closeFileFromDir)
-      (\(_, h) -> do
-         run (cb h))
+      (\(_, h) -> do run (cb h))
 
 -- |
 -- @since 0.1.6
 withFileDurableAtomic ::
      MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m r) -> m r
-withFileDurableAtomic absFp iomode cb =
+withFileDurableAtomic absFp iomode cb = do
+  let dir = takeDirectory absFp
+      origFp = takeFileName absFp
+      swpFp = origFp <> ".swp"
   withRunInIO $ \run ->
     case iomode
     -- We need to consider an atomic operation only when we are on 'WriteMode'
           of
-      WriteMode -> do
-        let dir = takeDirectory absFp
-            origFp = takeFileName absFp
-            swpFp = origFp <> ".swp"
+      WriteMode ->
+        withDurableAtomic dir origFp swpFp run
+      ReadWriteMode -> do
+       -- copy original file for read purposes
+        copyFile absFp (dir </> swpFp)
+        withDurableAtomic dir origFp swpFp run
+      _ -> run (withFileDurable absFp iomode cb)
+  where
+    withDurableAtomic dir origFp swpFp run =
         bracket
           (do dirFd <- openDirFD dir
-              fileHandle <- openFileFromDir dirFd swpFp WriteMode
+              fileHandle <- openFileFromDir dirFd swpFp ReadWriteMode
               return (dirFd, fileHandle))
           (uncurry $ closeSwapFileFromDir swpFp origFp)
           (\(_, h) -> run (cb h))
-      _ -> run (withFileDurable absFp iomode cb)
