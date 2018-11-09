@@ -12,34 +12,53 @@ module RIO.File
   )
   where
 
-import           RIO.ByteString         (hPut)
 import           RIO.Prelude.Reexports
 
+#ifdef WINDOWS
+import           RIO.Prelude.IO
+
+#else
+
+import           RIO.ByteString         (hPut)
 import           Data.Bits              ((.|.))
-import           Foreign.C              (CInt (..), throwErrnoIfMinus1Retry)
+import           Data.Typeable          (cast)
+import           Foreign.C              (CInt (..), throwErrnoIfMinus1,
+                                         throwErrnoIfMinus1Retry)
 import           GHC.IO.Device          (IODeviceType (RegularFile))
 import qualified GHC.IO.Device          as Device
 import qualified GHC.IO.FD              as FD
-import           GHC.IO.Handle.FD       (handleToFd, mkHandleFromFD)
+import qualified GHC.IO.Handle.FD       as HandleFD
 import           System.Directory       (copyFile)
-import           System.FilePath        ((</>), takeDirectory, takeFileName)
+import           System.FilePath        (takeDirectory, takeFileName, (</>))
 import           System.Posix.Internals (CFilePath, c_close, c_safe_open,
                                          withFilePath)
-import           System.Posix.Types     (CMode (..))
+import           System.Posix.Types     (CMode (..), Fd (..))
 
--- NOTE: System.Posix.Internal doesn't re-export this constants
--- so we have to recreate-them
-foreign import ccall unsafe "RIOFile.h __rio_o_rdonly" o_RDONLY :: CInt
-foreign import ccall unsafe "RIOFile.h __rio_o_wronly" o_WRONLY :: CInt
-foreign import ccall unsafe "RIOFile.h __rio_o_rdwr"   o_RDWR   :: CInt
-foreign import ccall unsafe "RIOFile.h __rio_o_append" o_APPEND :: CInt
-foreign import ccall unsafe "RIOFile.h __rio_o_creat"  o_CREAT  :: CInt
-foreign import ccall unsafe "RIOFile.h __rio_o_noctty" o_NOCTTY :: CInt
-foreign import ccall safe "RIOFile.h __rio_openat"
+#if MIN_VERSION_base(4,9,0)
+import qualified GHC.IO.Handle.Types    as HandleFD (Handle (..), Handle__ (..))
+#endif
+
+
+-- TODO: Add a ticket/pull request to export this symbols from
+-- System.Internal.Posix
+--
+-- NOTE: System.Posix.Internal doesn't re-export this constants so we have to
+-- recreate-them here
+foreign import ccall unsafe "HsBase.h __hscore_o_rdonly" o_RDONLY :: CInt
+foreign import ccall unsafe "HsBase.h __hscore_o_wronly" o_WRONLY :: CInt
+foreign import ccall unsafe "HsBase.h __hscore_o_rdwr"   o_RDWR   :: CInt
+foreign import ccall unsafe "HsBase.h __hscore_o_append" o_APPEND :: CInt
+foreign import ccall unsafe "HsBase.h __hscore_o_creat"  o_CREAT  :: CInt
+foreign import ccall unsafe "HsBase.h __hscore_o_noctty" o_NOCTTY :: CInt
+
+-- After here, we have our own imports
+foreign import ccall safe "fcntl.h openat"
   c_safe_openat :: CInt -> CFilePath -> CInt -> CMode -> IO CInt
-foreign import ccall safe "RIOFile.h __rio_renameat"
+
+foreign import ccall safe "fcntl.h renameat"
   c_safe_renameat :: CInt -> CFilePath -> CInt -> CFilePath -> IO CInt
-foreign import ccall safe "RIOFile.h __rio_fsync"
+
+foreign import ccall safe "unistd.h fsync"
   c_safe_fsync :: CInt -> IO CInt
 
 std_flags, output_flags, read_flags, write_flags, rw_flags,
@@ -59,94 +78,160 @@ ioModeToFlags iomode =
     ReadWriteMode -> rw_flags
     AppendMode    -> append_flags
 
-openDirFD :: MonadIO m => FilePath -> m CInt
-openDirFD fp
+openDir :: MonadIO m => FilePath -> m Fd
+openDir fp
   -- TODO: Investigate what is the situation with Windows FS in regards to non_blocking
   -- NOTE: File operations _do not support_ non_blocking on various kernels, more
   -- info can be found here: https://ghc.haskell.org/trac/ghc/ticket/15153
  =
   liftIO $
-  withFilePath fp $ \cFp -> c_safe_open cFp (ioModeToFlags ReadMode) 0o660
+  withFilePath fp $ \cFp ->
+    Fd <$>
+    (throwErrnoIfMinus1Retry "openDir" $
+     c_safe_open cFp (ioModeToFlags ReadMode) 0o660)
 
-
-openFileFromDir :: (MonadIO m) => CInt -> FilePath -> IOMode -> m Handle
-openFileFromDir dirFd fp iomode =
-  liftIO $ do
-    withFilePath fp $ \f ->
-      let oflags1 = ioModeToFlags iomode
-      -- TODO: Add support for mingw32
-          binary_flags = 0
-          oflags = oflags1 .|. binary_flags
-       in do fd <-
-               throwErrnoIfMinus1Retry "openFileFromDir" $
-               c_safe_openat dirFd f oflags 0o666
-             (fD, fd_type) <-
-               FD.mkFD
-                 fd
-                 iomode
-                 Nothing {- no stat -}
-                 False {- not a socket -}
-                 False {- non_blocking --}
-                `catchAny` \e -> do
-                 _ <- c_close fd
-                 _ <- c_close dirFd
-                 throwIO e
-      -- we want to truncate() if this is an open in WriteMode, but only if the
-      -- target is a RegularFile. ftruncate() fails on special files like
-      -- /dev/null.
-             when (iomode == WriteMode && fd_type == RegularFile) $
-               Device.setSize fD 0
-             -- result <- fdToHandle (FD.fdFD fD)
-             mkHandleFromFD fD fd_type fp iomode False Nothing
-               `onException` (liftIO $ Device.close fD)
-
-closeFileFromDir :: MonadIO m => CInt -> Handle -> m ()
-closeFileFromDir dirFdCInt h =
-  liftIO $ do
-    fileFd <- handleToFd h
-    void $
-      throwErrnoIfMinus1Retry "closeFileFromDir" $
-      c_safe_fsync (FD.fdFD fileFd)
-    hClose h
-    void $
-      throwErrnoIfMinus1Retry "closeFileFromDir" $
-      c_safe_fsync dirFdCInt
-    void $ throwErrnoIfMinus1Retry "closeFileFromDir" $ c_close dirFdCInt
-
--- 'Handle' maps to the swap file
-closeSwapFileFromDir ::
-     MonadIO m => FilePath -> FilePath -> CInt -> Handle -> m ()
-closeSwapFileFromDir swp orig dirFdCInt h =
+-- NOTE: Not Async exception safe
+openFileFromDir :: (MonadIO m) => Fd -> FilePath -> IOMode -> m Handle
+openFileFromDir (Fd dirFd) fp iomode =
   liftIO $
-  withFilePath swp $ \swpFp ->
-    withFilePath orig $ \origFp -> do
-      fileFd <- handleToFd h
-      void $
-        throwErrnoIfMinus1Retry "closeSwapFileFromDir" $
-        c_safe_fsync (FD.fdFD fileFd)
-      hClose h
-      void $
-        throwErrnoIfMinus1Retry "closeSwapFileFromDir" $
-        c_safe_renameat dirFdCInt swpFp dirFdCInt origFp
-      void $
-        throwErrnoIfMinus1Retry "closeSwapFileFromDir" $
-        c_safe_fsync dirFdCInt
-      void $ throwErrnoIfMinus1Retry "closeFileFromDir" $ c_close dirFdCInt
+  withFilePath fp $ \f -> do
+    fileFd <-
+      throwErrnoIfMinus1Retry "openFileFromDir" $
+      c_safe_openat dirFd f (ioModeToFlags iomode) 0o666
+    (fD, fd_type) <-
+      FD.mkFD
+        fileFd
+        iomode
+        Nothing {- no stat -}
+        False {- not a socket -}
+        False {- non_blocking --}
+         -- TODO: We want to investigate if we can do non-blocking here
+       `catchAny` \e -> do
+        void (c_close fileFd)
+        throwIO e
+    -- we want to truncate() if this is an open in WriteMode, but only if the
+    -- target is a RegularFile. ftruncate() fails on special files like
+    -- /dev/null.
+    when (iomode == WriteMode && fd_type == RegularFile) $ Device.setSize fD 0
+    HandleFD.mkHandleFromFD fD fd_type fp iomode False Nothing `onException`
+      (liftIO $ Device.close fD)
 
+-- | Opens a file using the openat C low-level API. This approach allows us to
+-- get a file descriptor for the directory that contains the file, which we can
+-- use later on to fsync the directory with.
+--
+-- @since 0.1.6
+openFileDurable :: MonadIO m => FilePath -> IOMode -> m (Fd, Handle)
+openFileDurable absFp iomode =  do
+  let dir = takeDirectory absFp
+      fp = takeFileName absFp
+
+  dirFd <- openDir dir
+  fileHandle <- openFileFromDir dirFd fp iomode
+  return (dirFd, fileHandle)
+
+-- | This sub-routine does the following tasks:
+--
+-- * It calls fsync and then closes the given handler (mapping to a temporal/backup filepath)
+-- * It calls fsync and then closes the containing directory of the file
+--
+-- These steps guarante that the file changes are durable.
+--
+-- @since 0.1.6
+closeFileDurable :: MonadIO m => Fd -> Handle -> m ()
+closeFileDurable (Fd dirFd) h =
+  liftIO $
+  finally
+    (do fileFd <- handleToFd h
+        fsyncDescriptor "File" (FD.fdFD fileFd) `finally` hClose h
+        fsyncDescriptor "Directory" dirFd)
+    closeDirectory
+  where
+    fsyncDescriptor name fd =
+      void $
+      throwErrnoIfMinus1 ("closeFileDurable - fsync(" <> name <> ")") $
+      c_safe_fsync fd
+    closeDirectory =
+      void $
+      throwErrnoIfMinus1Retry "closeFileDurable - close(Directory)" $
+      c_close dirFd
+
+toTmpFile :: FilePath -> FilePath
+toTmpFile orig = "." <> orig <> ".tmp"
+
+
+handleToFd :: Handle -> IO FD.FD
+#if MIN_VERSION_base(4,9,0)
+handleToFd h =
+  case h of
+    HandleFD.FileHandle _ mv -> do
+      HandleFD.Handle__{HandleFD.haDevice = dev} <- readMVar mv
+      case cast dev of
+        Just fd -> return fd
+        Nothing -> error "not a file handle"
+    HandleFD.DuplexHandle {} -> error "not a file handle"
+# else
+handleToFd = HandleFD.handleToFd
+#endif
+
+-- | This sub-routine does the following tasks:
+--
+-- * It calls fsync and then closes the given handler (mapping to a temporal/backup filepath)
+-- * It renames the file to the original path (using renameat)
+-- * It calls fsync and then closes the containing directory of the file
+--
+-- These steps guarante that the file are durable, and that the backup mechanism
+-- for catastrophic failure is discarded after no error is thrown.
+--
+-- @since 0.1.6
+closeFileDurableAtomic ::
+     MonadIO m => FilePath -> Fd -> Handle -> m ()
+closeFileDurableAtomic orig (Fd dirFd) fileHandler =
+  liftIO $
+  finally
+    (withFilePath tmpFile $ \tmpFp ->
+       withFilePath orig $ \origFp -> do
+         fileFd <- handleToFd fileHandler
+         fsyncDescriptor "File" (FD.fdFD fileFd) `finally` hClose fileHandler
+         renameFile tmpFp origFp
+         fsyncDescriptor "Directory" dirFd)
+    closeDirectory
+  where
+    tmpFile = toTmpFile orig
+    fsyncDescriptor name fd =
+      void $
+      throwErrnoIfMinus1 ("closeFileDurableAtomic - fsync(" <> name <> ")") $
+      c_safe_fsync fd
+    renameFile tmpFp origFp =
+      void $
+      throwErrnoIfMinus1Retry "closeFileDurableAtomic - renameFile" $
+      c_safe_renameat dirFd tmpFp dirFd origFp
+    closeDirectory =
+      void $
+      throwErrnoIfMinus1Retry "closeFileDurableAtomic - close(Directory)" $
+      c_close dirFd
+
+#endif
 
 -- | After a file is closed, it opens it again and executes fsync internally on
--- both the file and the directory it contains it.
+-- both the file and the directory that contains it.
+--
+-- [The effectiveness of calling this function is
+-- debatable](https://stackoverflow.com/questions/37288453/calling-fsync2-after-close2/50158433#50158433),
+-- as this relies on internal implementation details at the Kernel level that
+-- might change. We argue that, despite this fact, calling this function may
+-- bring benefits in terms of durability
 --
 -- @since 0.1.6
 ensureFileDurable :: MonadUnliftIO m => FilePath -> m ()
-ensureFileDurable absFp = do
-  let dir = takeDirectory absFp
-      fp = takeFileName absFp
-  bracket (do dirFd <- openDirFD dir
-              fileHandle <- openFileFromDir dirFd fp ReadMode
-              return (dirFd, fileHandle))
-          (uncurry closeFileFromDir)
+ensureFileDurable absFp =
+#if WINDOWS
+  absFp `seq` return ()
+#else
+  bracket (openFileDurable absFp ReadMode)
+          (uncurry closeFileDurable)
           (const $ return ())
+#endif
 
 
 -- | Similar to 'writeFileBinary', but it also ensures that changes executed to
@@ -156,7 +241,11 @@ ensureFileDurable absFp = do
 -- @since 0.1.6
 writeFileBinaryDurable :: MonadUnliftIO m => FilePath -> ByteString -> m ()
 writeFileBinaryDurable absFp bytes =
+#if WINDOWS
+  writeFileBinary absFp bytes
+#else
   withFileDurable absFp WriteMode (liftIO . (`hPut` bytes))
+#endif
 
 -- | Similar to 'writeFileBinary', but it also guarantes that changes executed
 -- to the file are durable, also, in case of failure, the modified file is never
@@ -165,48 +254,83 @@ writeFileBinaryDurable absFp bytes =
 --
 -- @since 0.1.6
 writeFileBinaryDurableAtomic :: MonadUnliftIO m => FilePath -> ByteString -> m ()
-writeFileBinaryDurableAtomic absFp bytes =
-  withFileDurableAtomic absFp WriteMode (liftIO . (`hPut` bytes))
+writeFileBinaryDurableAtomic fp bytes =
+#if WINDOWS
+  writeFileBinary fp bytes
+#else
+  withFileDurableAtomic fp WriteMode (liftIO . (`hPut` bytes))
+#endif
 
--- |
+-- | Opens a file with the following guarantees:
+--
+-- * Successfully closes the file in case of an asynchronous exception
+--
+-- * It reliably saves the file in the correct directory; including edge case
+--   situations like a different device being mounted to the current directory,
+--   or the current directory being renamed to some other name while the file is
+--   being used.
+--
+-- * It ensures durability by executing fsync before close
+--
 -- @since 0.1.6
 withFileDurable ::
      MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m r) -> m r
 withFileDurable absFp iomode cb =
-  withRunInIO $ \run -> do
-    let dir = takeDirectory absFp
-        fp = takeFileName absFp
+#if WINDOWS
+  withFile absFp iomode cb
+#else
+  withRunInIO $ \run ->
     bracket
-      (do dirFd <- openDirFD dir
-          fileHandle <- openFileFromDir dirFd fp iomode
-          return (dirFd, fileHandle))
-      (uncurry closeFileFromDir)
+      (openFileDurable absFp iomode)
+      (uncurry closeFileDurable)
       (\(_, h) -> do run (cb h))
+#endif
 
--- |
+-- | Opens a file with the following guarantees:
+--
+-- * Successfully closes the file in case of an asynchronous exception
+--
+-- * It reliably saves the file in the correct directory; including edge case
+--   situations like a different device being mounted to the current directory,
+--   or the current directory being renamed to some other name while the file is
+--   being used.
+--
+-- * It ensures durability by executing fsync before close
+--
+-- * It keeps all changes in a copy file, and after is closed it renames it to
+--   the original filepath, in case of catastrophic failure, the original file
+--   stays unaffected.
+--
+--
+-- === Performance Considerations
+--
+-- When using an 'IOMode' of 'WriteMode', 'ReadWriteMode', or 'AppendMode', this function
+-- performs a copy operation of the file being read. This may be prohibitive in
+-- scenarios where the input file is expected to be large.
+--
 -- @since 0.1.6
 withFileDurableAtomic ::
      MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m r) -> m r
 withFileDurableAtomic absFp iomode cb = do
+#if WINDOWS
+  withFile absFp iomode cb
+#else
   let dir = takeDirectory absFp
       origFp = takeFileName absFp
-      swpFp = origFp <> ".swp"
   withRunInIO $ \run ->
-    case iomode
-    -- We need to consider an atomic operation only when we are on 'WriteMode'
-          of
-      WriteMode ->
-        withDurableAtomic dir origFp swpFp run
-      ReadWriteMode -> do
-       -- copy original file for read purposes
-        copyFile absFp (dir </> swpFp)
-        withDurableAtomic dir origFp swpFp run
-      _ -> run (withFileDurable absFp iomode cb)
+    case iomode of
+        -- We need to consider an atomic operation only when we are on 'WriteMode'
+      ReadMode -> run (withFile absFp iomode cb)
+        -- We use regular old withFile operation
+      _ {- WriteMode, ReadWriteMode,  AppendMode -}
+       -> do
+        copyFile absFp (dir </> toTmpFile origFp)
+        -- copy original file for read purposes
+        withDurableAtomic origFp run
   where
-    withDurableAtomic dir origFp swpFp run =
-        bracket
-          (do dirFd <- openDirFD dir
-              fileHandle <- openFileFromDir dirFd swpFp ReadWriteMode
-              return (dirFd, fileHandle))
-          (uncurry $ closeSwapFileFromDir swpFp origFp)
-          (\(_, h) -> run (cb h))
+    withDurableAtomic origFp run =
+      bracket
+        (openFileDurable absFp iomode)
+        (uncurry $ closeFileDurableAtomic origFp)
+        (\(_, h) -> run (cb h))
+#endif

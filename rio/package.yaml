@@ -10,8 +10,6 @@ category: Control
 extra-source-files:
 - README.md
 - ChangeLog.md
-- cbits/RIOFile.c
-- include/RIOFile.h
 
 dependencies:
 - base >= 4.9 && < 10
@@ -47,12 +45,6 @@ when:
 
 library:
   source-dirs: src/
-  c-sources:
-    - cbits/*.c
-  include-dirs:
-    - include
-  install-includes:
-    - RIOFile.h
   other-modules:
     - RIO.Prelude.Display
     - RIO.Prelude.Extra

@@ -34,8 +34,6 @@ spec = do
           input <- BS.hGetLine h
           input `shouldBe` "Hello World"
           BS.hPut h "Goodbye World"
-        -- contents <- BS.readFile fp
-        -- contents `shouldBe` "Goodbye World"
 
     context "happy path" $ do
       it "works the same as withFile" $ do
