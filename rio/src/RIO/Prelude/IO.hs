@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module RIO.Prelude.IO
   ( withLazyFile
   , readFileBinary
@@ -7,12 +8,13 @@ module RIO.Prelude.IO
   , hPutBuilder
   ) where
 
-import RIO.Prelude.Reexports
-import qualified Data.ByteString.Builder  as BB
-import qualified Data.ByteString          as B
-import qualified Data.ByteString.Lazy     as BL
-import qualified Data.Text.IO             as T
-import           System.IO                (hSetEncoding, utf8)
+import           RIO.Prelude.Reexports
+import qualified Data.ByteString         as B
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy    as BL
+import qualified Data.Text.IO            as T
+import           System.IO               (hSetEncoding, utf8)
+
 
 -- | Lazily get the contents of a file. Unlike 'BL.readFile', this
 -- ensures that if an exception is thrown, the file handle is closed

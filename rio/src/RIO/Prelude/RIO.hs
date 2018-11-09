@@ -78,8 +78,8 @@ writeSomeRef (SomeRef _ x) = liftIO . x
 --
 -- @since 0.1.4.0
 modifySomeRef :: MonadIO m => SomeRef a -> (a -> a) -> m ()
-modifySomeRef (SomeRef read write) f =
-  liftIO $ (f <$> read) >>= write
+modifySomeRef (SomeRef read' write) f =
+  liftIO $ (f <$> read') >>= write
 
 ioRefToSomeRef :: IORef a -> SomeRef a
 ioRefToSomeRef ref = do
