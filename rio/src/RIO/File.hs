@@ -19,6 +19,7 @@ import           RIO.Prelude.IO
 
 #else
 
+import           RIO.Directory          (doesFileExist)
 import           RIO.ByteString         (hPut)
 import           Data.Bits              ((.|.))
 import           Data.Typeable          (cast)
@@ -156,8 +157,14 @@ closeFileDurable (Fd dirFd) h =
       throwErrnoIfMinus1Retry "closeFileDurable - close(Directory)" $
       c_close dirFd
 
-toTmpFile :: FilePath -> FilePath
-toTmpFile orig = "." <> orig <> ".tmp"
+toTmpFilePath :: FilePath -> FilePath
+toTmpFilePath filePath =
+    dirPath </> tmpFilename
+  where
+    dirPath = takeDirectory filePath
+    filename = takeFileName filePath
+    tmpFilename = "." <> filename <> ".tmp"
+
 
 
 handleToFd :: Handle -> IO FD.FD
@@ -186,18 +193,19 @@ handleToFd = HandleFD.handleToFd
 -- @since 0.1.6
 closeFileDurableAtomic ::
      MonadIO m => FilePath -> Fd -> Handle -> m ()
-closeFileDurableAtomic orig (Fd dirFd) fileHandler =
+closeFileDurableAtomic filePath (Fd dirFd) fileHandler =
   liftIO $
   finally
-    (withFilePath tmpFile $ \tmpFp ->
-       withFilePath orig $ \origFp -> do
+    (withFilePath tmpFilePath $ \tmpFp ->
+       withFilePath filePath $ \fp -> do
          fileFd <- handleToFd fileHandler
-         fsyncDescriptor "File" (FD.fdFD fileFd) `finally` hClose fileHandler
-         renameFile tmpFp origFp
+         fsyncDescriptor "File" (FD.fdFD fileFd)
+           `finally` hClose fileHandler
+         renameFile tmpFp fp
          fsyncDescriptor "Directory" dirFd)
     closeDirectory
   where
-    tmpFile = toTmpFile orig
+    tmpFilePath = toTmpFilePath filePath
     fsyncDescriptor name fd =
       void $
       throwErrnoIfMinus1 ("closeFileDurableAtomic - fsync(" <> name <> ")") $
@@ -315,8 +323,6 @@ withFileDurableAtomic absFp iomode cb = do
 #if WINDOWS
   withFile absFp iomode cb
 #else
-  let dir = takeDirectory absFp
-      origFp = takeFileName absFp
   withRunInIO $ \run ->
     case iomode of
         -- We need to consider an atomic operation only when we are on 'WriteMode'
@@ -324,13 +330,16 @@ withFileDurableAtomic absFp iomode cb = do
         -- We use regular old withFile operation
       _ {- WriteMode, ReadWriteMode,  AppendMode -}
        -> do
-        copyFile absFp (dir </> toTmpFile origFp)
         -- copy original file for read purposes
-        withDurableAtomic origFp run
+        fileExists <- doesFileExist absFp
+        when fileExists $
+          copyFile absFp (toTmpFilePath absFp)
+
+        withDurableAtomic run
   where
-    withDurableAtomic origFp run =
+    withDurableAtomic run =
       bracket
-        (openFileDurable absFp iomode)
-        (uncurry $ closeFileDurableAtomic origFp)
+        (openFileDurable (toTmpFilePath absFp) iomode)
+        (uncurry $ closeFileDurableAtomic absFp)
         (\(_, h) -> run (cb h))
 #endif
