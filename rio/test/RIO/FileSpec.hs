@@ -22,13 +22,13 @@ spec = do
         contents <- BS.readFile fp
         contents `shouldBe` "Hello World"
 
-  describe "withFileDurableAtomic" $ do
+  describe "withFileBinaryDurableAtomic" $ do
     context "read/write" $ do
       it "works correctly" $ do
         withSystemTempDirectory "rio" $ \dir -> do
           let fp = dir </> "ensure_file_durable_atomic"
           writeFileUtf8 fp "Hello World"
-          SUT.withFileDurableAtomic fp ReadWriteMode $ \h -> do
+          SUT.withFileBinaryDurableAtomic fp ReadWriteMode $ \h -> do
             input <- BS.hGetLine h
             input `shouldBe` "Hello World"
             BS.hPut h "Goodbye World"
@@ -37,17 +37,17 @@ spec = do
       it "works the same as withFile" $ do
         withSystemTempDirectory "rio" $ \dir -> do
           let fp = dir </> "with_file_durable_atomic"
-          SUT.withFileDurableAtomic fp WriteMode $ \h ->
+          SUT.withFileBinaryDurableAtomic fp WriteMode $ \h ->
             BS.hPut h "Hello World"
           contents <- BS.readFile fp
           contents `shouldBe` "Hello World"
 
-  describe "withFileDurable" $ do
+  describe "withFileBinaryDurable" $ do
     context "happy path" $ do
       it "works the same as withFile" $ do
         withSystemTempDirectory "rio" $ \dir -> do
           let fp = dir </> "with_file_durable"
-          SUT.withFileDurable fp WriteMode $ \h ->
+          SUT.withFileBinaryDurable fp WriteMode $ \h ->
             BS.hPut h "Hello World"
           contents <- BS.readFile fp
           contents `shouldBe` "Hello World"
