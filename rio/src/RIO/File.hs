@@ -133,7 +133,7 @@ openFileDurable absFp iomode =  do
 
 -- | This sub-routine does the following tasks:
 --
--- * It calls fsync and then closes the given handler (mapping to a temporal/backup filepath)
+-- * It calls fsync and then closes the given Handle (mapping to a temporal/backup filepath)
 -- * It calls fsync and then closes the containing directory of the file
 --
 -- These steps guarante that the file changes are durable.
@@ -183,11 +183,11 @@ handleToFd = HandleFD.handleToFd
 
 -- | This sub-routine does the following tasks:
 --
--- * It calls fsync and then closes the given handler (mapping to a temporal/backup filepath)
+-- * It calls fsync and then closes the given Handle (mapping to a temporal/backup filepath)
 -- * It renames the file to the original path (using renameat)
 -- * It calls fsync and then closes the containing directory of the file
 --
--- These steps guarante that the file are durable, and that the backup mechanism
+-- These steps guarantee that the file is durable, and that the backup mechanism
 -- for catastrophic failure is discarded after no error is thrown.
 --
 -- @since 0.1.6
@@ -291,7 +291,7 @@ withFileDurable absFp iomode cb =
     bracket
       (openFileDurable absFp iomode)
       (uncurry closeFileDurable)
-      (\(_, h) -> do run (cb h))
+      (run . cb . snd)
 #endif
 
 -- | Opens a file with the following guarantees:
