@@ -7,8 +7,8 @@ module RIO.File
   (
     writeFileBinaryDurable
   , writeFileBinaryDurableAtomic
-  , withFileBinaryDurable
-  , withFileBinaryDurableAtomic
+  , withBinaryFileDurable
+  , withBinaryFileDurableAtomic
   , ensureFileDurable
   )
   where
@@ -256,7 +256,7 @@ writeFileBinaryDurable absFp bytes =
 #if WINDOWS
   writeFileBinary absFp bytes
 #else
-  withFileBinaryDurable absFp WriteMode (liftIO . (`hPut` bytes))
+  withBinaryFileDurable absFp WriteMode (liftIO . (`hPut` bytes))
 #endif
 
 -- | Similar to 'writeFileBinary', but it also guarantes that changes executed
@@ -270,7 +270,7 @@ writeFileBinaryDurableAtomic fp bytes =
 #if WINDOWS
   writeFileBinary fp bytes
 #else
-  withFileBinaryDurableAtomic fp WriteMode (liftIO . (`hPut` bytes))
+  withBinaryFileDurableAtomic fp WriteMode (liftIO . (`hPut` bytes))
 #endif
 
 -- | Opens a file with the following guarantees:
@@ -285,9 +285,9 @@ writeFileBinaryDurableAtomic fp bytes =
 -- * It ensures durability by executing fsync before close
 --
 -- @since 0.1.6
-withFileBinaryDurable ::
+withBinaryFileDurable ::
      MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m r) -> m r
-withFileBinaryDurable absFp iomode cb =
+withBinaryFileDurable absFp iomode cb =
 #if WINDOWS
   withFile absFp iomode cb
 #else
@@ -321,9 +321,9 @@ withFileBinaryDurable absFp iomode cb =
 -- scenarios where the input file is expected to be large.
 --
 -- @since 0.1.6
-withFileBinaryDurableAtomic ::
+withBinaryFileDurableAtomic ::
      MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m r) -> m r
-withFileBinaryDurableAtomic absFp iomode cb = do
+withBinaryFileDurableAtomic absFp iomode cb = do
 #if WINDOWS
   withFile absFp iomode cb
 #else
