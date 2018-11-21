@@ -112,24 +112,23 @@ openFileFromDir (Fd dirFd) fp iomode =
   liftIO $
   withFilePath fp $ \f -> do
     bracketOnError
-      (throwErrnoIfMinus1Retry "openFileFromDir" $
-       c_safe_openat dirFd f (ioModeToFlags iomode) 0o666)
-      (void . c_close)
-      (\fileFd -> do
-         (fD, fd_type) <-
-           FD.mkFD
+      (do fileFd <- throwErrnoIfMinus1Retry "openFileFromDir" $
+                      c_safe_openat dirFd f (ioModeToFlags iomode) 0o666
+          FD.mkFD
              fileFd
              iomode
              Nothing {- no stat -}
              False {- not a socket -}
-             False {- non_blocking --}
+             False {- non_blocking -}
+            `onException` c_close fileFd)
+      (liftIO . Device.close . fst)
+      (\(fD, fd_type) -> do
          -- we want to truncate() if this is an open in WriteMode, but only if the
          -- target is a RegularFile. ftruncate() fails on special files like
          -- /dev/null.
          when (iomode == WriteMode && fd_type == RegularFile) $
            Device.setSize fD 0
-         HandleFD.mkHandleFromFD fD fd_type fp iomode False Nothing
-           `onException` (liftIO $ Device.close fD))
+         HandleFD.mkHandleFromFD fD fd_type fp iomode False Nothing)
 
 -- | Opens a file using the openat C low-level API. This approach allows us to
 -- get a file descriptor for the directory that contains the file, which we can
