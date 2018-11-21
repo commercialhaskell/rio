@@ -226,7 +226,9 @@ closeFileDurableAtomic tmpFilePath filePath dirFd@(Fd cDirFd) fileHandler = do
 #endif
 
 -- | After a file is closed, it opens it again and executes fsync internally on
--- both the file and the directory that contains it.
+-- both the file and the directory that contains it. Note this function is
+-- intended to work around the non-durability of existing file APIs, as opposed
+-- to being necessary for the API functions provided in 'RIO.File' module.
 --
 -- [The effectiveness of calling this function is
 -- debatable](https://stackoverflow.com/questions/37288453/calling-fsync2-after-close2/50158433#50158433),
