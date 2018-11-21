@@ -207,13 +207,13 @@ handleToFd = HandleFD.handleToFd
 -- @since 0.1.6
 closeFileDurableAtomic ::
      MonadUnliftIO m => FilePath -> FilePath -> Fd -> Handle -> m ()
-closeFileDurableAtomic tmpFilePath filePath dirFd@(Fd cDirFd) fileHandler = do
+closeFileDurableAtomic tmpFilePath filePath dirFd@(Fd cDirFd) fileHandle = do
   liftIO $
     finally
       (withFilePath tmpFilePath $ \tmpFp ->
          withFilePath filePath $ \fp -> do
-           fileFd <- handleToFd fileHandler
-           fsyncFileDescriptor "closeFileDurableAtomic/File" (FD.fdFD fileFd) `finally` hClose fileHandler
+           fileFd <- handleToFd fileHandle
+           fsyncFileDescriptor "closeFileDurableAtomic/File" (FD.fdFD fileFd) `finally` hClose fileHandle
            renameFile tmpFp fp
            fsyncFileDescriptor "closeFileDurableAtomic/Directory" cDirFd)
       (closeDirectory dirFd)
