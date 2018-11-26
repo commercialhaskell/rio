@@ -2,11 +2,65 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE NoImplicitPrelude        #-}
 {-# LANGUAGE OverloadedStrings        #-}
--- | @since 0.1.6
+{-|
+
+== Rationale
+
+This module offers functions to handle files that offer better durability and/or
+atomicity guarantees.
+
+== When to use the functions on this module?
+
+Given the usage of this functions comes at a cost in performance, is important
+to consider what are the use cases that are ideal for each of the functions.
+
+=== Not Durable and not Atomic
+
+For this use case, you want to use the regular functions:
+
+* 'System.IO.withFile'
+* 'RIO.writeFileBinary'
+
+The regular use case for this scenario happens when your program is dealing with
+outputs that are never going to be consumed again (e.g. a report that gets
+generated from other data sources).
+
+=== Atomic but not Durable
+
+The regular use case for this scenario is when you have a multi-step algorithm
+that builds temporal artifacts, you care about them being atomic, but your
+program recreates them each time. (e.g. @ghc --make@ generating @.o@ files).
+
+There is no function exported by this module that provides only atomicity.
+
+=== Durable but not Atomic
+
+For this use case, you want to use the functions:
+
+* 'withBinaryFileDurable'
+* 'writeBinaryFileDurable'
+
+The regular use case for this scenario happens when your program deals with the
+atomicity of your data through other means. (e.g. SQLite Write Ahead Log (WAL)
+strategy).
+
+=== Durable and Atomic
+
+For this use case, you can use the functions:
+
+* 'withBinaryFileDurableAtomic'
+* 'writeBinaryFileDurableAtomic'
+
+The regular use case for this scenario happens when you want to ensure that
+after a program is executed, the data is there and it will be in a consistent
+state, _always_.
+
+@since 0.1.6
+-}
 module RIO.File
   (
-    writeFileBinaryDurable
-  , writeFileBinaryDurableAtomic
+    writeBinaryFileDurable
+  , writeBinaryFileDurableAtomic
   , withBinaryFileDurable
   , withBinaryFileDurableAtomic
   , ensureFileDurable
@@ -235,6 +289,10 @@ closeFileDurableAtomic tmpFilePath filePath dirFd@(Fd cDirFd) fileHandle = do
 -- might change. We argue that, despite this fact, calling this function may
 -- bring benefits in terms of durability.
 --
+-- === Cross-Platform support
+--
+-- This function is a noop on Windows platforms.
+--
 -- @since 0.1.6
 ensureFileDurable :: MonadUnliftIO m => FilePath -> m ()
 ensureFileDurable absFp =
@@ -251,9 +309,13 @@ ensureFileDurable absFp =
 -- the file are guaranteed to be durable. It internally uses fsync and makes
 -- sure it synchronizes the file on disk.
 --
+-- === Cross-Platform support
+--
+-- This function behaves the same as 'RIO.writeFileBinary' on Windows platforms.
+--
 -- @since 0.1.6
-writeFileBinaryDurable :: MonadUnliftIO m => FilePath -> ByteString -> m ()
-writeFileBinaryDurable absFp bytes =
+writeBinaryFileDurable :: MonadUnliftIO m => FilePath -> ByteString -> m ()
+writeBinaryFileDurable absFp bytes =
 #if WINDOWS
   writeFileBinary absFp bytes
 #else
@@ -265,9 +327,13 @@ writeFileBinaryDurable absFp bytes =
 -- going to get corrupted. It internally uses fsync and makes sure it
 -- synchronizes the file on disk.
 --
+-- === Cross-Platform support
+--
+-- This function behaves the same as 'RIO.writeFileBinary' on Windows platforms.
+--
 -- @since 0.1.6
-writeFileBinaryDurableAtomic :: MonadUnliftIO m => FilePath -> ByteString -> m ()
-writeFileBinaryDurableAtomic fp bytes =
+writeBinaryFileDurableAtomic :: MonadUnliftIO m => FilePath -> ByteString -> m ()
+writeBinaryFileDurableAtomic fp bytes =
 #if WINDOWS
   writeFileBinary fp bytes
 #else
@@ -276,14 +342,19 @@ writeFileBinaryDurableAtomic fp bytes =
 
 -- | Opens a file with the following guarantees:
 --
--- * Successfully closes the file in case of an asynchronous exception
+-- * It successfully closes the file in case of an asynchronous exception
 --
 -- * It reliably saves the file in the correct directory; including edge case
 --   situations like a different device being mounted to the current directory,
 --   or the current directory being renamed to some other name while the file is
 --   being used.
 --
--- * It ensures durability by executing fsync before close
+-- * It ensures durability by executing an fsync call before closing the file
+--   handle
+--
+-- === Cross-Platform support
+--
+-- This function behaves the same as 'System.IO.withFile' on Windows platforms.
 --
 -- @since 0.1.6
 withBinaryFileDurable ::
@@ -301,14 +372,15 @@ withBinaryFileDurable absFp iomode cb =
 
 -- | Opens a file with the following guarantees:
 --
--- * Successfully closes the file in case of an asynchronous exception
+-- * It successfully closes the file in case of an asynchronous exception
 --
 -- * It reliably saves the file in the correct directory; including edge case
 --   situations like a different device being mounted to the current directory,
 --   or the current directory being renamed to some other name while the file is
 --   being used.
 --
--- * It ensures durability by executing fsync before close
+-- * It ensures durability by executing an fsync call before closing the file
+--   handle
 --
 -- * It keeps all changes in a copy file, and after is closed it renames it to
 --   the original filepath, in case of catastrophic failure, the original file
@@ -317,9 +389,14 @@ withBinaryFileDurable absFp iomode cb =
 --
 -- === Performance Considerations
 --
--- When using an 'IOMode' of 'WriteMode', 'ReadWriteMode', or 'AppendMode', this function
--- performs a copy operation of the file being read. This may be prohibitive in
--- scenarios where the input file is expected to be large.
+-- When using a non read-only 'IOMode' (e.g. 'WriteMode', 'ReadWriteMode',
+-- 'AppendMode'), this function performs a copy operation of the specified file.
+-- This may be prohibitive in scenarios where the input file is expected to be
+-- large in size.
+--
+-- === Cross-Platform support
+--
+-- This function behaves the same as 'System.IO.withFile' on Windows platforms.
 --
 -- @since 0.1.6
 withBinaryFileDurableAtomic ::
