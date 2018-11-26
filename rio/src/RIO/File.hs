@@ -390,9 +390,10 @@ withBinaryFileDurable absFp iomode cb =
 -- === Performance Considerations
 --
 -- When using a non read-only 'IOMode' (e.g. 'WriteMode', 'ReadWriteMode',
--- 'AppendMode'), this function performs a copy operation of the specified file.
--- This may be prohibitive in scenarios where the input file is expected to be
--- large in size.
+-- 'AppendMode'), this function performs a copy operation of the specified input
+-- file to guarantee the original file is intact in case of a catastrophic
+-- failure (no partial writes). This approach may be prohibitive in scenarios
+-- where the input file is expected to be large in size.
 --
 -- === Cross-Platform support
 --
