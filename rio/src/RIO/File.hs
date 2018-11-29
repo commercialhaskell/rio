@@ -11,7 +11,7 @@ atomicity guarantees.
 
 == When to use the functions on this module?
 
-Given the usage of this functions comes at a cost in performance, is important
+Given the usage of this functions comes at a cost in performance, it is important
 to consider what are the use cases that are ideal for each of the functions.
 
 === Not Durable and not Atomic
