@@ -404,7 +404,7 @@ withBinaryFileDurableAtomic ::
      MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m r) -> m r
 withBinaryFileDurableAtomic absFp iomode cb = do
 #if WINDOWS
-  withFile absFp iomode cb
+  withBinaryFile absFp iomode cb
 #else
   withRunInIO $ \run ->
     case iomode of
