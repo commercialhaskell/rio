@@ -7,7 +7,7 @@
 == Rationale
 
 This module offers functions to handle files that offer better durability and/or
-atomicity guarantees.
+atomicity.
 
 == When to use the functions on this module?
 
@@ -22,16 +22,23 @@ For this use case, you want to use the regular functions:
 * 'RIO.writeFileBinary'
 
 The regular use case for this scenario happens when your program is dealing with
-outputs that are never going to be consumed again (e.g. a report that gets
-generated from other data sources).
+outputs that are never going to be consumed again by your program. For example,
+imagine you have a program that generates sales reports for the last month, this
+is a report that can be generated quickly; you don't really care if the output
+file gets corrupted or lost at one particular execution of your program given
+that is cheap to execute the data export program a second time. In other words,
+your program doesn't /rely/ on the data contained in this file in order to work.
 
 === Atomic but not Durable
 
-The regular use case for this scenario is when you have a multi-step algorithm
-that builds temporal artifacts, you care about them being atomic, but your
-program recreates them each time. (e.g. @ghc --make@ generating @.o@ files).
+Imagine an scenario where your program builds a temporary file that serves as an
+intermediate step to a bigger task, like Object files (@.o@) in a compilation
+process. The program will use an existing @.o@ file if it is present, or it will
+build one from scratch if it is not. The file is not really required, but if it
+is present, it *must* be valid and consistent. In this situation, you care about
+atomicity, but not durability.
 
-There is no function exported by this module that provides only atomicity.
+There is no function exported by this module that provides /only/ atomicity.
 
 === Durable but not Atomic
 
@@ -40,9 +47,12 @@ For this use case, you want to use the functions:
 * 'withBinaryFileDurable'
 * 'writeBinaryFileDurable'
 
-The regular use case for this scenario happens when your program deals with the
-atomicity of your data through other means. (e.g. SQLite Write Ahead Log (WAL)
-strategy).
+The regular use case for this scenario happens when your program deals with file
+modifications that must be guaranteed to be durable, but you don't care that
+changes are consistent. If you use this function, more than likely your program
+is ensuring consistency guarantees through other means, for example, SQLite uses
+the (Write Ahead Log) WAL algorithm to ensure changes are atomic at an
+application level.
 
 === Durable and Atomic
 
@@ -52,8 +62,9 @@ For this use case, you can use the functions:
 * 'writeBinaryFileDurableAtomic'
 
 The regular use case for this scenario happens when you want to ensure that
-after a program is executed, the data is there and it will be in a consistent
-state, _always_.
+after a program is executed, the modifications done to a file are guaranteed to
+be saved, and also that changes are rolled-back in case there is a failure (e.g.
+hard reboot, shutdown, etc).
 
 @since 0.1.6
 -}
@@ -135,6 +146,13 @@ ioModeToFlags iomode =
     ReadWriteMode -> rw_flags
     AppendMode    -> append_flags
 
+-- | Returns a low-level file descriptor for a directory path. This function
+-- exists given the fact that 'openFile' does not work with directories.
+--
+-- If you use this function, make sure you are working on an unmasked state,
+-- otherwise async exceptions may leave file descriptors open.
+--
+-- @since 0.1.6
 openDir :: MonadIO m => FilePath -> m Fd
 openDir fp
   -- TODO: Investigate what is the situation with Windows FS in regards to non_blocking
@@ -147,27 +165,46 @@ openDir fp
     (throwErrnoIfMinus1Retry "openDir" $
      c_safe_open cFp (ioModeToFlags ReadMode) 0o660)
 
+-- | Closes a 'Fd' that points to a Directory.
+--
+-- @since 0.1.6
 closeDirectory :: MonadIO m => Fd -> m ()
 closeDirectory (Fd dirFd) =
   liftIO $
   void $
   throwErrnoIfMinus1Retry "closeDirectory" $ c_close dirFd
 
-fsyncFileDescriptor :: MonadIO m => String -> CInt -> m ()
+-- | Executes the low-level C function fsync on a C file descriptor
+--
+-- @since 0.1.6
+fsyncFileDescriptor
+  :: MonadIO m
+  => String -- ^ Meta-description for error messages
+  -> CInt   -- ^ C File Descriptor
+  -> m ()
 fsyncFileDescriptor name cFd =
   liftIO $
   void $
     throwErrnoIfMinus1 ("fsync - " <> name) $
     c_safe_fsync cFd
 
--- NOTE: Not Async exception safe
+-- | Opens a file from a directory, using this function in favour of a regular
+-- 'openFile' guarantees that any file modifications are kept in the same
+-- directory where the file was opened. An edge case scenario is a mount
+-- happening in the directory where the file was opened while your program is
+-- running.
+--
+-- If you use this function, make sure you are working on an unmasked state,
+-- otherwise async exceptions may leave file descriptors open.
+--
 openFileFromDir :: (MonadIO m) => Fd -> FilePath -> IOMode -> m Handle
 openFileFromDir (Fd dirFd) fp iomode =
   liftIO $
   withFilePath fp $ \f -> do
     bracketOnError
       (do fileFd <- throwErrnoIfMinus1Retry "openFileFromDir" $
-                      c_safe_openat dirFd f (ioModeToFlags iomode) 0o666
+                      c_safe_openat dirFd f (ioModeToFlags iomode)
+                                            0o666 {- Can open directory with read only -}
           FD.mkFD
              fileFd
              iomode
