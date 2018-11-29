@@ -409,7 +409,7 @@ withBinaryFileDurableAtomic absFp iomode cb = do
   withRunInIO $ \run ->
     case iomode of
         -- We need to consider an atomic operation only when we are on 'WriteMode'
-      ReadMode -> run (withFile absFp iomode cb)
+      ReadMode -> run (withBinaryFile absFp iomode cb)
         -- We use regular old withFile operation
       _ {- WriteMode, ReadWriteMode,  AppendMode -}
        -> do
