@@ -397,7 +397,7 @@ withBinaryFileDurable absFp iomode cb =
 --
 -- === Cross-Platform support
 --
--- This function behaves the same as 'System.IO.withFile' on Windows platforms.
+-- This function behaves the same as 'System.IO.withBinaryFile' on Windows platforms.
 --
 -- @since 0.1.6
 withBinaryFileDurableAtomic ::
