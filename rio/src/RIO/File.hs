@@ -18,7 +18,7 @@ to consider what are the use cases that are ideal for each of the functions.
 
 For this use case, you want to use the regular functions:
 
-* 'System.IO.withFile'
+* 'System.IO.withBinaryFile'
 * 'RIO.writeFileBinary'
 
 The regular use case for this scenario happens when your program is dealing with
