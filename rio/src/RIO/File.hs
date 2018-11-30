@@ -419,22 +419,23 @@ withBinaryFileDurable absFp iomode cb =
 -- * It ensures durability by executing an fsync call before closing the file
 --   handle
 --
--- * It keeps all changes in a copy file, and after is closed it renames it to
---   the original filepath, in case of catastrophic failure, the original file
---   stays unaffected.
+-- * It keeps all changes in a temporal file, and after is closed it atomically
+--   moves the temporal file to the original filepath, in case of catastrophic
+--   failure, the original file stays unaffected.
 --
 --
 -- === Performance Considerations
 --
--- When using a non read-only 'IOMode' (e.g. 'WriteMode', 'ReadWriteMode',
--- 'AppendMode'), this function performs a copy operation of the specified input
--- file to guarantee the original file is intact in case of a catastrophic
--- failure (no partial writes). This approach may be prohibitive in scenarios
--- where the input file is expected to be large in size.
+-- When using a read-write 'IOMode' (e.g. 'ReadWriteMode', 'AppendMode'), this
+-- function performs a copy operation of the specified input file to guarantee
+-- the original file is intact in case of a catastrophic failure (no partial
+-- writes). This approach may be prohibitive in scenarios where the input file
+-- is expected to be large in size.
 --
 -- === Cross-Platform support
 --
--- This function behaves the same as 'System.IO.withBinaryFile' on Windows platforms.
+-- This function behaves the same as 'System.IO.withBinaryFile' on Windows
+-- platforms.
 --
 -- @since 0.1.6
 withBinaryFileDurableAtomic ::
@@ -445,10 +446,15 @@ withBinaryFileDurableAtomic absFp iomode cb = do
 #else
   withRunInIO $ \run ->
     case iomode of
-        -- We need to consider an atomic operation only when we are on 'WriteMode'
+        -- We need to consider an atomic operation only when we are on 'WriteMode', lets
+        -- use a regular withBinaryFile
       ReadMode -> run (withBinaryFile absFp iomode cb)
-        -- We use regular old withFile operation
-      _ {- WriteMode, ReadWriteMode,  AppendMode -}
+        -- Given we are going to read contents from the original file, we can create
+        -- a temporal file and then do an atomic move
+      WriteMode ->  do
+        tmpFp <- toTmpFilePath absFp
+        withDurableAtomic tmpFp run
+      _ {- ReadWriteMode,  AppendMode -}
        -> do
         -- copy original file for read purposes
         fileExists <- doesFileExist absFp
