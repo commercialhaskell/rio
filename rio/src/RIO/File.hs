@@ -449,8 +449,8 @@ withBinaryFileDurableAtomic absFp iomode cb = do
         -- We need to consider an atomic operation only when we are on 'WriteMode', lets
         -- use a regular withBinaryFile
       ReadMode -> run (withBinaryFile absFp iomode cb)
-        -- Given we are going to read contents from the original file, we can create
-        -- a temporal file and then do an atomic move
+        -- Given we are not going to read contents from the original file, we
+        -- can create a temporal file and then do an atomic move
       WriteMode ->  do
         tmpFp <- toTmpFilePath absFp
         withDurableAtomic tmpFp run
