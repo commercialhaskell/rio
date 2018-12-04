@@ -426,7 +426,7 @@ withBinaryFileDurable absFp iomode cb =
 --
 -- === Performance Considerations
 --
--- When using a read-write 'IOMode' (e.g. 'ReadWriteMode', 'AppendMode'), this
+ -- When using a writable but non-truncating 'IOMode' (i.e. 'ReadWriteMode' and 'AppendMode'), this 
 -- function performs a copy operation of the specified input file to guarantee
 -- the original file is intact in case of a catastrophic failure (no partial
 -- writes). This approach may be prohibitive in scenarios where the input file
