@@ -225,15 +225,18 @@ openFileFromDir (Fd dirFd) fp iomode =
 -- get a file descriptor for the directory that contains the file, which we can
 -- use later on to fsync the directory with.
 --
+-- If you use this function, make sure you are working on an masked state,
+-- otherwise async exceptions may leave file descriptors open.
+--
 -- @since 0.1.6
 openFileAndDirectory :: MonadUnliftIO m => FilePath -> IOMode -> m (Fd, Handle)
 openFileAndDirectory absFp iomode =  do
   let dir = takeDirectory absFp
       fp = takeFileName absFp
 
-  dirFd <- openDir dir
-  fileHandle <- openFileFromDir dirFd fp iomode `onException` closeDirectory dirFd
-  return (dirFd, fileHandle)
+  bracketOnError (openDir dir) closeDirectory $ \dirFd -> do
+    fileHandle <- openFileFromDir dirFd fp iomode
+    return (dirFd, fileHandle)
 
 -- | This sub-routine does the following tasks:
 --
@@ -247,9 +250,8 @@ closeFileDurable :: MonadIO m => Fd -> Handle -> m ()
 closeFileDurable dirFd@(Fd cDirFd) h =
   liftIO $
   finally
-    (do fileFd <- handleToFd h
-        fsyncFileDescriptor "closeFileDurable/File" (FD.fdFD fileFd) `finally`
-          hClose h
+    (bracket (handleToFd h) (\_ -> hClose h) $ \fileFd -> do
+        fsyncFileDescriptor "closeFileDurable/File" (FD.fdFD fileFd)
         -- NOTE: Here we are purposefully not fsyncing the directory if the file fails to fsync
         fsyncFileDescriptor "closeFileDurable/Directory" cDirFd)
     (closeDirectory dirFd)
@@ -302,10 +304,10 @@ closeFileDurableAtomic tmpFilePath filePath dirFd@(Fd cDirFd) fileHandle = do
     finally
       (withFilePath tmpFilePath $ \tmpFp ->
          withFilePath filePath $ \fp -> do
-           fileFd <- handleToFd fileHandle
-           fsyncFileDescriptor "closeFileDurableAtomic/File" (FD.fdFD fileFd) `finally` hClose fileHandle
-           renameFile tmpFp fp
-           fsyncFileDescriptor "closeFileDurableAtomic/Directory" cDirFd)
+           bracket (handleToFd fileHandle) (\_ -> hClose fileHandle) $ \fileFd -> do
+             fsyncFileDescriptor "closeFileDurableAtomic/File" (FD.fdFD fileFd)
+             renameFile tmpFp fp
+             fsyncFileDescriptor "closeFileDurableAtomic/Directory" cDirFd)
       (closeDirectory dirFd)
   where
     renameFile tmpFp origFp =
