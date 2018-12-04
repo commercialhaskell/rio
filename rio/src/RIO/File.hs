@@ -194,7 +194,7 @@ fsyncFileDescriptor name cFd =
 -- happening in the directory where the file was opened while your program is
 -- running.
 --
--- If you use this function, make sure you are working on an unmasked state,
+-- If you use this function, make sure you are working on an masked state,
 -- otherwise async exceptions may leave file descriptors open.
 --
 openFileFromDir :: (MonadIO m) => Fd -> FilePath -> IOMode -> m Handle
