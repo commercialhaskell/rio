@@ -419,7 +419,7 @@ withBinaryFileDurable absFp iomode cb =
 -- * It ensures durability by executing an fsync call before closing the file
 --   handle
 --
--- * It keeps all changes in a temporal file, and after is closed it atomically
+ -- * It keeps all changes in a temporary file, and after it is closed it atomically 
 --   moves the temporal file to the original filepath, in case of catastrophic
 --   failure, the original file stays unaffected.
 --
