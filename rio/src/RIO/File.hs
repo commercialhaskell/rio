@@ -31,7 +31,7 @@ your program doesn't /rely/ on the data contained in this file in order to work.
 
 === Atomic but not Durable
 
- Imagine a scenario where your program builds a temporary file that serves as an 
+ Imagine a scenario where your program builds a temporary file that serves as an
 intermediate step to a bigger task, like Object files (@.o@) in a compilation
 process. The program will use an existing @.o@ file if it is present, or it will
 build one from scratch if it is not. The file is not really required, but if it
@@ -51,7 +51,7 @@ The regular use case for this scenario happens when your program deals with file
 modifications that must be guaranteed to be durable, but you don't care that
 changes are consistent. If you use this function, more than likely your program
 is ensuring consistency guarantees through other means, for example, SQLite uses
- the Write Ahead Log (WAL) algorithm to ensure changes are atomic at an 
+ the Write Ahead Log (WAL) algorithm to ensure changes are atomic at an
 application level.
 
 === Durable and Atomic
@@ -149,7 +149,7 @@ ioModeToFlags iomode =
 -- | Returns a low-level file descriptor for a directory path. This function
 -- exists given the fact that 'openFile' does not work with directories.
 --
--- If you use this function, make sure you are working on an unmasked state,
+-- If you use this function, make sure you are working on a masked state,
 -- otherwise async exceptions may leave file descriptors open.
 --
 -- @since 0.1.6
@@ -419,18 +419,18 @@ withBinaryFileDurable absFp iomode cb =
 -- * It ensures durability by executing an fsync call before closing the file
 --   handle
 --
- -- * It keeps all changes in a temporary file, and after it is closed it atomically 
+ -- * It keeps all changes in a temporary file, and after it is closed it atomically
 --   moves the temporal file to the original filepath, in case of catastrophic
 --   failure, the original file stays unaffected.
 --
 --
 -- === Performance Considerations
 --
- -- When using a writable but non-truncating 'IOMode' (i.e. 'ReadWriteMode' and 'AppendMode'), this 
--- function performs a copy operation of the specified input file to guarantee
--- the original file is intact in case of a catastrophic failure (no partial
--- writes). This approach may be prohibitive in scenarios where the input file
--- is expected to be large in size.
+-- When using a writable but non-truncating 'IOMode' (i.e. 'ReadWriteMode' and
+-- 'AppendMode'), this function performs a copy operation of the specified input
+-- file to guarantee the original file is intact in case of a catastrophic
+-- failure (no partial writes). This approach may be prohibitive in scenarios
+-- where the input file is expected to be large in size.
 --
 -- === Cross-Platform support
 --
