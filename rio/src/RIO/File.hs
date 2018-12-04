@@ -51,7 +51,7 @@ The regular use case for this scenario happens when your program deals with file
 modifications that must be guaranteed to be durable, but you don't care that
 changes are consistent. If you use this function, more than likely your program
 is ensuring consistency guarantees through other means, for example, SQLite uses
-the (Write Ahead Log) WAL algorithm to ensure changes are atomic at an
+ the Write Ahead Log (WAL) algorithm to ensure changes are atomic at an 
 application level.
 
 === Durable and Atomic
