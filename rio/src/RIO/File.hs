@@ -398,7 +398,7 @@ withBinaryFileDurable ::
      MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m r) -> m r
 withBinaryFileDurable absFp iomode cb =
 #if WINDOWS
-  withFile absFp iomode cb
+  withBinaryFile absFp iomode cb
 #else
   withRunInIO $ \run ->
     bracket
