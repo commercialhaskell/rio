@@ -31,7 +31,7 @@ your program doesn't /rely/ on the data contained in this file in order to work.
 
 === Atomic but not Durable
 
-Imagine an scenario where your program builds a temporary file that serves as an
+ Imagine a scenario where your program builds a temporary file that serves as an 
 intermediate step to a bigger task, like Object files (@.o@) in a compilation
 process. The program will use an existing @.o@ file if it is present, or it will
 build one from scratch if it is not. The file is not really required, but if it
