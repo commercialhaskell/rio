@@ -240,7 +240,7 @@ openFileAndDirectory absFp iomode =  do
 -- * It calls fsync and then closes the given Handle (mapping to a temporal/backup filepath)
 -- * It calls fsync and then closes the containing directory of the file
 --
--- These steps guarante that the file changes are durable.
+-- These steps guarantee that the file changes are durable.
 --
 -- @since 0.1.6
 closeFileDurable :: MonadIO m => Fd -> Handle -> m ()
