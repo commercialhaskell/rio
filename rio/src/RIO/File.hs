@@ -250,8 +250,9 @@ closeFileDurable :: MonadIO m => Fd -> Handle -> m ()
 closeFileDurable dirFd@(Fd cDirFd) h =
   liftIO $
   finally
-    (bracket (handleToFd h) (\_ -> hClose h) $ \fileFd -> do
-        fsyncFileDescriptor "closeFileDurable/File" (FD.fdFD fileFd)
+    (do (withHandleFd h $ \fileFd ->
+           fsyncFileDescriptor "closeFileDurable/File" (FD.fdFD fileFd))
+          `finally` hClose h
         -- NOTE: Here we are purposefully not fsyncing the directory if the file fails to fsync
         fsyncFileDescriptor "closeFileDurable/Directory" cDirFd)
     (closeDirectory dirFd)
@@ -273,19 +274,16 @@ toTmpFilePath filePath =
     filename = takeFileName filePath
     tmpFilename = "." <> filename <> ".tmp"
 
-handleToFd :: Handle -> IO FD.FD
-#if MIN_VERSION_base(4,9,0)
-handleToFd h =
+withHandleFd :: Handle -> (FD.FD -> IO a) -> IO a
+withHandleFd h cb =
   case h of
     HandleFD.FileHandle _ mv -> do
-      HandleFD.Handle__{HandleFD.haDevice = dev} <- readMVar mv
-      case cast dev of
-        Just fd -> return fd
-        Nothing -> error "not a file handle"
-    HandleFD.DuplexHandle {} -> error "not a file handle"
-# else
-handleToFd = HandleFD.handleToFd
-#endif
+      withMVar mv $ \HandleFD.Handle__{HandleFD.haDevice = dev} ->
+        case cast dev of
+          Just fd -> cb fd
+          Nothing -> error "withHandleFd: not a file handle"
+    HandleFD.DuplexHandle {} -> error "withHandleFd: not a file handle"
+
 
 -- | This sub-routine does the following tasks:
 --
@@ -304,10 +302,11 @@ closeFileDurableAtomic tmpFilePath filePath dirFd@(Fd cDirFd) fileHandle = do
     finally
       (withFilePath tmpFilePath $ \tmpFp ->
          withFilePath filePath $ \fp -> do
-           bracket (handleToFd fileHandle) (\_ -> hClose fileHandle) $ \fileFd -> do
-             fsyncFileDescriptor "closeFileDurableAtomic/File" (FD.fdFD fileFd)
-             renameFile tmpFp fp
-             fsyncFileDescriptor "closeFileDurableAtomic/Directory" cDirFd)
+           (withHandleFd fileHandle $ \fileFd ->
+               fsyncFileDescriptor "closeFileDurableAtomic/File" (FD.fdFD fileFd))
+             `finally` hClose fileHandle
+           renameFile tmpFp fp
+           fsyncFileDescriptor "closeFileDurableAtomic/Directory" cDirFd)
       (closeDirectory dirFd)
   where
     renameFile tmpFp origFp =
