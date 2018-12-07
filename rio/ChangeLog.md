@@ -1,8 +1,11 @@
 # Changelog for rio
 
-## Unreleased
+## 0.1.6.0
 
 * Changed `logUseColor` to default to `False` on Windows, even when verbose and on the terminal
+* Add `RIO.File` module which offers a family of file handling functions
+  (`withBinaryFileDurable`, `withBinaryFileDurableAtomic`, among others.) with
+  better durability and atomicity guarantees
 
 ## 0.1.5.0
 
