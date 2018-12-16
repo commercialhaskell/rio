@@ -274,9 +274,9 @@ minimumMaybe :: (Ord a, Foldable t) => t a -> Maybe a
 minimumMaybe = safeListCall Data.List.minimum
 
 -- | @since 0.1.3.0
-maximumByMaybe :: (Ord a, Foldable t) => (a -> a -> Ordering) -> t a -> Maybe a
+maximumByMaybe :: (Foldable t) => (a -> a -> Ordering) -> t a -> Maybe a
 maximumByMaybe f = safeListCall (Data.List.maximumBy f)
 
 -- | @since 0.1.3.0
-minimumByMaybe :: (Ord a, Foldable t) => (a -> a -> Ordering) -> t a -> Maybe a
+minimumByMaybe :: (Foldable t) => (a -> a -> Ordering) -> t a -> Maybe a
 minimumByMaybe f = safeListCall (Data.List.minimumBy f)
