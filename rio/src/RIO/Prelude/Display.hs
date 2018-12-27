@@ -42,7 +42,17 @@ instance IsString Utf8Builder where
 --
 -- @since 0.1.0.0
 class Display a where
+  {-# MINIMAL display | textDisplay #-}
+
   display :: a -> Utf8Builder
+  display = display . textDisplay
+
+  -- | Display data as `Text`, which will also be used for `display` if it is
+  -- not overriden.
+  --
+  -- @since 0.1.7.0
+  textDisplay :: a -> Text
+  textDisplay = utf8BuilderToText . display
 
 -- | @since 0.1.0.0
 instance Display Utf8Builder where

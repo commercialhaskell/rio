@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.7.0
+
+* Addition of `textDisplay` to `Display` class.
+
 ## 0.1.6.0
 
 * Changed `logUseColor` to default to `False` on Windows, even when verbose and on the terminal
