@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.8.0
+
+* Re-export `Control.Monad.State.modify`, `Control.Monad.State.modify'` and `Control.Monad.State.gets` in `RIO.State`
+
 ## 0.1.7.0
 
 * Addition of `textDisplay` to `Display` class.
