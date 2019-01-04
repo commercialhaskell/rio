@@ -1,5 +1,10 @@
 # Changelog for rio
 
+## 0.1.9.0
+
+* Re-export the `Control.Monad.State.State` and `Control.Monad.State.StateT` types and related computation functions in `RIO.State`.
+* Re-export the `Control.Monad.Writer.Writer` and `Control.Monad.Writer.WriterT` types and related computation functions in `RIO.Writer`.
+
 ## 0.1.8.0
 
 * Re-export `Control.Monad.State.modify`, `Control.Monad.State.modify'` and `Control.Monad.State.gets` in `RIO.State`
