@@ -38,6 +38,12 @@ import Control.Monad.Writer (MonadWriter(..))
 newtype RIO env a = RIO { unRIO :: ReaderT env IO a }
   deriving (Functor,Applicative,Monad,MonadIO,MonadReader env,MonadThrow)
 
+instance Semigroup a => Semigroup (RIO env a) where
+  (<>) = liftA2 (<>)
+instance Monoid a => Monoid (RIO env a) where
+  mempty = pure mempty
+  mappend = (<>)
+
 runRIO :: MonadIO m => env -> RIO env a -> m a
 runRIO env (RIO (ReaderT f)) = liftIO (f env)
 
