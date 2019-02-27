@@ -11,6 +11,7 @@ module RIO
   , module RIO.Prelude.Trace
   , module RIO.Prelude.URef
   , module RIO.Prelude.Simple
+  , module RIO.Deque
   ) where
 
 import RIO.Prelude.Display
@@ -25,3 +26,5 @@ import RIO.Prelude.Text
 import RIO.Prelude.Trace
 import RIO.Prelude.URef
 import RIO.Prelude.Simple
+
+import RIO.Deque

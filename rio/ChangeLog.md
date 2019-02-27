@@ -6,6 +6,7 @@
 * Re-export the `Control.Monad.Writer.Writer` and `Control.Monad.Writer.WriterT` types and related computation functions in `RIO.Writer`.
 * Re-export `pred`, `succ` in `RIO.Partial`.
 * Add `Semigroup` and `Monoid` instances for `RIO`
+* Add the `Deque` double-ended queue data type
 
 ## 0.1.8.0
 
