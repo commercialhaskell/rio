@@ -42,7 +42,7 @@ instance Semigroup a => Semigroup (RIO env a) where
   (<>) = liftA2 (<>)
 instance Monoid a => Monoid (RIO env a) where
   mempty = pure mempty
-  mappend = (<>)
+  mappend = liftA2 mappend
 
 runRIO :: MonadIO m => env -> RIO env a -> m a
 runRIO env (RIO (ReaderT f)) = liftIO (f env)
