@@ -30,7 +30,7 @@ import qualified Data.Vector.Unboxed.Mutable  as U
 import           Data.Primitive.MutVar
 
 data DequeState v s a = DequeState
-    (v s a)
+    !(v s a)
     {-# UNPACK #-} !Int -- start
     {-# UNPACK #-} !Int -- size
 
