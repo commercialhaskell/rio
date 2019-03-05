@@ -12,13 +12,13 @@ module RIO.Map.Unchecked
 
   -- * Conversion
   -- ** Ordered lists
-  , Data.Map.Strict.toAscList
+  , Data.Map.Strict.toAscList -- FIXME: remove in the next major version (0.2.0.0)
   , Data.Map.Strict.fromAscList
   , Data.Map.Strict.fromAscListWith
   , Data.Map.Strict.fromAscListWithKey
   , Data.Map.Strict.fromDistinctAscList
 #if MIN_VERSION_containers(0,5,8)
-  , Data.Map.Strict.toDescList
+  , Data.Map.Strict.toDescList -- FIXME: remove in the next major version (0.2.0.0)
   , Data.Map.Strict.fromDescList
   , Data.Map.Strict.fromDescListWith
   , Data.Map.Strict.fromDescListWithKey
