@@ -255,10 +255,21 @@ dequeToList = foldrDeque (\a rest -> pure $ a : rest) []
 {-# INLINE dequeToList #-}
 
 
--- | Convert to an immutable vector of any type
+-- | Convert to an immutable vector of any type. If resulting pure vector corresponds to the mutable
+-- one used by the `Deque`, it will be more efficient to use `freezeDeque` instead.
+--
+-- ==== __Example__
+--
+-- >>> :set -XTypeApplications
+-- >>> import qualified RIO.Vector.Unboxed as U
+-- >>> import qualified RIO.Vector.Storable as S
+-- >>> d <- newDeque @U.MVector @Int
+-- >>> mapM_ (pushFrontDeque d) [0..10]
+-- >>> dequeToVector @S.Vector d
+-- [10,9,8,7,6,5,4,3,2,1,0]
 --
 -- @since 0.1.9.0
-dequeToVector :: (V.MVector v a, VG.Vector v' a, PrimMonad m)
+dequeToVector :: (VG.Vector v' a, V.MVector v a, PrimMonad m)
               => Deque v (PrimState m) a -> m (v' a)
 dequeToVector dq = do
     size <- getDequeSize dq
@@ -286,11 +297,23 @@ newVector v size2 sizeOrig f = assert (sizeOrig == V.length v) $ do
 {-# INLINE newVector #-}
 
 
--- | Yield an immutable copy of the underlying mutable vector
+-- | Yield an immutable copy of the underlying mutable vector. The difference from `dequeToVector`
+-- is that the the copy will be performed with a more efficient @memcpy@, rather than element by
+-- element. The downside is that the resulting vector type must be the one that corresponds to the
+-- mutable one that is used in the `Deque`.
+--
+-- ==== __Example__
+--
+-- >>> :set -XTypeApplications
+-- >>> import qualified RIO.Vector.Unboxed as U
+-- >>> d <- newDeque @U.MVector @Int
+-- >>> mapM_ (pushFrontDeque d) [0..10]
+-- >>> freezeDeque @U.Vector d
+-- [10,9,8,7,6,5,4,3,2,1,0]
 --
 -- @since 0.1.9.0
 freezeDeque ::
-     (PrimMonad m, VG.Vector v a)
+     (VG.Vector v a, PrimMonad m)
   => Deque (VG.Mutable v) (PrimState m) a
   -> m (v a)
 freezeDeque (Deque var) = do
