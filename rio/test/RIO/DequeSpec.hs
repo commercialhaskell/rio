@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module RIO.DequeSpec (spec) where
 
 import RIO
@@ -6,6 +7,10 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
+import qualified Data.Vector as VB
+import qualified Data.Vector.Generic as VG
+import qualified Data.Vector.Unboxed as VU
+import qualified Data.Vector.Storable as VS
 import qualified Data.Vector.Generic.Mutable as V
 
 data DequeAction
@@ -36,33 +41,33 @@ specialCase =
 spec :: Spec
 spec = do
   let runActions
-        :: V.MVector v Int
-        => (Deque v (PrimState IO) Int -> Deque v (PrimState IO) Int)
+        :: forall v . (VG.Vector v Int, Show (v Int), Eq (v Int))
+        => Proxy v
         -> [DequeAction]
         -> IO ()
-      runActions forceType actions = do
+      runActions proxy actions = do
         base <- newIORef [] :: IO (IORef [Int])
-        tested <- fmap forceType newDeque
+        tested <- newDeque :: IO (Deque (VG.Mutable v) (PrimState IO) Int)
         for_ (PopFront : PopBack : actions) $ \action -> do
           case action of
             PushFront i -> do
               pushFrontRef base i
               pushFrontDeque tested i
-              same base tested
+              same proxy base tested
             PushBack i -> do
               pushBackRef base i
               pushBackDeque tested i
-              same base tested
+              same proxy base tested
             PopFront -> do
               expected <- popFrontRef base
               actual <- popFrontDeque tested
               actual `shouldBe` expected
-              same base tested
+              same proxy base tested
             PopBack -> do
               expected <- popBackRef base
               actual <- popBackDeque tested
               actual `shouldBe` expected
-              same base tested
+              same proxy base tested
         let drain = do
               expected <- popBackRef base
               actual <- popBackDeque tested
@@ -71,14 +76,14 @@ spec = do
                 Just _ -> drain
                 Nothing -> return $! ()
         drain
-      test name forceType = describe name $ do
-        prop "arbitrary actions" $ runActions forceType
-        it "many pushes" $ runActions forceType manyPushes
-        it "special case" $ runActions forceType specialCase
+      test name proxy = describe name $ do
+        prop "arbitrary actions" $ runActions proxy
+        it "many pushes" $ runActions proxy manyPushes
+        it "special case" $ runActions proxy specialCase
 
-  test "UDeque" asUDeque
-  test "SDeque" asSDeque
-  test "BDeque" asBDeque
+  test "UDeque" (Proxy :: Proxy VU.Vector)
+  test "SDeque" (Proxy :: Proxy VS.Vector)
+  test "BDeque" (Proxy :: Proxy VB.Vector)
 
 pushFrontRef :: IORef [Int] -> Int -> IO ()
 pushFrontRef ref i = modifyIORef ref (i:)
@@ -104,11 +109,19 @@ popBackRef ref = do
       pure $ Just i
     [] -> pure Nothing
 
-same :: V.MVector v Int => IORef [Int] -> Deque v (PrimState IO) Int -> IO ()
-same ref deque = do
+same ::
+     forall v. (Show (v Int), Eq (v Int), VG.Vector v Int)
+  => Proxy v
+  -> IORef [Int]
+  -> Deque (VG.Mutable v) (PrimState IO) Int
+  -> IO ()
+same proxy ref deque = do
   fromRef <- readIORef ref
   fromRight <- foldrDeque (\i rest -> pure $ i : rest) [] deque
   fromRight `shouldBe` fromRef
   fromLeft <- foldlDeque (\rest i -> pure $ i : rest) [] deque
   fromLeft `shouldBe` reverse fromRef
   dequeToList deque `shouldReturn` fromRef
+  dequeToVector deque `shouldReturn` (VU.fromList fromRef :: VU.Vector Int)
+  uv :: v Int <- freezeDeque deque
+  uv `shouldBe` VG.fromList fromRef

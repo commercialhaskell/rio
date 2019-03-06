@@ -7,6 +7,7 @@ module RIO.Deque
     , BDeque
       -- * Operations
     , newDeque
+    , getDequeSize
     , popFrontDeque
     , popBackDeque
     , pushFrontDeque
@@ -14,6 +15,8 @@ module RIO.Deque
     , foldlDeque
     , foldrDeque
     , dequeToList
+    , dequeToVector
+    , freezeDeque
       -- * Inference helpers
     , asUDeque
     , asSDeque
@@ -23,6 +26,7 @@ module RIO.Deque
 import           RIO.Prelude.Reexports
 import           Control.Exception            (assert)
 import           Control.Monad                (liftM)
+import qualified Data.Vector.Generic          as VG
 import qualified Data.Vector.Generic.Mutable  as V
 import qualified Data.Vector.Mutable          as B
 import qualified Data.Vector.Storable.Mutable as S
@@ -89,6 +93,17 @@ newDeque = do
   where
     baseSize = 32
 {-# INLINE newDeque #-}
+
+
+-- | /O(1)/ - Get the number of elements that is currently in the `Deque`
+--
+-- @since 0.1.9.0
+getDequeSize :: PrimMonad m => Deque v (PrimState m) a -> m Int
+getDequeSize (Deque var) = do
+  DequeState _ _ size <- readMutVar var
+  pure size
+{-# INLINE getDequeSize #-}
+
 
 -- | Pop the first value from the beginning of the 'Deque'
 --
@@ -205,6 +220,7 @@ foldlDeque f acc0 (Deque var) = do
             loop (idx + 1) $! acc'
   loop 0 acc0
 
+
 -- | Fold over a 'Deque', starting at the end. Does not modify the 'Deque'.
 --
 -- @since 0.1.9.0
@@ -238,6 +254,30 @@ dequeToList
 dequeToList = foldrDeque (\a rest -> pure $ a : rest) []
 {-# INLINE dequeToList #-}
 
+
+-- | Convert to an immutable vector of any type. If resulting pure vector corresponds to the mutable
+-- one used by the `Deque`, it will be more efficient to use `freezeDeque` instead.
+--
+-- ==== __Example__
+--
+-- >>> :set -XTypeApplications
+-- >>> import qualified RIO.Vector.Unboxed as U
+-- >>> import qualified RIO.Vector.Storable as S
+-- >>> d <- newDeque @U.MVector @Int
+-- >>> mapM_ (pushFrontDeque d) [0..10]
+-- >>> dequeToVector @S.Vector d
+-- [10,9,8,7,6,5,4,3,2,1,0]
+--
+-- @since 0.1.9.0
+dequeToVector :: (VG.Vector v' a, V.MVector v a, PrimMonad m)
+              => Deque v (PrimState m) a -> m (v' a)
+dequeToVector dq = do
+    size <- getDequeSize dq
+    mv <- V.unsafeNew size
+    foldlDeque (\i e -> V.unsafeWrite mv i e >> pure (i+1)) 0 dq
+    VG.unsafeFreeze mv
+
+
 newVector :: (PrimMonad m, V.MVector v a)
           => v (PrimState m) a
           -> Int
@@ -255,3 +295,46 @@ newVector v size2 sizeOrig f = assert (sizeOrig == V.length v) $ do
         (V.unsafeTake size2 v)
     f v' 0 sizeOrig
 {-# INLINE newVector #-}
+
+
+-- | Yield an immutable copy of the underlying mutable vector. The difference from `dequeToVector`
+-- is that the the copy will be performed with a more efficient @memcpy@, rather than element by
+-- element. The downside is that the resulting vector type must be the one that corresponds to the
+-- mutable one that is used in the `Deque`.
+--
+-- ==== __Example__
+--
+-- >>> :set -XTypeApplications
+-- >>> import qualified RIO.Vector.Unboxed as U
+-- >>> d <- newDeque @U.MVector @Int
+-- >>> mapM_ (pushFrontDeque d) [0..10]
+-- >>> freezeDeque @U.Vector d
+-- [10,9,8,7,6,5,4,3,2,1,0]
+--
+-- @since 0.1.9.0
+freezeDeque ::
+     (VG.Vector v a, PrimMonad m)
+  => Deque (VG.Mutable v) (PrimState m) a
+  -> m (v a)
+freezeDeque (Deque var) = do
+    state@(DequeState v _ size) <- readMutVar var
+    v' <- V.unsafeNew size
+    makeCopy v' state
+    VG.unsafeFreeze v'
+
+
+makeCopy ::
+     (V.MVector v a, PrimMonad m)
+  => v (PrimState m) a
+  -> DequeState v (PrimState m) a
+  -> m ()
+makeCopy v' (DequeState v start size) = do
+    let size1 = min size (V.length v - start)
+        size2 = size - size1
+    V.unsafeCopy
+        (V.unsafeTake size1 v')
+        (V.unsafeSlice start size1 v)
+    when (size > size1) $ V.unsafeCopy
+        (V.unsafeSlice size1 size2 v')
+        (V.unsafeTake size2 v)
+{-# INLINE makeCopy #-}
