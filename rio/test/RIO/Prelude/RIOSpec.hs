@@ -7,8 +7,8 @@ import RIO
 import RIO.State
 import RIO.Writer
 import Test.Hspec
-import Test.Hspec.QuickCheck
 
+spec :: Spec
 spec = do
   describe "RIO writer instance" $ do
     it "tell works" $ do
@@ -30,7 +30,7 @@ spec = do
 
     it "pass works" $ do
       ref <- newSomeRef (mempty :: Text)
-      result <- runRIO ref $ pass $ do
+      () <- runRIO ref $ pass $ do
         tell "hello\n"
         tell "world\n"
         return ((), \a -> a <> "!")
@@ -48,7 +48,7 @@ spec = do
 
     it "state works" $ do
       ref <- newSomeRef (mempty :: Text)
-      newRef <- newSomeRef ("Hello World!" :: Text)
-      result <- runRIO ref $ state (\ref -> ((), "Hello World!"))
+      _newRef <- newSomeRef ("Hello World!" :: Text)
+      () <- runRIO ref $ state (\_ -> ((), "Hello World!"))
       contents <- readSomeRef ref
       contents `shouldBe` "Hello World!"

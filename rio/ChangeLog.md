@@ -7,6 +7,7 @@
 * Re-export `pred`, `succ` in `RIO.Partial`.
 * Add `Semigroup` and `Monoid` instances for `RIO`
 * Add the `Deque` double-ended queue data type
+* Re-export `Data.Map.Strict.toAscList` and `Data.Map.Strict.toDescList` from `RIO.Map`.
 
 ## 0.1.8.0
 

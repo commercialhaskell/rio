@@ -113,6 +113,12 @@ module RIO.Map
   , Data.Map.Strict.fromListWith
   , Data.Map.Strict.fromListWithKey
 
+  -- ** Ordered lists
+  , Data.Map.Strict.toAscList
+#if MIN_VERSION_containers(0,5,8)
+  , Data.Map.Strict.toDescList
+#endif
+
   -- * Filter
   , Data.Map.Strict.filter
   , Data.Map.Strict.filterWithKey

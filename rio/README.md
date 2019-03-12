@@ -211,8 +211,10 @@ problems that might otherwise go overlooked:
 
 * `-Wall`
 * `-Wcompat`
+* `-Widentities`
 * `-Wincomplete-record-updates`
 * `-Wincomplete-uni-patterns`
+* `-Wpartial-fields`
 * `-Wredundant-constraints`
 
 You may add them per file, or to your package.yaml, or pass them on the command 
@@ -225,9 +227,12 @@ code:
 
 * `-Werror`
 
-Further reading: Alexis King explains why these are a good idea in [her blog 
+Further reading: 
+* Alexis King explains why these are a good idea in [her blog 
 post](https://lexi-lambda.github.io/blog/2018/02/10/an-opinionated-guide-to-haskell-in-2018/) 
 which was the original inspiration for this section.
+* Max Tagher gives an in-depth overview of these flags, and more,
+[in his blog post](https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3).
 
 ### Monads
 
