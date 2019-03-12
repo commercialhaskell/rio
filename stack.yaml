@@ -1,8 +1,4 @@
-resolver: lts-10.5
+resolver: lts-13.12
 packages:
 - rio
 - rio-orphans
-extra-deps:
-- unliftio-0.2.6.0@rev:0
-- unliftio-core-0.1.1.0@rev:1
-- typed-process-0.2.2.0@rev:0
