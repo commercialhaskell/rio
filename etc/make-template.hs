@@ -1,10 +1,5 @@
 #!/usr/bin/env stack
-{- stack runghc
-    --package rio
-    --package conduit
-    --package project-template
-    -- -hide-all-packages
--}
+-- stack --resolver lts-13.12 script
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}

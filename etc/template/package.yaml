@@ -20,8 +20,8 @@ extra-source-files:
 description:         DESCRIPTION
 
 dependencies:
-- base >= 4.10 && < 10
-- rio >= 0.1.1.0
+- base >= 4.11 && < 10
+- rio >= 0.1.9.0
 
 ghc-options:
 - -Wall
