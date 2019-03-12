@@ -6,17 +6,6 @@
 
 [![Build Status](https://travis-ci.org/commercialhaskell/rio.svg?branch=master)](https://travis-ci.org/commercialhaskell/rio) [![Build status](https://ci.appveyor.com/api/projects/status/n6935pmtlry77dmn?svg=true)](https://ci.appveyor.com/project/snoyberg/rio-21tpl)
 
-__NOTE__ This code is currently in prerelease status, and has been
-released as a tech preview. A number of us are actively working on
-improving the project and getting it to a useful first release. For
-more information, see the
-[description of goals](https://github.com/snoyberg/codename-karka#readme)
-and the
-[issue tracker for discussions](https://github.com/commercialhaskell/rio/issues). If
-you're reading this file anywhere but Github, you should probably
-[read the Github version instead](https://github.com/commercialhaskell/rio#readme),
-which will be more up to date.
-
 The goal of the `rio` library is to make it easier to adopt Haskell
 for writing production software.  It is intended as a cross between:
 
@@ -24,9 +13,11 @@ for writing production software.  It is intended as a cross between:
 * Useful `Prelude` replacement
 * A set of best practices for writing production quality Haskell code
 
-You're free to use any subset of functionality desired in your
-project. This README will guide you through using `rio` to its fullest
-extent.
+This repository contains the `rio` library and other related
+libraries, such as `rio-orphans`. There is a [tutorial on how to use
+`rio`](https://haskell.fpcomplete.com/library/rio) available on FP
+Complete's Haskell site. This README discusses project goals and
+collects other reference information.
 
 ## Standard library
 
@@ -112,9 +103,8 @@ functionality. You should:
   regardless of qualification. For instance, if you are importing both
   `RIO.Map.\\` and `RIO.List.\\` do not import either one unqualified.
 
-__TODO__ In the future, we may have editor integration or external
-tooling to help with import management. Also, see project template
-comments below.
+In the future, we may have editor integration or external tooling to
+help with import management.
 
 ### Language extensions
 
@@ -182,9 +172,10 @@ Notes on some surprising choices:
 * `MonadFailDesugaring` helps prevent partial pattern matches in your
   code, see [#85](https://github.com/commercialhaskell/rio/issues/85)
 
-__TODO__ Do we recommend setting in `package.yaml` or in the source
-files themselves? Need to discuss and come to a conclusion on this
-point https://github.com/commercialhaskell/rio/issues/9
+Due to concerns about tooling usage (see [issue
+#9](https://github.com/commercialhaskell/rio/issues/9)), we recommend
+adding these extensions on-demand in your individual source modules
+instead of including them in your `package.yaml` or `.cabal` files.
 
 There are other language extensions which are perfectly fine to use as
 well, but are not recommended to be turned on by default:
@@ -206,7 +197,7 @@ StaticPointers
 
 ### GHC Options
 
-We recommend using these GHC complier warning flags on all projects, to catch 
+We recommend using these GHC complier warning flags on all projects, to catch
 problems that might otherwise go overlooked:
 
 * `-Wall`
@@ -217,19 +208,20 @@ problems that might otherwise go overlooked:
 * `-Wpartial-fields`
 * `-Wredundant-constraints`
 
-You may add them per file, or to your package.yaml, or pass them on the command 
-line when running ghc. We plan to add these to the package.yaml of our project 
-template, once its ready.
+You may add them per file, or to your package.yaml, or pass them on
+the command line when running ghc. We include these in the project
+template's `package.yaml` file.
 
-For code targeting production use, you should also use the flag that turns all 
-warnings into errors, to force you to resolve the warnings before you ship your 
+For code targeting production use, you should also use the flag that turns all
+warnings into errors, to force you to resolve the warnings before you ship your
 code:
 
 * `-Werror`
 
-Further reading: 
-* Alexis King explains why these are a good idea in [her blog 
-post](https://lexi-lambda.github.io/blog/2018/02/10/an-opinionated-guide-to-haskell-in-2018/) 
+Further reading:
+
+* Alexis King explains why these are a good idea in [her blog
+post](https://lexi-lambda.github.io/blog/2018/02/10/an-opinionated-guide-to-haskell-in-2018/)
 which was the original inspiration for this section.
 * Max Tagher gives an in-depth overview of these flags, and more,
 [in his blog post](https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3).
@@ -307,9 +299,6 @@ and here just give recommendations.
     envL = lens seEnv (\x y -> x { seEnv = y })
   ```
 
-  __TODO__ Open question: how do we decide when we use a `Lens'`
-  versus just a `SimpleGetter` in these `Has` typeclasses?
-
 * If you're writing code that you want to be usable outside of `RIO`
   for some reason, you should stick to the good mtl-style typeclasses:
   `MonadReader`, `MonadIO`, `MonadUnliftIO`, `MonadThrow`, and
@@ -322,14 +311,14 @@ and here just give recommendations.
 
 ### Exceptions
 
-For in-depth discussion, see
-[exceptions best practices](https://www.fpcomplete.com/blog/2016/11/exceptions-best-practices-haskell). The
+For in-depth discussion, see [safe exception
+handling](https://haskell.fpcomplete.com/tutorial/exceptions). The
 basic idea is:
 
 * If something can fail, and you want people to deal with that failure
   every time (e.g., `lookup`), then return a `Maybe` or `Either`
   value.
-* If the use will sometimes not want to deal with it, then use
+* If the user will usually not want to deal with it, then use
   exceptions. In the case of pure code, use a `MonadThrow`
   constraint. In the case of `IO` code: use runtime exceptions via
   `throwIO` (works in the `RIO` monad too).
@@ -366,18 +355,18 @@ do otherwise.
 
 ### Project template
 
-__TODO__ In the future, we'll add a new Stack template for using this
-library. We'll use hpack, not cabal files, and rely on automatic
-exposed-module discovery.
+We provide a project template which sets up lots of things for you out
+of the box. You can use it by running:
+
+```
+$ stack new projectname rio
+```
 
 ### Safety first
 
 This library intentionally puts safety first, and therefore avoids
 promoting partial functions and lazy I/O. If you think you need lazy
 I/O: you need a streaming data library like conduit instead.
-
-__TODO__ Decide if we include a streaming data solution out of the
-box. https://github.com/commercialhaskell/rio/issues/1
 
 ### When to generalize
 
@@ -394,13 +383,6 @@ question is defining your own typeclasses. As a general rule: avoid
 doing so as long as possible. And _if_ you define a typeclass: make
 sure its usage can't lead to accidental bugs by allowing you to swap
 in types you didn't expect.
-
-__TODO__ Expand, clarify, examples.
-
-### Coding style
-
-__TODO__ Point to coding style guidelines, and discuss
-[hindent](https://github.com/commercialhaskell/hindent).
 
 ### Module hierarchy
 
