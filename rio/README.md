@@ -4,7 +4,7 @@
 
 ![Rio](https://camo.githubusercontent.com/fc162fb0024699c85f00eae769085a5fe528153e/68747470733a2f2f7777772e61687374617469632e636f6d2f70686f746f732f636974792f76692d76363837315f30305f31343030783434322e6a7067)
 
-[![Build Status](https://travis-ci.org/commercialhaskell/rio.svg?branch=master)](https://travis-ci.org/commercialhaskell/rio) [![Build status](https://ci.appveyor.com/api/projects/status/n6935pmtlry77dmn?svg=true)](https://ci.appveyor.com/project/snoyberg/rio-21tpl)
+[![Build Status](https://dev.azure.com/snoyberg/rio/_apis/build/status/commercialhaskell.rio?branchName=master)](https://dev.azure.com/snoyberg/rio/_build/latest?definitionId=6&branchName=master)
 
 __NOTE__ This code is currently in prerelease status, and has been
 released as a tech preview. A number of us are actively working on
