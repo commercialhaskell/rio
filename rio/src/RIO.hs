@@ -1,5 +1,6 @@
 module RIO
   ( module RIO.Prelude.Display
+  , module RIO.Prelude.Exit
   , module RIO.Prelude.Extra
   , module RIO.Prelude.IO
   , module RIO.Prelude.Lens
@@ -15,6 +16,7 @@ module RIO
   ) where
 
 import RIO.Prelude.Display
+import RIO.Prelude.Exit
 import RIO.Prelude.Extra
 import RIO.Prelude.IO
 import RIO.Prelude.Lens

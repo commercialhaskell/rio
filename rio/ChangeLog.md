@@ -2,6 +2,7 @@
 
 ## 0.1.9.0
 
+* Add `Prelude.Exit` to export lifted versions of the exit functions from `System.Exit`.
 * Re-export the `Control.Monad.State.State` and `Control.Monad.State.StateT` types and related computation functions in `RIO.State`.
 * Re-export the `Control.Monad.Writer.Writer` and `Control.Monad.Writer.WriterT` types and related computation functions in `RIO.Writer`.
 * Re-export `pred`, `succ` in `RIO.Partial`.

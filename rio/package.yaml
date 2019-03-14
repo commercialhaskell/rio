@@ -47,6 +47,7 @@ library:
   source-dirs: src/
   other-modules:
     - RIO.Prelude.Display
+    - RIO.Prelude.Exit
     - RIO.Prelude.Extra
     - RIO.Prelude.IO
     - RIO.Prelude.Lens
