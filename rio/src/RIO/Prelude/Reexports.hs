@@ -229,7 +229,6 @@ module RIO.Prelude.Reexports
   , (Prelude.$!)
   , (Prelude.^)
   , (Prelude.^^)
-  , System.Exit.ExitCode(..)
   , Text.Read.Read
   , Text.Read.readMaybe
     -- * Primitive
