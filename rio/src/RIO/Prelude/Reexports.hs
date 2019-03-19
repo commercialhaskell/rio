@@ -165,6 +165,7 @@ module RIO.Prelude.Reexports
   , Data.Ord.comparing
   , Data.Proxy.Proxy(..)
   , Data.Semigroup.Semigroup (..)
+  , Data.Sequence.Seq
   , Data.Set.Set
   , Data.String.IsString(..)
   , Data.Text.Text
@@ -300,6 +301,7 @@ import qualified Data.Maybe
 import qualified Data.Ord
 import qualified Data.Proxy
 import qualified Data.Set
+import qualified Data.Sequence
 import qualified Data.Text.Encoding.Error
 import qualified Data.Traversable
 import qualified Data.Vector
