@@ -9,6 +9,7 @@
 * Add `Semigroup` and `Monoid` instances for `RIO`
 * Add the `Deque` double-ended queue data type
 * Re-export `Data.Map.Strict.toAscList` and `Data.Map.Strict.toDescList` from `RIO.Map`.
+* Re-export `Data.Sequence.Seq` from `RIO`.
 
 ## 0.1.8.0
 
