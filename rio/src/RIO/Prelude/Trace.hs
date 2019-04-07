@@ -1,5 +1,6 @@
 module RIO.Prelude.Trace
-  ( -- * Text
+  ( -- ** Trace
+    -- *** Text
     trace
   , traceId
   , traceIO
@@ -9,7 +10,7 @@ module RIO.Prelude.Trace
   , traceMarker
   , traceMarkerIO
   , traceStack
-    -- * Show
+    -- *** Show
   , traceShow
   , traceShowId
   , traceShowIO
@@ -19,7 +20,7 @@ module RIO.Prelude.Trace
   , traceShowMarker
   , traceShowMarkerIO
   , traceShowStack
-    -- * Display
+    -- *** Display
   , traceDisplay
   , traceDisplayId
   , traceDisplayIO

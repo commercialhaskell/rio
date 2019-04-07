@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 module RIO.Prelude.Extra
   ( mapLeft
@@ -10,13 +11,17 @@ module RIO.Prelude.Extra
   , nubOrd
   , whenM
   , unlessM
+  , (<&>)
   , asIO
   ) where
 
+import Prelude
 import qualified Data.Set as Set
 import Data.Monoid (First (..))
 import Data.Foldable (foldlM)
-import RIO.Prelude.Reexports
+import Data.Functor
+import Data.Maybe
+import Control.Monad
 
 -- | Apply a function to a 'Left' constructor
 mapLeft :: (a1 -> a2) -> Either a1 b -> Either a2 b
@@ -75,15 +80,19 @@ nubOrd =
 
 -- | Run the second value if the first value returns 'True'
 whenM :: Monad m => m Bool -> m () -> m ()
-whenM boolM action = do
-  x <- boolM
-  if x then action else return ()
+whenM boolM action = boolM >>= (`when` action)
 
 -- | Run the second value if the first value returns 'False'
 unlessM :: Monad m => m Bool -> m () -> m ()
-unlessM boolM action = do
-  x <- boolM
-  if x then return () else action
+unlessM boolM action = boolM >>= (`unless` action)
+
+#if !MIN_VERSION_base(4, 11, 0)
+(<&>) :: Functor f => f a -> (a -> b) -> f b
+as <&> f = f <$> as
+
+infixl 1 <&>
+#endif
+
 
 -- | Helper function to force an action to run in 'IO'. Especially
 -- useful for overly general contexts, like hspec tests.

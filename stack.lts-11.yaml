@@ -1,0 +1,6 @@
+resolver: lts-11.22
+packages:
+- rio
+- rio-orphans
+extra-deps:
+- unliftio-0.2.10@sha256:ed8bc7f9c38361aebd5481efbbbe6e3ee9468d07fffd1a7f0670f0fbbe28bb4f
