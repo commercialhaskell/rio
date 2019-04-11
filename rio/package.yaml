@@ -26,7 +26,8 @@ dependencies:
 - text
 - time
 - typed-process >= 0.2.2.0
-- unliftio >= 0.2.6.0
+- unliftio >= 0.2.8.0
+- unliftio-core
 - unordered-containers
 - vector
 
@@ -45,6 +46,55 @@ when:
 
 library:
   source-dirs: src/
+  exposed-modules:
+    - RIO
+    - RIO.ByteString
+    - RIO.ByteString.Lazy
+    - RIO.ByteString.Lazy.Partial
+    - RIO.ByteString.Partial
+    - RIO.Char
+    - RIO.Char.Partial
+    - RIO.Deque
+    - RIO.Directory
+    - RIO.File
+    - RIO.FilePath
+    - RIO.HashMap
+    - RIO.HashMap.Partial
+    - RIO.HashSet
+    - RIO.List
+    - RIO.List.Partial
+    - RIO.Map
+    - RIO.Map.Partial
+    - RIO.Map.Unchecked
+    - RIO.Partial
+    - RIO.Prelude
+    - RIO.Prelude.Simple
+    - RIO.Prelude.Types
+    - RIO.Process
+    - RIO.Seq
+    - RIO.Set
+    - RIO.Set.Partial
+    - RIO.Set.Unchecked
+    - RIO.State
+    - RIO.Text
+    - RIO.Text.Lazy
+    - RIO.Text.Lazy.Partial
+    - RIO.Text.Partial
+    - RIO.Time
+    - RIO.Vector
+    - RIO.Vector.Boxed
+    - RIO.Vector.Boxed.Partial
+    - RIO.Vector.Boxed.Unsafe
+    - RIO.Vector.Partial
+    - RIO.Vector.Storable
+    - RIO.Vector.Storable.Partial
+    - RIO.Vector.Storable.Unsafe
+    - RIO.Vector.Unboxed
+    - RIO.Vector.Unboxed.Partial
+    - RIO.Vector.Unboxed.Unsafe
+    - RIO.Vector.Unsafe
+    - RIO.Writer
+
   other-modules:
     - RIO.Prelude.Display
     - RIO.Prelude.Exit

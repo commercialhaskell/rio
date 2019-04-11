@@ -10,6 +10,12 @@
 * Add the `Deque` double-ended queue data type
 * Re-export `Data.Map.Strict.toAscList` and `Data.Map.Strict.toDescList` from `RIO.Map`.
 * Re-export `Data.Sequence.Seq` from `RIO`.
+* Addition of `RIO.Prelude` module
+* Addition of `RIO.Prelude.Types` module
+* Re-export `zipWith` and `runST` from `RIO.Prelude`
+* Re-export `Exception`, `MonadFail`, `Typeable` and `ST` from `RIO.Prelude.Types`
+* Switch to `MonadFail.fail` from `Monad.fail` and re-exported it from `RIO.Prelude`
+
 
 ## 0.1.8.0
 

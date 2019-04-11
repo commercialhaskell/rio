@@ -8,7 +8,7 @@ module RIO.Prelude.RIO
   ( RIO (..)
   , runRIO
   , liftRIO
-  -- * SomeRef for Writer/State interfaces
+  -- SomeRef for Writer/State interfaces
   , SomeRef
   , HasStateRef (..)
   , HasWriteRef (..)
@@ -44,9 +44,15 @@ instance Monoid a => Monoid (RIO env a) where
   mempty = pure mempty
   mappend = liftA2 mappend
 
+-- | Using the environment run in IO the action that requires that environment.
+--
+-- @since 0.0.1.0
 runRIO :: MonadIO m => env -> RIO env a -> m a
 runRIO env (RIO (ReaderT f)) = liftIO (f env)
 
+-- | Abstract `RIO` to an arbitrary `MonadReader` instance, which can handle IO.
+--
+-- @since 0.0.1.0
 liftRIO :: (MonadIO m, MonadReader env m) => RIO env a -> m a
 liftRIO rio = do
   env <- ask
@@ -88,12 +94,12 @@ modifySomeRef (SomeRef read' write) f =
   liftIO $ (f <$> read') >>= write
 
 ioRefToSomeRef :: IORef a -> SomeRef a
-ioRefToSomeRef ref = do
+ioRefToSomeRef ref =
   SomeRef (readIORef ref)
           (\val -> modifyIORef' ref (\_ -> val))
 
 uRefToSomeRef :: Unbox a => URef RealWorld a -> SomeRef a
-uRefToSomeRef ref = do
+uRefToSomeRef ref =
   SomeRef (readURef ref) (writeURef ref)
 
 -- | Environment values with stateful capabilities to SomeRef

@@ -1,7 +1,5 @@
 module RIO.Prelude.URef
-  ( -- * Unboxed references
-    Unbox
-  , URef
+  ( URef
   , IOURef
   , newURef
   , readURef

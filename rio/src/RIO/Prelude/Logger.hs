@@ -2,19 +2,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 module RIO.Prelude.Logger
-  ( -- * Standard logging functions
-    logDebug
-  , logInfo
-  , logWarn
-  , logError
-  , logOther
-    -- * Running with logging
-  , withLogFunc
+  ( -- ** Running with logging
+    withLogFunc
   , newLogFunc
   , LogFunc
   , HasLogFunc (..)
   , logOptionsHandle
-    -- ** Log options
+    -- *** Log options
   , LogOptions
   , setLogMinLevel
   , setLogMinLevelIO
@@ -24,29 +18,35 @@ module RIO.Prelude.Logger
   , setLogUseTime
   , setLogUseColor
   , setLogUseLoc
-    -- * Advanced logging functions
-    -- ** Sticky logging
+    -- ** Standard logging functions
+  , logDebug
+  , logInfo
+  , logWarn
+  , logError
+  , logOther
+    -- ** Advanced logging functions
+    -- *** Sticky logging
   , logSticky
   , logStickyDone
-    -- ** With source
+    -- *** With source
   , logDebugS
   , logInfoS
   , logWarnS
   , logErrorS
   , logOtherS
-    -- ** Generic log function
+    -- *** Generic log function
   , logGeneric
-    -- * Advanced running functions
+    -- ** Advanced running functions
   , mkLogFunc
   , logOptionsMemory
-    -- * Data types
+    -- ** Data types
   , LogLevel (..)
   , LogSource
   , CallStack
-    -- * Convenience functions
+    -- ** Convenience functions
   , displayCallStack
   , noLogging
-    -- * Accessors
+    -- ** Accessors
   , logFuncUseColorL
   ) where
 
@@ -355,7 +355,7 @@ getCanUseUnicode = do
 -- Intended for use if you want to deal with the teardown of 'LogFunc' yourself,
 -- otherwise prefer the 'withLogFunc' function instead.
 --
---  @since  0.1.3.0
+--  @since 0.1.3.0
 newLogFunc :: (MonadIO n, MonadIO m) => LogOptions -> n (LogFunc, m ())
 newLogFunc options =
   if logTerminal options then do
@@ -474,7 +474,7 @@ setLogTerminal t options = options { logTerminal = t }
 
 -- | Include the time when printing log messages.
 --
--- Default: true in debug mode, false otherwise.
+-- Default: `True` in debug mode, `False` otherwise.
 --
 -- @since 0.0.0.0
 setLogUseTime :: Bool -> LogOptions -> LogOptions
@@ -482,7 +482,7 @@ setLogUseTime t options = options { logUseTime = t }
 
 -- | Use ANSI color codes in the log output.
 --
--- Default: true if in verbose mode /and/ the 'Handle' is a terminal device.
+-- Default: `True` if in verbose mode /and/ the 'Handle' is a terminal device.
 --
 -- @since 0.0.0.0
 setLogUseColor :: Bool -> LogOptions -> LogOptions
@@ -490,7 +490,7 @@ setLogUseColor c options = options { logUseColor = c }
 
 -- | Use code location in the log output.
 --
--- Default: true if in verbose mode, false otherwise.
+-- Default: `True` if in verbose mode, `False` otherwise.
 --
 -- @since 0.1.2.0
 setLogUseLoc :: Bool -> LogOptions -> LogOptions
