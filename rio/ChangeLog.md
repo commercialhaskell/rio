@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.9.1
+
+* Remove accidental reexport of `Control.Applicative.empty` introduced in the previous release.
+
 ## 0.1.9.0
 
 * Add `Prelude.Exit` to export lifted versions of the exit functions from `System.Exit`.
@@ -15,6 +19,7 @@
 * Re-export `zipWith` and `runST` from `RIO.Prelude`
 * Re-export `Exception`, `MonadFail`, `Typeable` and `ST` from `RIO.Prelude.Types`
 * Switch to `MonadFail.fail` from `Monad.fail` and re-exported it from `RIO.Prelude`
+* Functions from `Data.Data.Data` class are no longer exported.
 
 
 ## 0.1.8.0
