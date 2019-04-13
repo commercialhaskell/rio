@@ -170,7 +170,7 @@ module RIO.Prelude.Types
   , Data.Typeable.Typeable
     -- **** @Data@
     -- | Re-exported from "Data.Data":
-  , Data.Data.Data
+  , Data.Data.Data(..)
     -- **** @Generic@
     -- | Re-exported from "GHC.Generics":
   , GHC.Generics.Generic
