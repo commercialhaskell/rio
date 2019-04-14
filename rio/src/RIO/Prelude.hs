@@ -201,6 +201,7 @@ module RIO.Prelude
     -- | Re-exported from "Control.Monad":
   , Control.Monad.return
   , Control.Monad.join
+  , Control.Monad.fail
   , (Control.Monad.>>=)
   , (Control.Monad.>>)
   , (Control.Monad.=<<)
@@ -220,10 +221,6 @@ module RIO.Prelude
   -- TODO: Export these as well perhaps?
   -- , Data.Foldable.foldlM
   -- , Data.Foldable.foldrM
-
-    -- ** @MonadFail@
-    -- | Re-exported from "Control.Monad.Fail":
-  , Control.Monad.Fail.fail
 
     -- * @Foldable@
     -- | Re-exported from "Data.Foldable":
@@ -413,7 +410,6 @@ import qualified Data.Functor
 import qualified Control.Applicative
 
 import qualified Control.Monad
-import qualified Control.Monad.Fail
 
 import qualified Data.Foldable
 

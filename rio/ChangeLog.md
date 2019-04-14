@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.9.2
+
+* Bring back re-export of `Monad.fail` from `RIO.Prelude`.
+
 ## 0.1.9.1
 
 * Remove accidental reexport of `Control.Applicative.empty` introduced in the previous release.
