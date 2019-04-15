@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.10.0
+
+* Relax a bunch of `RIO.File` functions from `MonadUnliftIO` to `MonadIO`
+
 ## 0.1.9.2
 
 * Bring back re-export of `Monad.fail` from `RIO.Prelude`.

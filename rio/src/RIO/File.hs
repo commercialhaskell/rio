@@ -229,8 +229,8 @@ openFileFromDir (Fd dirFd) fp iomode =
 -- otherwise async exceptions may leave file descriptors open.
 --
 -- @since 0.1.6
-openFileAndDirectory :: MonadUnliftIO m => FilePath -> IOMode -> m (Fd, Handle)
-openFileAndDirectory absFp iomode =  do
+openFileAndDirectory :: MonadIO m => FilePath -> IOMode -> m (Fd, Handle)
+openFileAndDirectory absFp iomode =  liftIO $ do
   let dir = takeDirectory absFp
       fp = takeFileName absFp
 
@@ -257,16 +257,16 @@ closeFileDurable dirFd@(Fd cDirFd) h =
         fsyncFileDescriptor "closeFileDurable/Directory" cDirFd)
     (closeDirectory dirFd)
 
-buildTemporaryFilePath :: MonadUnliftIO m => FilePath -> m FilePath
-buildTemporaryFilePath filePath = do
+buildTemporaryFilePath :: MonadIO m => FilePath -> m FilePath
+buildTemporaryFilePath filePath = liftIO $ do
   let
     dirFp  = takeDirectory filePath
     fileFp = takeFileName filePath
-  bracket (liftIO $ openBinaryTempFile dirFp fileFp)
+  bracket (openBinaryTempFile dirFp fileFp)
           (hClose . snd)
           (return . fst)
 
-toTmpFilePath :: MonadUnliftIO m => FilePath -> m FilePath
+toTmpFilePath :: MonadIO m => FilePath -> m FilePath
 toTmpFilePath filePath =
     buildTemporaryFilePath (dirPath </> tmpFilename)
   where
@@ -296,7 +296,7 @@ withHandleFd h cb =
 --
 -- @since 0.1.6
 closeFileDurableAtomic ::
-     MonadUnliftIO m => FilePath -> FilePath -> Fd -> Handle -> m ()
+     MonadIO m => FilePath -> FilePath -> Fd -> Handle -> m ()
 closeFileDurableAtomic tmpFilePath filePath dirFd@(Fd cDirFd) fileHandle = do
   liftIO $
     finally
@@ -332,11 +332,12 @@ closeFileDurableAtomic tmpFilePath filePath dirFd@(Fd cDirFd) fileHandle = do
 -- This function is a noop on Windows platforms.
 --
 -- @since 0.1.6
-ensureFileDurable :: MonadUnliftIO m => FilePath -> m ()
+ensureFileDurable :: MonadIO m => FilePath -> m ()
 ensureFileDurable absFp =
 #if WINDOWS
   absFp `seq` return ()
 #else
+  liftIO $
   bracket (openFileAndDirectory absFp ReadMode)
           (uncurry closeFileDurable)
           (const $ return ())
@@ -352,12 +353,12 @@ ensureFileDurable absFp =
 -- This function behaves the same as 'RIO.writeFileBinary' on Windows platforms.
 --
 -- @since 0.1.6
-writeBinaryFileDurable :: MonadUnliftIO m => FilePath -> ByteString -> m ()
+writeBinaryFileDurable :: MonadIO m => FilePath -> ByteString -> m ()
 writeBinaryFileDurable absFp bytes =
 #if WINDOWS
-  writeFileBinary absFp bytes
+  liftIO $ writeFileBinary absFp bytes
 #else
-  withBinaryFileDurable absFp WriteMode (liftIO . (`hPut` bytes))
+  liftIO $ withBinaryFileDurable absFp WriteMode (liftIO . (`hPut` bytes))
 #endif
 
 -- | Similar to 'writeFileBinary', but it also guarantes that changes executed
@@ -370,12 +371,12 @@ writeBinaryFileDurable absFp bytes =
 -- This function behaves the same as 'RIO.writeFileBinary' on Windows platforms.
 --
 -- @since 0.1.6
-writeBinaryFileDurableAtomic :: MonadUnliftIO m => FilePath -> ByteString -> m ()
+writeBinaryFileDurableAtomic :: MonadIO m => FilePath -> ByteString -> m ()
 writeBinaryFileDurableAtomic fp bytes =
 #if WINDOWS
-  writeFileBinary fp bytes
+  liftIO $ writeFileBinary fp bytes
 #else
-  withBinaryFileDurableAtomic fp WriteMode (liftIO . (`hPut` bytes))
+  liftIO $ withBinaryFileDurableAtomic fp WriteMode (liftIO . (`hPut` bytes))
 #endif
 
 -- | Opens a file with the following guarantees:
