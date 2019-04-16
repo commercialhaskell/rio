@@ -14,7 +14,7 @@ import           Data.ByteString          (ByteString)
 import qualified Data.ByteString.Lazy     as BL
 import qualified Data.ByteString.Builder  as BB
 import           Data.ByteString.Builder  (Builder)
-import           Data.Semigroup           (Semigroup)
+import           Data.Semigroup           (Semigroup(..))
 import           Data.Text                (Text)
 import qualified Data.Text.Lazy           as TL
 import qualified Data.Text.Lazy.Encoding  as TL
@@ -30,7 +30,17 @@ import           System.Process.Typed     (ProcessConfig, setEnvInherit)
 --
 -- @since 0.1.0.0
 newtype Utf8Builder = Utf8Builder { getUtf8Builder :: Builder }
-  deriving (Semigroup, Monoid)
+  deriving (Semigroup)
+
+-- Custom instance is created instead of deriving, otherwise list fusion breaks
+-- for `mconcat`.
+instance Monoid Utf8Builder where
+  mempty = Utf8Builder mempty
+  {-# INLINE mempty #-}
+  mappend = (Data.Semigroup.<>)
+  {-# INLINE mappend #-}
+  mconcat = foldr mappend mempty
+  {-# INLINE mconcat #-}
 
 -- | @since 0.1.0.0
 instance IsString Utf8Builder where
