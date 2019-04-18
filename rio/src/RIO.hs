@@ -91,7 +91,6 @@ import RIO.Deque
 import RIO.Prelude
 import RIO.Prelude.Display
 import RIO.Prelude.Exit
-import RIO.Prelude.Extra
 import RIO.Prelude.IO
 import RIO.Prelude.Lens
 import RIO.Prelude.Logger
@@ -99,7 +98,6 @@ import RIO.Prelude.Renames
 import RIO.Prelude.RIO as MonadRIO (RIO(..), liftRIO, runRIO)
 import RIO.Prelude.RIO as SomeRef hiding (RIO(..), liftRIO, runRIO)
 import RIO.Prelude.Simple
-import RIO.Prelude.Text
 import RIO.Prelude.Trace
 import RIO.Prelude.Types
 import RIO.Prelude.URef

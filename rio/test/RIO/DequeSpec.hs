@@ -11,7 +11,6 @@ import qualified Data.Vector as VB
 import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Unboxed as VU
 import qualified Data.Vector.Storable as VS
-import qualified Data.Vector.Generic.Mutable as V
 
 data DequeAction
     = PushFront Int
@@ -115,7 +114,7 @@ same ::
   -> IORef [Int]
   -> Deque (VG.Mutable v) (PrimState IO) Int
   -> IO ()
-same proxy ref deque = do
+same _ ref deque = do
   fromRef <- readIORef ref
   fromRight <- foldrDeque (\i rest -> pure $ i : rest) [] deque
   fromRight `shouldBe` fromRef

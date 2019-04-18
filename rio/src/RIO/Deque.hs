@@ -274,7 +274,7 @@ dequeToVector :: (VG.Vector v' a, V.MVector v a, PrimMonad m)
 dequeToVector dq = do
     size <- getDequeSize dq
     mv <- V.unsafeNew size
-    foldlDeque (\i e -> V.unsafeWrite mv i e >> pure (i+1)) 0 dq
+    _ <- foldlDeque (\i e -> V.unsafeWrite mv i e >> pure (i+1)) 0 dq
     VG.unsafeFreeze mv
 
 
@@ -317,7 +317,7 @@ freezeDeque ::
   => Deque (VG.Mutable v) (PrimState m) a
   -> m (v a)
 freezeDeque (Deque var) = do
-    state@(DequeState v _ size) <- readMutVar var
+    state@(DequeState _ _ size) <- readMutVar var
     v' <- V.unsafeNew size
     makeCopy v' state
     VG.unsafeFreeze v'

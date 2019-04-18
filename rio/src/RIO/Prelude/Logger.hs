@@ -51,7 +51,6 @@ module RIO.Prelude.Logger
   ) where
 
 import RIO.Prelude.Reexports hiding ((<>))
-import RIO.Prelude.Renames
 import RIO.Prelude.Display
 import RIO.Prelude.Lens
 import Data.Text (Text)

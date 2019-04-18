@@ -383,7 +383,7 @@ module RIO.Prelude
 import qualified RIO.Prelude.Extra
 import qualified RIO.Prelude.Renames
 import qualified RIO.Prelude.Text
-import qualified RIO.Prelude.Types
+import RIO.Prelude.Types
 
 import Prelude ((*))
 import qualified Prelude

@@ -9,6 +9,9 @@
 * Addition of `RIO.NonEmpty` module
 * Addition of `RIO.NonEmpty.Partial` module
 * Export `NonEmpty` type from RIO.Prelude.Types
+* Addition of `writeBinaryFileAtomic` and `withBinaryFileAtomic`.
+* Addition of `readBinaryFile`, `writeBinaryFile` and `withBinaryFileLazy`.
+* Fix for [#160](https://github.com/commercialhaskell/rio/issues/160) and a few other atomic+durable related bugs.
 
 ## 0.1.9.2
 

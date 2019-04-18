@@ -11,7 +11,6 @@ module RIO.Prelude.Renames
   , yieldThread
   ) where
 
-import Prelude
 import qualified Data.ByteString          as B
 import qualified Data.ByteString.Lazy     as BL
 import qualified Data.Vector.Generic      as GVector
