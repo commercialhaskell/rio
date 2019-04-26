@@ -58,6 +58,7 @@ module RIO.Prelude
   , Data.Ord.min
   , Data.Ord.compare
   , Data.Ord.comparing
+  , Data.Ord.Down(..)
 
     -- * @Enum@
     -- | Re-exported from "Prelude":
@@ -442,4 +443,3 @@ import qualified Data.Text.Encoding.Error (lenientDecode)
 
 import qualified Control.Monad.Primitive (primitive)
 import qualified Control.Monad.ST
-

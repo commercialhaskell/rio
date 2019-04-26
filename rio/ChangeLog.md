@@ -4,6 +4,7 @@
 
 * Relax a bunch of `RIO.File` functions from `MonadUnliftIO` to `MonadIO`
 * Custom `Monoid` instance for `Utf8Builder` that matches semantics of the derived one, but doesn't break list fusion
+* Re-export `Data.Ord.Down` from `RIO.Prelude`
 
 ## 0.1.9.2
 
