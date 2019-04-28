@@ -4,6 +4,8 @@
 
 * Relax a bunch of `RIO.File` functions from `MonadUnliftIO` to `MonadIO`
 * Custom `Monoid` instance for `Utf8Builder` that matches semantics of the derived one, but doesn't break list fusion
+* Addition of `RIO.NonEmpty` module
+* Addition of `RIO.NonEmpty.Partial` module
 
 ## 0.1.9.2
 
