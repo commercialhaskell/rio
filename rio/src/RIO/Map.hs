@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 -- | Strict @Map@. Import as:
 --
 -- > import qualified RIO.Map as Map

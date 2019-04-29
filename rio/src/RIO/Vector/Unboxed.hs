@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 -- | Unboxed @Vector@. Import as:
 --
 -- > import qualified RIO.Vector.Unboxed as VU

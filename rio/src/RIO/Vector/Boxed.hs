@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 -- | Boxed @Vector@. Import as:
 --
 -- > import qualified RIO.Vector.Boxed as VB

@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 -- | @Set@. Import as:
 --
 -- > import qualified RIO.Set as Set

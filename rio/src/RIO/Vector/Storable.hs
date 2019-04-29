@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+
 -- | Storable @Vector@. Import as:
 --
 -- > import qualified RIO.Vector.Storable as VS
