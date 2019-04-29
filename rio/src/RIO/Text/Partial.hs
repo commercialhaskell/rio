@@ -1,5 +1,6 @@
--- | This module exports all the partial functions from "Data.Text"
-
+-- | Strict @Text@ partial functions. Import as:
+--
+-- > import qualified RIO.Text.Partial as T'
 module RIO.Text.Partial
     (
     -- * Basic interface

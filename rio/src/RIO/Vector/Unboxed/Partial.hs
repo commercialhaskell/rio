@@ -1,3 +1,6 @@
+-- | Unboxed @Vector@ partial functions. Import as:
+--
+-- > import qualified RIO.Vector.Unboxed.Partial as VU'
 module RIO.Vector.Unboxed.Partial
   (
   -- * Accessors

@@ -2,6 +2,9 @@
 -- | @Set@. Import as:
 --
 -- > import qualified RIO.Set as Set
+--
+-- This module does not export any partial or unchecked functions.  For those,
+-- see "RIO.Set.Partial" and "RIO.Set.Unchecked"
 module RIO.Set
   (
   -- * Set type

@@ -1,6 +1,9 @@
 -- | @NonEmpty@ list. Import as:
 --
 -- > import qualified RIO.NonEmpty as NE
+--
+-- This module does not export any partial functions.  For those, see
+-- "RIO.NonEmpty.Partial"
 module RIO.NonEmpty
   (
   -- * The type of non-empty streams

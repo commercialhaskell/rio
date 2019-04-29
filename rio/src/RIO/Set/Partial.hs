@@ -1,3 +1,6 @@
+-- | @Set@ partial functions. Import as:
+--
+-- > import qualified RIO.Set.Partial as Set'
 module RIO.Set.Partial
   (
   -- * Indexed

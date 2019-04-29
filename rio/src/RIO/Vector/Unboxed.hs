@@ -2,6 +2,9 @@
 -- | Unboxed @Vector@. Import as:
 --
 -- > import qualified RIO.Vector.Unboxed as VU
+--
+-- This module does not export any partial or unsafe functions.  For those, see
+-- "RIO.Vector.Unboxed.Partial" and "RIO.Vector.Unboxed.Unsafe"
 module RIO.Vector.Unboxed
   (
   -- * Unboxed vectors

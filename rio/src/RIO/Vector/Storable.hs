@@ -2,6 +2,9 @@
 -- | Storable @Vector@. Import as:
 --
 -- > import qualified RIO.Vector.Storable as VS
+--
+-- This module does not export any partial or unsafe functions.  For those, see
+-- "RIO.Vector.Storable.Partial" and "RIO.Vector.Storable.Unsafe"
 module RIO.Vector.Storable
   (
   -- * Storable vectors

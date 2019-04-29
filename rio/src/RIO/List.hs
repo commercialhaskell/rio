@@ -1,6 +1,9 @@
 -- | @List@. Import as:
 --
 -- > import qualified RIO.List as L
+--
+-- This module does not export any partial functions.  For those, see
+-- "RIO.List.Partial"
 module RIO.List
   (
   -- * Basic functions

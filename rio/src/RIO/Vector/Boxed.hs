@@ -2,6 +2,9 @@
 -- | Boxed @Vector@. Import as:
 --
 -- > import qualified RIO.Vector.Boxed as VB
+--
+-- This module does not export any partial or unsafe functions.  For those, see
+-- "RIO.Vector.Boxed.Partial" and "RIO.Vector.Boxed.Unsafe"
 module RIO.Vector.Boxed
   (
   -- * Boxed vectors

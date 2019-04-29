@@ -1,3 +1,6 @@
+-- | @NonEmpty@ list partial functions. Import as:
+--
+-- > import qualified RIO.NonEmpty.Partial as NE'
 module RIO.NonEmpty.Partial
   (
   -- * Indexing streams

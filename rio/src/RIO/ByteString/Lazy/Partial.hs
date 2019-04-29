@@ -1,5 +1,6 @@
--- | This module exports all the partial functions from "Data.ByteString.Lazy"
-
+-- | Lazy @ByteString@ partial functions. Import as:
+--
+-- > import qualified RIO.ByteString.Lazy.Partial as BL'
 module RIO.ByteString.Lazy.Partial
   (
   -- * Basic interface

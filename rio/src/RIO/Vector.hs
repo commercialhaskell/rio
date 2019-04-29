@@ -2,6 +2,9 @@
 -- | Generic @Vector@ interface. Import as:
 --
 -- > import qualified RIO.Vector as V
+--
+-- This module does not export any partial or unsafe functions.  For those, see
+-- "RIO.Vector.Partial" and "RIO.Vector.Unsafe"
 module RIO.Vector
   (
   -- * Immutable vectors

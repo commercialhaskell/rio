@@ -1,3 +1,7 @@
+-- | Storable @Vector@ unsafe functions. These perform no bounds
+--   checking, and may cause segmentation faults etc.!  Import as:
+--
+-- > import qualified RIO.Vector.Storable.Unsafe as VS'
 module RIO.Vector.Storable.Unsafe
   (
   -- * Accessors

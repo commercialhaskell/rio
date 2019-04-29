@@ -1,3 +1,6 @@
+-- | Boxed @Vector@ partial functions. Import as:
+--
+-- > import qualified RIO.Vector.Boxed.Partial as VB'
 module RIO.Vector.Boxed.Partial
   (
   -- * Accessors

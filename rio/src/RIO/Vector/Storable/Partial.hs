@@ -1,3 +1,6 @@
+-- | Storable @Vector@ partial functions. Import as:
+--
+-- > import qualified RIO.Vector.Storable.Partial as VS'
 module RIO.Vector.Storable.Partial
   (
   -- * Accessors
