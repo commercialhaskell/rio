@@ -171,6 +171,9 @@ module RIO.Prelude.Types
     -- **** @Data@
     -- | Re-exported from "Data.Data":
   , Data.Data.Data(..)
+    -- **** @NonEmpty@
+    -- | Re-exported from Data.List.NonEmpty
+  , Data.List.NonEmpty.NonEmpty
     -- **** @Generic@
     -- | Re-exported from "GHC.Generics":
   , GHC.Generics.Generic
@@ -325,6 +328,7 @@ import qualified Data.Int
 import qualified Data.IntMap.Strict
 import qualified Data.IntSet
 import qualified Data.List
+import qualified Data.List.NonEmpty
 import qualified Data.Map.Strict
 import qualified Data.Maybe
 import qualified Data.Ord
