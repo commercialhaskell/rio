@@ -1,5 +1,6 @@
--- | This module exports all the partial functions from "Data.Text.Lazy"
-
+-- | Lazy @Text@ partial functions. Import as:
+--
+-- > import qualified RIO.Text.Lazy.Partial as TL'
 module RIO.Text.Lazy.Partial
     (
     -- * Creation and elimination

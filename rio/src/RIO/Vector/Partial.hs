@@ -1,3 +1,6 @@
+-- | Generic @Vector@ interface partial functions. Import as:
+--
+-- > import qualified RIO.Vector.Partial as V'
 module RIO.Vector.Partial
   (
   -- * Accessors

@@ -1,3 +1,6 @@
+-- | Unicode @Char@ partial functions. Import as:
+--
+-- > import qualified RIO.Char.Partial as C'
 module RIO.Char.Partial
   (
   -- * Single digit characters

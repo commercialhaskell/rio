@@ -1,3 +1,6 @@
+-- | Strict @Map@ partial functions. Import as:
+--
+-- > import qualified RIO.Map.Partial as Map'
 module RIO.Map.Partial
   (
   -- * Operators

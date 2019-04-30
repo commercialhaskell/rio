@@ -1,7 +1,11 @@
 {-# LANGUAGE CPP #-}
+
 -- | Strict @Map@. Import as:
 --
 -- > import qualified RIO.Map as Map
+--
+-- This module does not export any partial or unchecked functions.  For those,
+-- see "RIO.Map.Partial" and "RIO.Map.Unchecked"
 module RIO.Map
   (
   -- * Map type

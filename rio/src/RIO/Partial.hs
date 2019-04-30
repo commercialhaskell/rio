@@ -1,5 +1,6 @@
--- | Partial functions.
+-- | Partial functions. Import as:
 --
+-- > import qualified RIO.Partial as RIO'
 module RIO.Partial
   ( Data.Maybe.fromJust
   , Prelude.read

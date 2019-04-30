@@ -1,6 +1,9 @@
 -- | Unicode @Char@. Import as:
 --
 -- > import qualified RIO.Char as C
+--
+-- This module does not export any partial functions.  For those, see
+-- "RIO.Char.Partial"
 module RIO.Char
   (
     Data.Char.Char

@@ -1,3 +1,7 @@
+-- | Boxed @Vector@ unsafe functions. These perform no bounds
+--   checking, and may cause segmentation faults etc.!  Import as:
+--
+-- > import qualified RIO.Vector.Boxed.Unsafe as VB'
 module RIO.Vector.Boxed.Unsafe
   (
   -- * Accessors

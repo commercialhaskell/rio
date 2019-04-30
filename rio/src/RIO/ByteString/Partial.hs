@@ -1,5 +1,6 @@
--- | This module exports all the partial functions from 'Data.ByteString'
-
+-- | Strict @ByteString@ partial functions. Import as:
+--
+-- > import qualified RIO.ByteString.Partial as B'
 module RIO.ByteString.Partial
   (
   -- * Basic interface

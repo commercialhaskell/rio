@@ -3,7 +3,9 @@
 -- | This module contains functions from "Data.Set" that have unchecked
 --   preconditions on their input.  If these preconditions are not satisfied,
 --   the data structure may end up in an invalid state and other operations
---   may misbehave.
+--   may misbehave.  Import as:
+--
+-- > import qualified RIO.Set.Unchecked as Set'
 module RIO.Set.Unchecked
   (
   -- * Map

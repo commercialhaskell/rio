@@ -10,6 +10,9 @@ module RIO
     -- > {-# LANGUAGE NoImplicitPrelude #-}
     -- > import RIO
     --
+    -- Some functions not exported here can be found in "RIO.Partial":
+    -- @fromJust@, @read@, @toEnum@, @pred@, @succ@.
+    --
     module RIO.Prelude
   , module RIO.Prelude.Types
     -- * The @RIO@ Monad

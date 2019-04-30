@@ -1,6 +1,9 @@
 -- | Strict @Map@ with hashed keys. Import as:
 --
 -- > import qualified RIO.HashMap as HM
+--
+-- This module does not export any partial functions.  For those, see
+-- "RIO.HashMap.Partial"
 module RIO.HashMap
   (
     Data.HashMap.Strict.HashMap

@@ -1,9 +1,11 @@
 {-# LANGUAGE CPP #-}
--- | This module contains functions from "Data.Map.strict" that have unchecked
+
+-- | This module contains functions from "Data.Map.Strict" that have unchecked
 --   preconditions on their input.  If these preconditions are not satisfied,
 --   the data structure may end up in an invalid state and other operations
---   may misbehave.
-
+--   may misbehave.  Import as:
+--
+-- > import qualified RIO.Map.Unchecked as Map'
 module RIO.Map.Unchecked
   (
   -- * Traversal

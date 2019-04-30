@@ -1,7 +1,11 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+
 -- | Strict @ByteString@. Import as:
 --
 -- > import qualified RIO.ByteString as B
-{-# LANGUAGE NoImplicitPrelude #-}
+--
+-- This module does not export any partial functions.  For those, see
+-- "RIO.ByteString.Partial"
 module RIO.ByteString
   ( module Data.ByteString
   , module RIO.ByteString

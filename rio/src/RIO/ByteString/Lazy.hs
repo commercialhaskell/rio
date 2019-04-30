@@ -1,7 +1,11 @@
+{-# LANGUAGE NoImplicitPrelude #-}
+
 -- | Lazy @ByteString@. Import as:
 --
 -- > import qualified RIO.ByteString.Lazy as BL
-{-# LANGUAGE NoImplicitPrelude #-}
+--
+-- This module does not export any partial functions.  For those, see
+-- "RIO.ByteString.Lazy.Partial"
 module RIO.ByteString.Lazy
   (
   -- * The @ByteString@ type

@@ -1,3 +1,7 @@
+-- | Generic @Vector@ interface unsafe functions. These perform no bounds
+--   checking, and may cause segmentation faults etc.!  Import as:
+--
+-- > import qualified RIO.Vector.Unsafe as V'
 module RIO.Vector.Unsafe
   (
   -- * Immutable vectors

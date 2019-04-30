@@ -1,3 +1,6 @@
+-- | @List@ partial functions. Import as:
+--
+-- > import qualified RIO.List.Partial as L'
 module RIO.List.Partial
   (
   -- * Basic functions

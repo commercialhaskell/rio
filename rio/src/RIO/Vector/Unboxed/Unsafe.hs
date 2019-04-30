@@ -1,3 +1,7 @@
+-- | Unoxed @Vector@ unsafe functions. These perform no bounds
+--   checking, and may cause segmentation faults etc.!  Import as:
+--
+-- > import qualified RIO.Vector.Unoxed.Unsafe as VU'
 module RIO.Vector.Unboxed.Unsafe
   (
   -- * Accessors
