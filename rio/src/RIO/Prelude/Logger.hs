@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE BangPatterns #-}
 module RIO.Prelude.Logger
   ( -- ** Running with logging
     withLogFunc
@@ -60,6 +61,7 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import GHC.Stack (HasCallStack, CallStack, SrcLoc (..), getCallStack, callStack)
 import Data.Time
 import qualified Data.Text.IO as TIO
+import Data.Bits
 import Data.ByteString.Builder (toLazyByteString, char7, byteString, hPutBuilder)
 import Data.ByteString.Builder.Extra (flush)
 import           GHC.IO.Handle.Internals         (wantWritableHandle)
@@ -359,12 +361,12 @@ getCanUseUnicode = do
 newLogFunc :: (MonadIO n, MonadIO m) => LogOptions -> n (LogFunc, m ())
 newLogFunc options =
   if logTerminal options then do
-    var <- newMVar mempty
+    var <- newMVar (mempty,0)
     return (LogFunc
              { unLogFunc = stickyImpl var options (simpleLogFunc options)
              , lfOptions = Just options
              }
-           , do state <- takeMVar var
+           , do (state,_) <- takeMVar var
                 unless (B.null state) (liftIO $ logSend options "\n")
            )
   else
@@ -579,12 +581,12 @@ timestampLength =
   length (formatTime defaultTimeLocale "%F %T.000000" (UTCTime (ModifiedJulianDay 0) 0))
 
 stickyImpl
-    :: MVar ByteString -> LogOptions
+    :: MVar (ByteString,Int) -> LogOptions
     -> (CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ())
     -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
-stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> do
+stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \(sticky,stickyLen) -> do
   let backSpaceChar = '\8'
-      repeating = mconcat . replicate (B.length sticky) . char7
+      repeating = mconcat . replicate stickyLen . char7
       clear = logSend lo
         (repeating backSpaceChar <>
         repeating ' ' <>
@@ -596,19 +598,37 @@ stickyImpl ref lo logFunc loc src level msgOrig = modifyMVar_ ref $ \sticky -> d
     LevelOther "sticky-done" -> do
       clear
       logFunc loc src LevelInfo msgOrig
-      return mempty
+      return (mempty,0)
     LevelOther "sticky" -> do
       clear
       let bs = toStrictBytes $ toLazyByteString $ getUtf8Builder msgOrig
       logSend lo (byteString bs <> flush)
-      return bs
+      return (bs, utf8CharacterCount bs)
     _
       | level >= logLevel -> do
           clear
           logFunc loc src level msgOrig
           unless (B.null sticky) $ logSend lo (byteString sticky <> flush)
-          return sticky
-      | otherwise -> return sticky
+          return (sticky,stickyLen)
+      | otherwise -> return (sticky,stickyLen)
+
+-- | The number of Unicode characters in a UTF-8 encoded byte string,
+-- excluding ANSI CSI sequences.
+utf8CharacterCount :: ByteString -> Int
+utf8CharacterCount = go 0
+  where
+    go !n bs = case B.uncons bs of
+        Nothing -> n
+        Just (c,bs)
+            | c .&. 0xC0 == 0x80 -> go n bs            -- UTF-8 continuation
+            | c == 0x1B          -> go n $ dropCSI bs  -- ANSI escape
+            | otherwise          -> go (n+1) bs
+
+    dropCSI bs = case B.uncons bs of
+        Just (0x5B,bs2) -> B.drop 1 $ B.dropWhile isSequenceByte bs2
+        _               -> bs
+
+    isSequenceByte c = c >= 0x20 && c <= 0x3F
 
 -- | Is the log func configured to use color output?
 --
