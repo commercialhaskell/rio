@@ -24,6 +24,20 @@ spec = do
       logStickyDone "XYZ"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "ABC\b\b\b   \b\b\bshould appear\nABC\b\b\b   \b\b\bXYZ\n"
+  it "stickyUnicode" $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc options $ \lf -> runRIO lf $ do
+      logSticky "ö"
+      logStickyDone "."
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "\195\182\b \b.\n"
+  it "stickyAnsiEscape" $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc options $ \lf -> runRIO lf $ do
+      logSticky "\ESC[31mABC\ESC[0m"
+      logStickyDone "."
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "\ESC[31mABC\ESC[0m\b\b\b   \b\b\b.\n"
   it "setLogMinLevelIO" $ do
     (ref, options) <- logOptionsMemory
     logLevelRef <- newIORef LevelDebug

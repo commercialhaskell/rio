@@ -9,6 +9,7 @@
 * Addition of `RIO.NonEmpty` module
 * Addition of `RIO.NonEmpty.Partial` module
 * Export `NonEmpty` type from RIO.Prelude.Types
+* Fix handling of non-ASCII characters in `logSticky`
 
 ## 0.1.9.2
 
