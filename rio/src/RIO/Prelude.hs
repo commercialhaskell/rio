@@ -264,6 +264,12 @@ module RIO.Prelude
   , Control.Monad.when
   , Control.Monad.unless
 
+    -- * @Bifunctor@
+    -- | Re-exported from "Data.Bifunctor":
+  , Data.Bifunctor.bimap
+  , Data.Bifunctor.first
+  , Data.Bifunctor.second
+
     -- * @MonadPlus@
     -- | Re-exported from "Control.Monad":
   , Control.Monad.mzero
@@ -273,8 +279,6 @@ module RIO.Prelude
 
     -- * @Arrow@
     -- | Re-exported from "Control.Arrow" and "Control.Category":
-  , Control.Arrow.first
-  , Control.Arrow.second
   , (Control.Arrow.&&&)
   , (Control.Arrow.***)
   , (Control.Category.>>>)
@@ -385,61 +389,36 @@ import qualified RIO.Prelude.Renames
 import qualified RIO.Prelude.Text
 import qualified RIO.Prelude.Types
 
-import Prelude ((*))
-import qualified Prelude
-
-import qualified Data.Bool
-
-import qualified Data.Maybe
-
-import qualified Data.Either
-
-import qualified Data.Tuple
-
-import qualified Data.Eq
-
-import qualified Data.Ord
-
-import qualified Data.Word
-
-import qualified Data.Semigroup
-
-import qualified Data.Monoid
-
-import qualified Data.Functor
-
 import qualified Control.Applicative
-
-import qualified Control.Monad
-
-import qualified Data.Foldable
-
-import qualified Data.Traversable
-
 import qualified Control.Arrow
 import qualified Control.Category
-
-import qualified Data.Function
-
-import qualified Data.List
-
-import qualified Data.String
-
-import qualified Text.Show
-
-import qualified Text.Read
-
 import qualified Control.DeepSeq
-
-import qualified Data.Void
-
-import qualified Control.Monad.Reader
-
-import qualified Data.ByteString.Short
-
-import qualified Data.Text.Encoding (decodeUtf8', decodeUtf8With, encodeUtf8,
-                                     encodeUtf8Builder)
-import qualified Data.Text.Encoding.Error (lenientDecode)
-
+import qualified Control.Monad
 import qualified Control.Monad.Primitive (primitive)
+import qualified Control.Monad.Reader
 import qualified Control.Monad.ST
+import qualified Data.Bifunctor
+import qualified Data.Bool
+import qualified Data.ByteString.Short
+import qualified Data.Either
+import qualified Data.Eq
+import qualified Data.Foldable
+import qualified Data.Function
+import qualified Data.Functor
+import qualified Data.List
+import qualified Data.Maybe
+import qualified Data.Monoid
+import qualified Data.Ord
+import qualified Data.Semigroup
+import qualified Data.String
+import qualified Data.Text.Encoding
+    (decodeUtf8', decodeUtf8With, encodeUtf8, encodeUtf8Builder)
+import qualified Data.Text.Encoding.Error (lenientDecode)
+import qualified Data.Traversable
+import qualified Data.Tuple
+import qualified Data.Void
+import qualified Data.Word
+import           Prelude ((*))
+import qualified Prelude
+import qualified Text.Read
+import qualified Text.Show

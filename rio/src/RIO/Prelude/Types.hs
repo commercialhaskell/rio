@@ -133,6 +133,9 @@ module RIO.Prelude.Types
     -- **** @Functor@
     -- | Re-exported from "Data.Functor":
   , Data.Functor.Functor
+    -- **** @Bifunctor@
+    -- | Re-exported from "Data.Bifunctor":
+  , Data.Bifunctor.Bifunctor
     -- **** @Foldable@
     -- | Re-exported from "Data.Foldable":
   , Data.Foldable.Foldable
@@ -287,17 +290,6 @@ module RIO.Prelude.Types
   , Control.Monad.Primitive.PrimMonad (PrimState)
   ) where
 
-import qualified Control.Monad.Primitive (PrimMonad(..))
-import qualified Data.ByteString (ByteString)
-import qualified Data.ByteString.Builder (Builder)
-import qualified Data.Monoid (Monoid)
-import qualified Data.Semigroup (Semigroup)
-import qualified Data.String (IsString, String)
-import qualified Data.Text (Text)
-import qualified Data.Typeable
-import qualified System.IO
-
-import qualified Data.Vector.Unboxed (Unbox)
 import qualified RIO.Prelude.Renames
 
 import qualified Control.Applicative
@@ -308,9 +300,13 @@ import qualified Control.Exception.Base
 import qualified Control.Monad
 import qualified Control.Monad.Catch
 import qualified Control.Monad.Fail
+import qualified Control.Monad.Primitive (PrimMonad(..))
 import qualified Control.Monad.Reader
 import qualified Control.Monad.ST
+import qualified Data.Bifunctor
 import qualified Data.Bool
+import qualified Data.ByteString (ByteString)
+import qualified Data.ByteString.Builder (Builder)
 import qualified Data.ByteString.Short
 import qualified Data.Char
 import qualified Data.Data
@@ -331,14 +327,20 @@ import qualified Data.List
 import qualified Data.List.NonEmpty
 import qualified Data.Map.Strict
 import qualified Data.Maybe
+import qualified Data.Monoid (Monoid)
 import qualified Data.Ord
 import qualified Data.Proxy
 import qualified Data.Ratio
+import qualified Data.Semigroup (Semigroup)
 import qualified Data.Sequence
 import qualified Data.Set
+import qualified Data.String (IsString, String)
+import qualified Data.Text (Text)
 import qualified Data.Text.Encoding.Error
 import qualified Data.Traversable
+import qualified Data.Typeable
 import qualified Data.Vector
+import qualified Data.Vector.Unboxed (Unbox)
 import qualified Data.Void
 import qualified Data.Word
 import qualified Foreign.Storable
@@ -347,8 +349,9 @@ import qualified GHC.Stack
 import qualified Numeric.Natural
 import qualified Prelude
 import qualified System.Exit
+import qualified System.IO
 import qualified Text.Read
 import qualified Text.Show
 
 -- Bring instances for some of the unliftio types in scope, so they can be documented here.
-import UnliftIO ()
+import           UnliftIO ()
