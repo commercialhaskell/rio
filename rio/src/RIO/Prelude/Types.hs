@@ -62,7 +62,7 @@ module RIO.Prelude.Types
   , Data.Either.Either(..)
     -- *** @NonEmpty@
     -- | Re-exported from Data.List.NonEmpty
-  , Data.List.NonEmpty.NonEmpty
+  , Data.List.NonEmpty.NonEmpty(..)
     -- *** @Proxy@
     -- | Re-exported from "Data.Proxy":
   , Data.Proxy.Proxy(..)
