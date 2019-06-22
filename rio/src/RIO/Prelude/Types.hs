@@ -139,6 +139,9 @@ module RIO.Prelude.Types
     -- **** @Foldable@
     -- | Re-exported from "Data.Foldable":
   , Data.Foldable.Foldable
+    -- **** @Bifoldable@
+    -- | Re-exported from "Data.Bifoldable":
+  , Data.Bifoldable.Bifoldable
     -- **** @Semigroup@
     -- | Re-exported from "Data.Semigroup":
   , Data.Semigroup.Semigroup
@@ -303,6 +306,7 @@ import qualified Control.Monad.Fail
 import qualified Control.Monad.Primitive (PrimMonad(..))
 import qualified Control.Monad.Reader
 import qualified Control.Monad.ST
+import qualified Data.Bifoldable
 import qualified Data.Bifunctor
 import qualified Data.Bool
 import qualified Data.ByteString (ByteString)

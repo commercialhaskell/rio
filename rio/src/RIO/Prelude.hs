@@ -270,6 +270,41 @@ module RIO.Prelude
   , Data.Bifunctor.first
   , Data.Bifunctor.second
 
+    -- * @Bifoldable@
+    -- | Re-exported from "Data.Bifoldable":
+  , Data.Bifoldable.bifold
+  , Data.Bifoldable.bifoldMap
+  , Data.Bifoldable.bifoldr
+  , Data.Bifoldable.bifoldl
+  , Data.Bifoldable.bifoldr'
+  , Data.Bifoldable.bifoldr1
+  , Data.Bifoldable.bifoldrM
+  , Data.Bifoldable.bifoldl'
+  , Data.Bifoldable.bifoldl1
+  , Data.Bifoldable.bifoldlM
+  , Data.Bifoldable.bitraverse_
+  , Data.Bifoldable.bifor_
+  , Data.Bifoldable.bisequence_
+  , Data.Bifoldable.biasum
+  , Data.Bifoldable.biList
+  , Data.Bifoldable.binull
+  , Data.Bifoldable.bilength
+  , Data.Bifoldable.bielem
+  , Data.Bifoldable.bimaximum
+  , Data.Bifoldable.biminimum
+  , Data.Bifoldable.bisum
+  , Data.Bifoldable.biproduct
+  , Data.Bifoldable.biconcat
+  , Data.Bifoldable.biconcatMap
+  , Data.Bifoldable.biand
+  , Data.Bifoldable.bior
+  , Data.Bifoldable.biany
+  , Data.Bifoldable.biall
+  , Data.Bifoldable.bimaximumBy
+  , Data.Bifoldable.biminimumBy
+  , Data.Bifoldable.binotElem
+  , Data.Bifoldable.bifind
+
     -- * @MonadPlus@
     -- | Re-exported from "Control.Monad":
   , Control.Monad.mzero
@@ -397,6 +432,7 @@ import qualified Control.Monad
 import qualified Control.Monad.Primitive (primitive)
 import qualified Control.Monad.Reader
 import qualified Control.Monad.ST
+import qualified Data.Bifoldable
 import qualified Data.Bifunctor
 import qualified Data.Bool
 import qualified Data.ByteString.Short
