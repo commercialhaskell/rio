@@ -66,6 +66,8 @@ library:
     - RIO.Map
     - RIO.Map.Partial
     - RIO.Map.Unchecked
+    - RIO.NonEmpty
+    - RIO.NonEmpty.Partial
     - RIO.Partial
     - RIO.Prelude
     - RIO.Prelude.Simple
