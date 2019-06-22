@@ -64,7 +64,7 @@ module RIO.NonEmpty
   -- * Sublist predicates
   , Data.List.NonEmpty.isPrefixOf
 
-  -- * "Set" operations
+  -- * Set-like operations
   , Data.List.NonEmpty.nub
   , Data.List.NonEmpty.nubBy
 
