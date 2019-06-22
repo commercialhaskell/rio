@@ -7,6 +7,7 @@ author: Michael Snoyman
 maintainer: michael@snoyman.com
 github: commercialhaskell/rio
 category: Control
+
 extra-source-files:
 - README.md
 - ChangeLog.md
@@ -21,6 +22,7 @@ dependencies:
 - filepath
 - hashable
 - microlens
+- microlens-mtl
 - mtl
 - primitive
 - text

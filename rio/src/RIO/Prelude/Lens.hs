@@ -1,23 +1,51 @@
 module RIO.Prelude.Lens
-  ( view
-  , Lens.Micro.ASetter
-  , Lens.Micro.ASetter'
-  , Lens.Micro.Getting
-  , Lens.Micro.Lens
-  , Lens.Micro.Lens'
-  , Lens.Micro.SimpleGetter
-  , Lens.Micro.lens
-  , Lens.Micro.over
-  , Lens.Micro.set
-  , Lens.Micro.sets
-  , Lens.Micro.to
+  ( -- ** Setter
+    ASetter
+  , ASetter'
+  , (%~)
+  , over
+  , (.~)
+  , set
+  , sets
+    -- ** Getter
+  , SimpleGetter
+  , Getting
   , (Lens.Micro.^.)
+  , view
+  , preview
+  , to
+    -- ** Fold
+  , SimpleFold
+  , (^..)
+  , toListOf
+  , (^?)
+  , has
+    -- ** Lens
+  , Lens
+  , Lens'
+  , _1, _2, _3, _4, _5
+  , at
+  , lens
+    -- ** Iso
+  , non
+    -- ** Traversal
+  , singular
+  , failing
+  , filtered
+  , both
+  , traversed
+  , each
+  , ix
+  , _head
+  , _tail
+  , _init
+  , _last
+    -- ** Prism
+  , _Left
+  , _Right
+  , _Just
+  , _Nothing
   ) where
 
 import Lens.Micro
-import Control.Monad.Reader (MonadReader, asks)
-import           Lens.Micro.Internal      (( #. ))
-import           Control.Applicative      (Const (..))
-
-view :: MonadReader s m => Getting a s a -> m a
-view l = asks (getConst #. l Const)
+import Lens.Micro.Mtl
