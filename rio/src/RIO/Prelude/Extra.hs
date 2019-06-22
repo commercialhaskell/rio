@@ -1,5 +1,5 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE CPP          #-}
 module RIO.Prelude.Extra
   ( mapLeft
   , fromFirst
@@ -15,13 +15,15 @@ module RIO.Prelude.Extra
   , asIO
   ) where
 
-import Prelude
+import           Control.Monad
+import           Data.Foldable (foldlM)
+#if MIN_VERSION_base(4,11,0)
+import           Data.Functor ((<&>))
+#endif
+import           Data.Maybe
+import           Data.Monoid (First(..))
 import qualified Data.Set as Set
-import Data.Monoid (First (..))
-import Data.Foldable (foldlM)
-import Data.Functor
-import Data.Maybe
-import Control.Monad
+import           Prelude
 
 -- | Apply a function to a 'Left' constructor
 mapLeft :: (a1 -> a2) -> Either a1 b -> Either a2 b

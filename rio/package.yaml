@@ -46,7 +46,6 @@ when:
 
 ghc-options:
   - -Wall
-  - -Wcompat
   - -Wpartial-fields
   - -Wincomplete-record-updates
   - -Wincomplete-uni-patterns
