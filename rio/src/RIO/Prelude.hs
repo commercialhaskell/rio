@@ -305,6 +305,14 @@ module RIO.Prelude
   , Data.Bifoldable.binotElem
   , Data.Bifoldable.bifind
 
+    -- * @Bitraverse@
+    -- | Re-exported from "Data.Bitraversable":
+  , Data.Bitraversable.bitraverse
+  , Data.Bitraversable.bisequence
+  , Data.Bitraversable.bifor
+  , Data.Bitraversable.bimapAccumL
+  , Data.Bitraversable.bimapAccumR
+
     -- * @MonadPlus@
     -- | Re-exported from "Control.Monad":
   , Control.Monad.mzero
@@ -434,6 +442,7 @@ import qualified Control.Monad.Reader
 import qualified Control.Monad.ST
 import qualified Data.Bifoldable
 import qualified Data.Bifunctor
+import qualified Data.Bitraversable
 import qualified Data.Bool
 import qualified Data.ByteString.Short
 import qualified Data.Either

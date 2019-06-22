@@ -157,6 +157,9 @@ module RIO.Prelude.Types
     -- **** @Traversable@
     -- | Re-exported from "Data.Traversable":
   , Data.Traversable.Traversable
+    -- **** @Bitraversable@
+    -- | Re-exported from "Data.Bitraversable":
+  , Data.Bitraversable.Bitraversable
     -- **** @Monad@
     -- | Re-exported from "Control.Monad":
   , Control.Monad.Monad
@@ -308,6 +311,7 @@ import qualified Control.Monad.Reader
 import qualified Control.Monad.ST
 import qualified Data.Bifoldable
 import qualified Data.Bifunctor
+import qualified Data.Bitraversable
 import qualified Data.Bool
 import qualified Data.ByteString (ByteString)
 import qualified Data.ByteString.Builder (Builder)
