@@ -23,15 +23,15 @@ module RIO.Deque
     , asBDeque
     ) where
 
-import           RIO.Prelude.Reexports
-import           Control.Exception            (assert)
-import           Control.Monad                (liftM)
-import qualified Data.Vector.Generic          as VG
-import qualified Data.Vector.Generic.Mutable  as V
-import qualified Data.Vector.Mutable          as B
-import qualified Data.Vector.Storable.Mutable as S
-import qualified Data.Vector.Unboxed.Mutable  as U
+import           Control.Exception (assert)
+import           Control.Monad (liftM)
 import           Data.Primitive.MutVar
+import qualified Data.Vector.Generic as VG
+import qualified Data.Vector.Generic.Mutable as V
+import qualified Data.Vector.Mutable as B
+import qualified Data.Vector.Storable.Mutable as S
+import qualified Data.Vector.Unboxed.Mutable as U
+import           RIO.Prelude.Reexports
 
 data DequeState v s a = DequeState
     !(v s a)
@@ -274,7 +274,7 @@ dequeToVector :: (VG.Vector v' a, V.MVector v a, PrimMonad m)
 dequeToVector dq = do
     size <- getDequeSize dq
     mv <- V.unsafeNew size
-    foldlDeque (\i e -> V.unsafeWrite mv i e >> pure (i+1)) 0 dq
+    void $ foldlDeque (\i e -> V.unsafeWrite mv i e >> pure (i+1)) 0 dq
     VG.unsafeFreeze mv
 
 
@@ -317,7 +317,7 @@ freezeDeque ::
   => Deque (VG.Mutable v) (PrimState m) a
   -> m (v a)
 freezeDeque (Deque var) = do
-    state@(DequeState v _ size) <- readMutVar var
+    state@(DequeState _ _ size) <- readMutVar var
     v' <- V.unsafeNew size
     makeCopy v' state
     VG.unsafeFreeze v'

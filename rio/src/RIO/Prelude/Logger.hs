@@ -52,7 +52,6 @@ module RIO.Prelude.Logger
   ) where
 
 import RIO.Prelude.Reexports hiding ((<>))
-import RIO.Prelude.Renames
 import RIO.Prelude.Display
 import RIO.Prelude.Lens
 import Data.Text (Text)
@@ -619,14 +618,14 @@ utf8CharacterCount = go 0
   where
     go !n bs = case B.uncons bs of
         Nothing -> n
-        Just (c,bs)
-            | c .&. 0xC0 == 0x80 -> go n bs            -- UTF-8 continuation
-            | c == 0x1B          -> go n $ dropCSI bs  -- ANSI escape
-            | otherwise          -> go (n+1) bs
+        Just (c,rest)
+            | c .&. 0xC0 == 0x80 -> go n rest            -- UTF-8 continuation
+            | c == 0x1B          -> go n $ dropCSI rest  -- ANSI escape
+            | otherwise          -> go (n+1) rest
 
     dropCSI bs = case B.uncons bs of
-        Just (0x5B,bs2) -> B.drop 1 $ B.dropWhile isSequenceByte bs2
-        _               -> bs
+        Just (0x5B,rest) -> B.drop 1 $ B.dropWhile isSequenceByte rest
+        _                -> bs
 
     isSequenceByte c = c >= 0x20 && c <= 0x3F
 

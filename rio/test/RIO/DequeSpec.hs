@@ -1,17 +1,16 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module RIO.DequeSpec (spec) where
 
-import RIO
-import Test.Hspec
-import Test.Hspec.QuickCheck
-import Test.QuickCheck.Arbitrary
-import Test.QuickCheck.Gen
 import qualified Data.Vector as VB
 import qualified Data.Vector.Generic as VG
-import qualified Data.Vector.Unboxed as VU
 import qualified Data.Vector.Storable as VS
-import qualified Data.Vector.Generic.Mutable as V
+import qualified Data.Vector.Unboxed as VU
+import           RIO
+import           Test.Hspec
+import           Test.Hspec.QuickCheck
+import           Test.QuickCheck.Arbitrary
+import           Test.QuickCheck.Gen
 
 data DequeAction
     = PushFront Int
@@ -73,7 +72,7 @@ spec = do
               actual <- popBackDeque tested
               actual `shouldBe` expected
               case actual of
-                Just _ -> drain
+                Just _  -> drain
                 Nothing -> return $! ()
         drain
       test name proxy = describe name $ do
@@ -115,7 +114,7 @@ same ::
   -> IORef [Int]
   -> Deque (VG.Mutable v) (PrimState IO) Int
   -> IO ()
-same proxy ref deque = do
+same _ ref deque = do
   fromRef <- readIORef ref
   fromRight <- foldrDeque (\i rest -> pure $ i : rest) [] deque
   fromRight `shouldBe` fromRef

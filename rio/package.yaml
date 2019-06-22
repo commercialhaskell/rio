@@ -44,6 +44,14 @@ when:
     dependencies:
     - unix
 
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Wpartial-fields
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Widentities
+
 library:
   source-dirs: src/
   exposed-modules:

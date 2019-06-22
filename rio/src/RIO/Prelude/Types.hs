@@ -317,7 +317,6 @@ import qualified Data.Data
 import qualified Data.Either
 import qualified Data.Eq
 import qualified Data.Foldable
-import qualified Data.Function
 import qualified Data.Functor
 import qualified Data.Functor.Const
 import qualified Data.Functor.Identity
@@ -327,7 +326,6 @@ import qualified Data.HashSet
 import qualified Data.Int
 import qualified Data.IntMap.Strict
 import qualified Data.IntSet
-import qualified Data.List
 import qualified Data.List.NonEmpty
 import qualified Data.Map.Strict
 import qualified Data.Maybe
@@ -346,9 +344,8 @@ import qualified GHC.Generics
 import qualified GHC.Stack
 import qualified Numeric.Natural
 import qualified Prelude
-import qualified System.Exit
 import qualified Text.Read
 import qualified Text.Show
 
 -- Bring instances for some of the unliftio types in scope, so they can be documented here.
-import UnliftIO ()
+import           UnliftIO ()

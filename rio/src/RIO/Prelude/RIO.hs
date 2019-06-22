@@ -1,9 +1,11 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FunctionalDependencies     #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
+
 module RIO.Prelude.RIO
   ( RIO (..)
   , runRIO
@@ -21,11 +23,11 @@ module RIO.Prelude.RIO
 
 import GHC.Exts (RealWorld)
 
-import RIO.Prelude.Lens
-import RIO.Prelude.URef
-import RIO.Prelude.Reexports
 import Control.Monad.State (MonadState(..))
 import Control.Monad.Writer (MonadWriter(..))
+import RIO.Prelude.Lens
+import RIO.Prelude.Reexports
+import RIO.Prelude.URef
 
 -- | The Reader+IO monad. This is different from a 'ReaderT' because:
 --
@@ -42,7 +44,9 @@ instance Semigroup a => Semigroup (RIO env a) where
   (<>) = liftA2 (<>)
 instance Monoid a => Monoid (RIO env a) where
   mempty = pure mempty
+#if !MIN_VERSION_base(4,11,0)
   mappend = liftA2 mappend
+#endif
 
 -- | Using the environment run in IO the action that requires that environment.
 --
