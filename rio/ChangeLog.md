@@ -3,12 +3,13 @@
 ## 0.1.10.0
 
 * Relax a bunch of `RIO.File` functions from `MonadUnliftIO` to `MonadIO`
-* Custom `Monoid` instance for `Utf8Builder` that matches semantics of the derived one, but doesn't break list fusion
+* Custom `Monoid` instance for `Utf8Builder` that matches semantics of the
+  derived one, but doesn't break list fusion
 * Qualified import recommendations for `*.Partial`, `*.Unchecked`, `*.Unsafe`
 * Re-export `Data.Ord.Down` from `RIO.Prelude`
 * Addition of `RIO.NonEmpty` module
 * Addition of `RIO.NonEmpty.Partial` module
-* Export `NonEmpty` type from RIO.Prelude.Types
+* Export `NonEmpty` type and its constructor `(:|)` from RIO.Prelude.Types
 * Fix handling of non-ASCII characters in `logSticky`
 
 ## 0.1.9.2

@@ -60,6 +60,9 @@ module RIO.Prelude.Types
     -- *** @Either@
     -- | Re-exported from "Data.Either":
   , Data.Either.Either(..)
+    -- *** @NonEmpty@
+    -- | Re-exported from Data.List.NonEmpty
+  , Data.List.NonEmpty.NonEmpty(..)
     -- *** @Proxy@
     -- | Re-exported from "Data.Proxy":
   , Data.Proxy.Proxy(..)
@@ -171,9 +174,6 @@ module RIO.Prelude.Types
     -- **** @Data@
     -- | Re-exported from "Data.Data":
   , Data.Data.Data(..)
-    -- **** @NonEmpty@
-    -- | Re-exported from Data.List.NonEmpty
-  , Data.List.NonEmpty.NonEmpty
     -- **** @Generic@
     -- | Re-exported from "GHC.Generics":
   , GHC.Generics.Generic
