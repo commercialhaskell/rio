@@ -1,5 +1,11 @@
 # Changelog for rio
 
+## 0.2.0.0
+
+* Expose `Bifunctor`, `Bifoldable`, and `Bitraversable`.
+* The `first` and `second` functions exported by `RIO` formerly originated from
+  `Control.Arrow`. They now come from `Bifunctor`.
+
 ## 0.1.16.0
 
 * Expand the number of `microlens` functions exported by the RIO prelude.
