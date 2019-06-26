@@ -2,3 +2,5 @@ resolver: lts-13.26
 packages:
 - rio
 - rio-orphans
+extra-deps:
+- typed-process-0.2.5.0@rev:0

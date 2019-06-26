@@ -11,6 +11,7 @@
 * Addition of `RIO.NonEmpty.Partial` module
 * Export `NonEmpty` type and its constructor `(:|)` from RIO.Prelude.Types
 * Fix handling of non-ASCII characters in `logSticky`
+* Deprecate `withProcess` and `withProcess_`, add `withProcessWait`, `withProcessWait_`, `withProcessTerm`, and `withProcessTerm_`
 
 ## 0.1.9.2
 

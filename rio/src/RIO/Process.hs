@@ -57,6 +57,10 @@ module RIO.Process
     -- * Spawning (run child process)
   , withProcess
   , withProcess_
+  , withProcessWait
+  , withProcessWait_
+  , withProcessTerm
+  , withProcessTerm_
     -- * Exec (replacing current process)
   , exec
   , execSpawn
@@ -135,7 +139,11 @@ import           System.Environment (getEnvironment)
 import           System.Exit (exitWith)
 import qualified System.FilePath as FP
 import qualified System.Process.Typed as P
-import           System.Process.Typed hiding (withProcess, withProcess_, proc)
+import           System.Process.Typed hiding
+                    (withProcess, withProcess_,
+                     withProcessWait, withProcessWait_,
+                     withProcessTerm, withProcessTerm_,
+                     proc)
 
 #ifndef WINDOWS
 import           System.Directory (setCurrentDirectory)
@@ -431,7 +439,8 @@ withProcess
   => ProcessConfig stdin stdout stderr
   -> (Process stdin stdout stderr -> m a)
   -> m a
-withProcess pc f = withRunInIO $ \run -> P.withProcess pc (run . f)
+withProcess pc f = withRunInIO $ \run -> P.withProcessTerm pc (run . f)
+{-# DEPRECATED withProcess "Please consider using withProcessWait, or instead use withProcessTerm" #-}
 
 -- | Same as 'P.withProcess_', but generalized to 'MonadUnliftIO'.
 --
@@ -441,7 +450,48 @@ withProcess_
   => ProcessConfig stdin stdout stderr
   -> (Process stdin stdout stderr -> m a)
   -> m a
-withProcess_ pc f = withRunInIO $ \run -> P.withProcess_ pc (run . f)
+withProcess_ pc f = withRunInIO $ \run -> P.withProcessTerm_ pc (run . f)
+{-# DEPRECATED withProcess_ "Please consider using withProcessWait, or instead use withProcessTerm" #-}
+
+-- | Same as 'P.withProcessWait', but generalized to 'MonadUnliftIO'.
+--
+-- @since 0.1.10.0
+withProcessWait
+  :: MonadUnliftIO m
+  => ProcessConfig stdin stdout stderr
+  -> (Process stdin stdout stderr -> m a)
+  -> m a
+withProcessWait pc f = withRunInIO $ \run -> P.withProcessWait pc (run . f)
+
+-- | Same as 'P.withProcessWait_', but generalized to 'MonadUnliftIO'.
+--
+-- @since 0.1.10.0
+withProcessWait_
+  :: MonadUnliftIO m
+  => ProcessConfig stdin stdout stderr
+  -> (Process stdin stdout stderr -> m a)
+  -> m a
+withProcessWait_ pc f = withRunInIO $ \run -> P.withProcessWait_ pc (run . f)
+
+-- | Same as 'P.withProcessTerm', but generalized to 'MonadUnliftIO'.
+--
+-- @since 0.1.10.0
+withProcessTerm
+  :: MonadUnliftIO m
+  => ProcessConfig stdin stdout stderr
+  -> (Process stdin stdout stderr -> m a)
+  -> m a
+withProcessTerm pc f = withRunInIO $ \run -> P.withProcessTerm pc (run . f)
+
+-- | Same as 'P.withProcessTerm_', but generalized to 'MonadUnliftIO'.
+--
+-- @since 0.1.10.0
+withProcessTerm_
+  :: MonadUnliftIO m
+  => ProcessConfig stdin stdout stderr
+  -> (Process stdin stdout stderr -> m a)
+  -> m a
+withProcessTerm_ pc f = withRunInIO $ \run -> P.withProcessTerm_ pc (run . f)
 
 -- | A convenience environment combining a 'LogFunc' and a 'ProcessContext'
 --

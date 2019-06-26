@@ -25,7 +25,7 @@ dependencies:
 - primitive
 - text
 - time
-- typed-process >= 0.2.2.0
+- typed-process >= 0.2.5.0
 - unliftio >= 0.2.8.0
 - unliftio-core
 - unordered-containers
