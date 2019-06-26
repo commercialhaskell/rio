@@ -256,6 +256,7 @@ module RIO.Prelude
     -- * @Alternative@
     -- | Re-exported from "Control.Applicative":
   , (Control.Applicative.<|>)
+  , Control.Applicative.empty
   , Control.Applicative.some
   , Control.Applicative.many
   , Control.Applicative.optional
