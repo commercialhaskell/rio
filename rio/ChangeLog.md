@@ -1,6 +1,6 @@
 # Changelog for rio
 
-## 0.1.10.1
+## 0.1.11.0
 
 * Re-export the `class Alternative`'s `empty` function as
   `aempty = Control.Applicative.empty`
