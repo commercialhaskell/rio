@@ -3,7 +3,7 @@
 
 -- | Strict @Text@. Import as:
 --
--- > import qualified RIO.Text as Text
+-- > import qualified RIO.Text as T
 --
 -- This module does not export any partial functions.  For those, see
 -- "RIO.Text.Partial"
