@@ -1,5 +1,10 @@
 # Changelog for rio
 
+## 0.1.11.0
+
+* Re-export the `class Alternative`'s `empty` function as
+  `aempty = Control.Applicative.empty`
+
 ## 0.1.10.0
 
 * Relax a bunch of `RIO.File` functions from `MonadUnliftIO` to `MonadIO`

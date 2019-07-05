@@ -256,6 +256,9 @@ module RIO.Prelude
     -- * @Alternative@
     -- | Re-exported from "Control.Applicative":
   , (Control.Applicative.<|>)
+  , aempty -- ^ @since 0.1.10.1
+  -- | The Alternative class's "empty" function re-exported as "aempty" to avoid
+  -- naming conflicts
   , Control.Applicative.some
   , Control.Applicative.many
   , Control.Applicative.optional
@@ -443,3 +446,6 @@ import qualified Data.Text.Encoding.Error (lenientDecode)
 
 import qualified Control.Monad.Primitive (primitive)
 import qualified Control.Monad.ST
+
+aempty :: Control.Applicative.Alternative f => f a
+aempty = Control.Applicative.empty
