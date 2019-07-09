@@ -174,8 +174,8 @@ foreign import ccall safe "fcntl.h renameat"
   c_safe_renameat :: CInt -> CFilePath -> CInt -> CFilePath -> IO CInt
 
 c_renameat :: DirFd -> CFilePath -> DirFd -> CFilePath -> IO CInt
-c_renameat (DirFd (Fd fdFrom)) cFpFrom (DirFd (Fd fdTo)) cFdTo =
-  c_safe_renameat fdFrom cFpFrom fdTo cFdTo
+c_renameat (DirFd (Fd fdFrom)) cFpFrom (DirFd (Fd fdTo)) cFpTo =
+  c_safe_renameat fdFrom cFpFrom fdTo cFpTo
 
 foreign import ccall safe "unistd.h fsync"
   c_safe_fsync :: CInt -> IO CInt
@@ -300,8 +300,9 @@ openFileFromDir dirFd filePath@(takeFileName -> fileName) iomode =
 openAnonymousTempFileFromDir ::
      MonadIO m =>
      Maybe DirFd
-     -- ^ If the file descriptor for the directory the target file is/will be
-     -- located in, than it will be used for opening an anonymous file
+     -- ^ If a file descriptor is given for the directory where the target file is/will be
+     -- located in, then it will be used for opening an anonymous file. Otherwise
+     -- anonymous will be opened unattached to any file path.
      -> FilePath
      -- ^ File path of the target file that we are working on.
      -> IOMode
@@ -465,7 +466,7 @@ withFileInDirectory dirFd filePath iomode =
 withBinaryTempFileFor ::
      MonadUnliftIO m
   => FilePath
-  -- ^ Source file path. It may exist or may not.
+  -- ^ "For" file. It may exist or may not.
   -> (FilePath -> Handle -> m a)
   -> m a
 withBinaryTempFileFor filePath action =
@@ -488,7 +489,7 @@ withAnonymousBinaryTempFileFor ::
   -- in such case supply its file descriptor. i.e. @openat@ will be used instead
   -- of @open@
   -> FilePath
-  -- ^ Source file path. The file may exist or may not.
+  -- ^ "For" file. The file may exist or may not.
   -> IOMode
   -> (Handle -> m a)
   -> m (Maybe a)
@@ -512,7 +513,7 @@ withNonAnonymousBinaryTempFileFor ::
   -- in such case supply its file descriptor. i.e. @openat@ will be used instead
   -- of @open@
   -> FilePath
-  -- ^ Source file path. The file may exist or may not.
+  -- ^ "For" file. The file may exist or may not.
   -> IOMode
   -> (FilePath -> Handle -> m a)
   -> m a
@@ -618,7 +619,7 @@ withBinaryFileDurableAtomicPosix filePath iomode action =
           Just res -> pure res
           Nothing ->
             withNonAnonymousBinaryTempFileFor (Just dirFd) filePath iomode $ \tmpFilePath ->
-                 durableAtomicAction dirFd (Just tmpFilePath)
+              durableAtomicAction dirFd (Just tmpFilePath)
   where
     durableAtomicAction dirFd mTmpFilePath tmpFileHandle = do
       mFileMode <- copyFileHandle iomode filePath tmpFileHandle
@@ -663,7 +664,7 @@ withBinaryFileAtomicPosix filePath iomode action =
 
 #endif
 
--- | After a file is closed, it opens it again and executes fsync internally on
+-- | After a file is closed, it opens it again and executes @fsync()@ internally on
 -- both the file and the directory that contains it. Note this function is
 -- intended to work around the non-durability of existing file APIs, as opposed
 -- to being necessary for the API functions provided in 'RIO.File' module.
@@ -673,6 +674,10 @@ withBinaryFileAtomicPosix filePath iomode action =
 -- as it relies on internal implementation details at the Kernel level that
 -- might change. We argue that, despite this fact, calling this function may
 -- bring benefits in terms of durability.
+--
+-- This function does not provide the same guarantee as if you would open and modify a
+-- file using `withBinaryFileDurable` or `writeBinaryFileDurable`, since they ensure that
+-- the @fsync()@ is called before the file is closed, so if possible use those instead.
 --
 -- === Cross-Platform support
 --
@@ -684,7 +689,7 @@ ensureFileDurable :: MonadIO m => FilePath -> m ()
 
 
 -- | Similar to 'writeFileBinary', but it also ensures that changes executed to
--- the file are guaranteed to be durable. It internally uses fsync and makes
+-- the file are guaranteed to be durable. It internally uses @fsync()@ and makes
 -- sure it synchronizes the file on disk.
 --
 -- === Cross-Platform support
@@ -697,7 +702,7 @@ writeBinaryFileDurable :: MonadIO m => FilePath -> ByteString -> m ()
 
 -- | Similar to 'writeFileBinary', but it also guarantes that changes executed
 -- to the file are durable, also, in case of failure, the modified file is never
--- going to get corrupted. It internally uses fsync and makes sure it
+-- going to get corrupted. It internally uses @fsync()@ and makes sure it
 -- synchronizes the file on disk.
 --
 -- === Cross-Platform support
@@ -727,7 +732,7 @@ writeBinaryFileAtomic :: MonadIO m => FilePath -> ByteString -> m ()
 --   or the current directory being renamed to some other name while the file is
 --   being used.
 --
--- * It ensures durability by executing an fsync call before closing the file
+-- * It ensures durability by executing an @fsync()@ call before closing the file
 --   handle
 --
 -- === Cross-Platform support
@@ -748,7 +753,7 @@ withBinaryFileDurable ::
 --   or the current directory being renamed to some other name while the file is
 --   being used.
 --
--- * It ensures durability by executing an fsync call before closing the file
+-- * It ensures durability by executing an @fsync()@ call before closing the file
 --   handle
 --
 -- * It keeps all changes in a temporary file, and after it is closed it atomically
@@ -804,6 +809,12 @@ withBinaryFileDurableAtomic ::
 --
 -- __Important__ - Do not close the handle, otherwise it will result in @invalid
 -- argument (Bad file descriptor)@ exception
+--
+-- __Note__ - on Linux operating system and only with supported file systems an anonymous
+-- temporary file will be used while working on the file (see @O_TMPFILE@ in @man
+-- openat@). In case when such feature is not available or not supported a temporary file
+-- ".target-file-nameXXX.ext.tmp", where XXX is some random number, will be created
+-- alongside the target file in the same directory
 --
 -- @since 0.1.10
 withBinaryFileAtomic ::

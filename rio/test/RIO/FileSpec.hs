@@ -117,8 +117,8 @@ withBinaryFileSpec atomic fname withFileTestable = do
           withFileTestable fp iomode $ \h -> BS.hPut h goodbye
           getPermissions fp `shouldReturn` modifiedPermissions
     it "exception - Does not corrupt files" $
-      bool expectFailure id atomic $ -- should fail for non-atomic
-      forAll (elements [WriteMode, ReadWriteMode, AppendMode]) $ \iomode ->
+      bool expectFailure property atomic $ -- should fail for non-atomic
+      forM_ [WriteMode, ReadWriteMode, AppendMode] $ \iomode ->
         withSystemTempDirectory "rio" $ \dir -> do
           let fp = dir </> fname ++ "-exception"
           _ :: Either ExpectedException () <-
@@ -128,8 +128,8 @@ withBinaryFileSpec atomic fname withFileTestable = do
               throwIO ExpectedException
           BS.readFile fp `shouldReturn` hello
     it "exception - Does not leave files behind" $
-      bool expectFailure id atomic $ -- should fail for non-atomic
-      forAll (elements [WriteMode, ReadWriteMode, AppendMode]) $ \iomode ->
+      bool expectFailure property atomic $ -- should fail for non-atomic
+      forM_ [WriteMode, ReadWriteMode, AppendMode] $ \iomode ->
         withSystemTempDirectory "rio" $ \dir -> do
           let fp = dir </> fname ++ "-exception"
           _ :: Either ExpectedException () <-
@@ -140,8 +140,8 @@ withBinaryFileSpec atomic fname withFileTestable = do
           doesFileExist fp `shouldReturn` False
           listDirectory dir `shouldReturn` []
     it "delete - file" $
-      bool expectFailure id atomic $ -- should fail for non-atomic
-      forAll (elements [WriteMode, ReadWriteMode, AppendMode]) $ \iomode ->
+      bool expectFailure property atomic $ -- should fail for non-atomic
+      forM_ [WriteMode, ReadWriteMode, AppendMode] $ \iomode ->
         withSystemTempDirectory "rio" $ \dir -> do
           let fp = dir </> fname ++ "-delete"
           withHelloFileTestable fp iomode $ \h -> do
