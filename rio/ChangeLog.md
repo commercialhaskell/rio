@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.11.0
+
+* Replace atomic and durable file writing functions with the ones from `unliftio`, see [#167](https://github.com/commercialhaskell/rio/pull/167)
+
 ## 0.1.10.0
 
 * Relax a bunch of `RIO.File` functions from `MonadUnliftIO` to `MonadIO`

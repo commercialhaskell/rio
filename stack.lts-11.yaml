@@ -3,5 +3,5 @@ packages:
 - rio
 - rio-orphans
 extra-deps:
-- unliftio-0.2.10@sha256:ed8bc7f9c38361aebd5481efbbbe6e3ee9468d07fffd1a7f0670f0fbbe28bb4f
-- typed-process-0.2.5.0@rev:0
+- unliftio-0.2.12@sha256:b089fbc2ff2628a963c2c4b12143f2020874e3e5144ffd6c62b25639a0ca1483,3325
+- typed-process-0.2.6.0@sha256:c901c13d491441830eb23132ad6968243a56b98161629d260a26c0b13c735fcd,2136
