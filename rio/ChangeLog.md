@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.12.0
+
+* Add `logFormat` and `setLogFormat` for `LogOptions`.
+
 ## 0.1.11.0
 
 * Replace atomic and durable file writing functions with the ones from `unliftio`, see [#167](https://github.com/commercialhaskell/rio/pull/167)
