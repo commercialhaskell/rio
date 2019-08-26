@@ -208,7 +208,7 @@ problems that might otherwise go overlooked:
 * `-Wpartial-fields`
 * `-Wredundant-constraints`
 
-You may add them per file, or to your package.yaml, or pass them on
+You may add them per file, or to your `package.yaml`, or pass them on
 the command line when running ghc. We include these in the project
 template's `package.yaml` file.
 
