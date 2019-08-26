@@ -19,6 +19,7 @@ module RIO.Prelude.Logger
   , setLogUseTime
   , setLogUseColor
   , setLogUseLoc
+  , setLogFormat
     -- ** Standard logging functions
   , logDebug
   , logInfo
@@ -287,6 +288,7 @@ logOptionsMemory = do
         , logUseTime = False
         , logUseColor = False
         , logUseLoc = False
+        , logFormat = id
         , logSend = \new -> atomicModifyIORef' ref $ \old -> (old <> new, ())
         }
   return (ref, options)
@@ -324,6 +326,7 @@ logOptionsHandle handle' verbose = liftIO $ do
     , logUseColor = verbose && terminal
 #endif
     , logUseLoc = verbose
+    , logFormat = id
     , logSend = \builder ->
         if useUtf8 && unicode
           then hPutBuilder handle' (builder <> flush)
@@ -425,6 +428,7 @@ data LogOptions = LogOptions
   , logUseTime :: !Bool
   , logUseColor :: !Bool
   , logUseLoc :: !Bool
+  , logFormat :: !(Utf8Builder -> Utf8Builder)
   , logSend :: !(Builder -> IO ())
   }
 
@@ -498,6 +502,14 @@ setLogUseColor c options = options { logUseColor = c }
 setLogUseLoc :: Bool -> LogOptions -> LogOptions
 setLogUseLoc l options = options { logUseLoc = l }
 
+-- | Set format method for messages
+--
+-- Default: `id`
+--
+-- @since 0.1.12.0
+setLogFormat :: (Utf8Builder -> Utf8Builder) -> LogOptions -> LogOptions
+setLogFormat f options = options { logFormat = f }
+
 simpleLogFunc :: LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
 simpleLogFunc lo cs _src level msg = do
     logLevel   <- logMinLevel lo
@@ -509,7 +521,7 @@ simpleLogFunc lo cs _src level msg = do
         timestamp <>
         getLevel logVerbose <>
         ansi reset <>
-        msg <>
+        logFormat lo msg <>
         getLoc <>
         ansi reset <>
         "\n"

@@ -67,3 +67,10 @@ spec = do
       noLogging $ logInfo "should not appear"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "[info] should appear\n"
+  it "setLogFormat" $ do
+    (ref, options) <- logOptionsMemory
+    let format = ("[context] " <>)
+    withLogFunc (options & setLogFormat format) $ \lf -> runRIO lf $ do
+      logInfo "should be formatted"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "[context] should be formatted\n"
