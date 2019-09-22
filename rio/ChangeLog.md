@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.13.0
+
+* Move vector `slice` functions to `Partial` modules and add `RIO.Vector.sliceMaybe` function.
+
 ## 0.1.12.0
 
 * Add `logFormat` and `setLogFormat` for `LogOptions`.
