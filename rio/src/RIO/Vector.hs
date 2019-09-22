@@ -20,7 +20,6 @@ module RIO.Vector
   , (Data.Vector.Generic.!?)
 
   -- ** Extracting subvectors
-  , Data.Vector.Generic.slice
   , Data.Vector.Generic.take
   , Data.Vector.Generic.drop
   , Data.Vector.Generic.splitAt

@@ -21,7 +21,6 @@ module RIO.Vector.Boxed
   , (Data.Vector.!?)
 
   -- ** Extracting subvectors
-  , Data.Vector.slice
   , Data.Vector.take
   , Data.Vector.drop
   , Data.Vector.splitAt

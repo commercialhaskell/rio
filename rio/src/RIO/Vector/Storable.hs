@@ -22,7 +22,6 @@ module RIO.Vector.Storable
   , (Data.Vector.Storable.!?)
 
   -- ** Extracting subvectors
-  , Data.Vector.Storable.slice
   , Data.Vector.Storable.take
   , Data.Vector.Storable.drop
   , Data.Vector.Storable.splitAt

@@ -17,6 +17,7 @@ module RIO.Vector.Boxed.Partial
   -- ** Extracting subvectors
   , Data.Vector.init
   , Data.Vector.tail
+  , Data.Vector.slice
 
   -- * Modifying vectors
   -- ** Bulk updates
