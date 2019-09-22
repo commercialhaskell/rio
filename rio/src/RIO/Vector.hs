@@ -20,6 +20,7 @@ module RIO.Vector
   , (Data.Vector.Generic.!?)
 
   -- ** Extracting subvectors
+  , sliceMaybe
   , Data.Vector.Generic.take
   , Data.Vector.Generic.drop
   , Data.Vector.Generic.splitAt
@@ -256,3 +257,20 @@ module RIO.Vector
   ) where
 
 import qualified Data.Vector.Generic
+import Data.Vector.Generic (Vector)
+import Control.Monad (guard)
+
+-- | /O(1)/ Yield a slice of the vector without copying it. If the vector
+-- cannot satisfy the specificed slice 'Nothing' is returned.
+--
+-- @since 0.1.13.0
+sliceMaybe :: Vector v a
+  => Int  -- ^ @i@ starting index
+  -> Int  -- ^ @n@ length
+  -> v a
+  -> Maybe (v a)
+sliceMaybe i n v = do
+  guard $ i >= 0
+  guard $ n >= 0
+  guard $ Data.Vector.Generic.length v >= i + n
+  pure $ Data.Vector.Generic.slice i n v

@@ -22,6 +22,7 @@ module RIO.Vector.Unboxed
   , (Data.Vector.Unboxed.!?)
 
   -- ** Extracting subvectors
+  , V.sliceMaybe
   , Data.Vector.Unboxed.take
   , Data.Vector.Unboxed.drop
   , Data.Vector.Unboxed.splitAt
@@ -210,3 +211,4 @@ module RIO.Vector.Unboxed
   ) where
 
 import qualified Data.Vector.Unboxed
+import qualified RIO.Vector as V

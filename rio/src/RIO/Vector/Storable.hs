@@ -22,6 +22,7 @@ module RIO.Vector.Storable
   , (Data.Vector.Storable.!?)
 
   -- ** Extracting subvectors
+  , V.sliceMaybe
   , Data.Vector.Storable.take
   , Data.Vector.Storable.drop
   , Data.Vector.Storable.splitAt
@@ -187,3 +188,4 @@ module RIO.Vector.Storable
   ) where
 
 import qualified Data.Vector.Storable
+import qualified RIO.Vector as V
