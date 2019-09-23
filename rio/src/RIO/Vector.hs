@@ -272,5 +272,5 @@ sliceMaybe :: Vector v a
 sliceMaybe i n v = do
   guard $ i >= 0
   guard $ n >= 0
-  guard $ Data.Vector.Generic.length v >= i + n
+  guard $ Data.Vector.Generic.length v - n >= i
   pure $ Data.Vector.Generic.slice i n v
