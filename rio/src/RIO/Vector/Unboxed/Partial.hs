@@ -17,7 +17,7 @@ module RIO.Vector.Unboxed.Partial
   -- ** Extracting subvectors
   , Data.Vector.Unboxed.init
   , Data.Vector.Unboxed.tail
-  , Data.Vector.Unboxed.slice
+  , RIO.Vector.Partial.slice  -- Pending <https://gitlab.haskell.org/ghc/ghc/issues/17233>
 
   -- * Modifying vectors
   -- ** Bulk updates
@@ -63,3 +63,4 @@ module RIO.Vector.Unboxed.Partial
   ) where
 
 import qualified Data.Vector.Unboxed
+import qualified RIO.Vector.Partial

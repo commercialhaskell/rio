@@ -17,7 +17,7 @@ module RIO.Vector.Storable.Partial
   -- ** Extracting subvectors
   , Data.Vector.Storable.init
   , Data.Vector.Storable.tail
-  , Data.Vector.Storable.slice
+  , RIO.Vector.Partial.slice  -- Pending <https://gitlab.haskell.org/ghc/ghc/issues/17233>
 
   -- * Modifying vectors
   -- ** Bulk updates
@@ -61,3 +61,4 @@ module RIO.Vector.Storable.Partial
   ) where
 
 import qualified Data.Vector.Storable
+import qualified RIO.Vector.Partial
