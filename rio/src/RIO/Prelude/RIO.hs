@@ -8,6 +8,7 @@ module RIO.Prelude.RIO
   ( RIO (..)
   , runRIO
   , liftRIO
+  , mapRIO
   -- SomeRef for Writer/State interfaces
   , SomeRef
   , HasStateRef (..)
@@ -57,6 +58,12 @@ liftRIO :: (MonadIO m, MonadReader env m) => RIO env a -> m a
 liftRIO rio = do
   env <- ask
   runRIO env rio
+
+-- | Lift one RIO env to another.
+mapRIO :: (outer -> inner) -> RIO inner a -> RIO outer a
+mapRIO f m = do
+  outer <- ask
+  runRIO (f outer) m
 
 instance MonadUnliftIO (RIO env) where
     askUnliftIO = RIO $ ReaderT $ \r ->
