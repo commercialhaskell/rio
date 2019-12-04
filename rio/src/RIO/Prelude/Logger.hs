@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -41,6 +44,14 @@ module RIO.Prelude.Logger
     -- ** Advanced running functions
   , mkLogFunc
   , logOptionsMemory
+    -- *** Type-generic logging
+  , mkGLogFunc
+  , glog
+  , HasGLogFunc(..)
+  , GLogFunc
+  , HasLogLevel(..)
+  , HasLogSource(..)
+  , gLogFuncClassic
     -- ** Data types
   , LogLevel (..)
   , LogSource
@@ -56,6 +67,7 @@ import RIO.Prelude.Reexports hiding ((<>))
 import RIO.Prelude.Renames
 import RIO.Prelude.Display
 import RIO.Prelude.Lens
+import Data.Functor.Contravariant
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -659,3 +671,97 @@ logFuncUseColorL = logFuncL.to (maybe False logUseColor . lfOptions)
 -- @since 0.1.5.0
 noLogging :: (HasLogFunc env, MonadReader env m) => m a -> m a
 noLogging = local (set logFuncL mempty)
+
+--------------------------------------------------------------------------------
+-- Generic logging
+
+-- | An app is capable of generic logging if it implements this.
+--
+-- @since 0.1.12.0
+class HasGLogFunc env msg | env -> msg where
+  gLogFuncL :: Lens' env (GLogFunc msg)
+
+-- | Quick way to run a RIO that only has a logger in its environment.
+--
+-- @since 0.1.12.0
+instance HasGLogFunc (GLogFunc msg) msg where
+  gLogFuncL = id
+
+-- | A generic logger of some type @msg@.
+--
+-- Your 'GLocFunc' can re-use the existing classical logging framework
+-- of RIO, and/or implement additional transforms,
+-- filters. Alternatively, you may log to a JSON source in a database,
+-- or anywhere else as needed. You can decide how to log levels or
+-- severities based on the constructors in your type. You will
+-- normally determine this in your main app entry point.
+--
+-- @since 0.1.12.0
+newtype GLogFunc msg = GLogFunc (CallStack -> msg -> IO ())
+
+-- | Use this instance to wrap sub-loggers via 'RIO.mapRIO'.
+--
+-- @since 0.1.12.0
+instance Contravariant GLogFunc where
+  contramap f (GLogFunc io) = GLogFunc (\stack msg -> io stack (f msg))
+  {-# INLINABLE contramap #-}
+
+-- | Perform both sets of actions per log entry.
+--
+-- @since 0.1.12.0
+instance Semigroup (GLogFunc msg) where
+  GLogFunc f <> GLogFunc g = GLogFunc (\a b -> f a b *> g a b)
+
+-- | 'mempty' peforms no logging.
+--
+-- @since 0.1.12.0
+instance Monoid (GLogFunc msg) where
+  mempty = mkGLogFunc $ \_ _ -> return ()
+  mappend = (<>)
+
+-- | Make a generic logger.
+--
+-- @since 0.1.12.0
+mkGLogFunc :: (CallStack -> msg -> IO ()) -> GLogFunc msg
+mkGLogFunc = GLogFunc
+
+-- | Log a value generically.
+--
+-- @since 0.1.12.0
+glog ::
+     (MonadIO m, HasCallStack, HasGLogFunc env msg, MonadReader env m)
+  => msg
+  -> m ()
+glog t = do
+  GLogFunc gLogFunc <- asks (view gLogFuncL)
+  liftIO (gLogFunc callStack t)
+
+--------------------------------------------------------------------------------
+-- Integration with classical logger framework
+
+-- | Level, if any, of your logs. If unknown, use 'LogOther'. Use for
+-- your generic log data types that want to sit inside the classic log
+-- framework.
+--
+-- @since 0.1.12.0
+class HasLogLevel msg where
+  getLogLevel :: msg -> LogLevel
+
+-- | Source of a log. This can be whatever you want. Use for your
+-- generic log data types that want to sit inside the classic log
+-- framework.
+--
+-- @since 0.1.12.0
+class HasLogSource msg where
+  getLogSource :: msg -> LogSource
+
+-- | Make a 'GLogFunc' via classic 'LogFunc'.
+--
+-- @since 0.1.12.0
+gLogFuncClassic ::
+     (HasLogLevel msg, HasLogSource msg, Display msg) => LogFunc -> GLogFunc msg
+gLogFuncClassic (LogFunc {unLogFunc = io}) =
+  mkGLogFunc
+    (\theCallStack msg ->
+       liftIO
+         (io theCallStack (getLogSource msg) (getLogLevel msg) (display msg)))
