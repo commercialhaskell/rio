@@ -44,14 +44,6 @@ module RIO.Prelude.Logger
     -- ** Advanced running functions
   , mkLogFunc
   , logOptionsMemory
-    -- *** Type-generic logging
-  , mkGLogFunc
-  , glog
-  , HasGLogFunc(..)
-  , GLogFunc
-  , HasLogLevel(..)
-  , HasLogSource(..)
-  , gLogFuncClassic
     -- ** Data types
   , LogLevel (..)
   , LogSource
@@ -61,6 +53,15 @@ module RIO.Prelude.Logger
   , noLogging
     -- ** Accessors
   , logFuncUseColorL
+    -- * Type-generic logger
+    -- $type-generic-intro
+  , glog
+  , GLogFunc
+  , gLogFuncClassic
+  , mkGLogFunc
+  , HasGLogFunc(..)
+  , HasLogLevel(..)
+  , HasLogSource(..)
   ) where
 
 import RIO.Prelude.Reexports hiding ((<>))
@@ -673,7 +674,17 @@ noLogging :: (HasLogFunc env, MonadReader env m) => m a -> m a
 noLogging = local (set logFuncL mempty)
 
 --------------------------------------------------------------------------------
--- Generic logging
+--
+-- $type-generic-intro
+--
+-- When logging takes on a more semantic meaning and the logs need to
+-- be digested, acted upon, translated or serialized upstream (to
+-- e.g. a JSON logging server), we have 'GLogFunc' (as in "generic log
+-- function"), and is accessed via 'HasGLogFunc'.
+--
+-- There is only one function to log in this system: the 'glog'
+-- function, which can log any message. You determine the log levels
+-- or severity of messages when needed.
 
 -- | An app is capable of generic logging if it implements this.
 --
@@ -719,7 +730,10 @@ instance Monoid (GLogFunc msg) where
   mempty = mkGLogFunc $ \_ _ -> return ()
   mappend = (<>)
 
--- | Make a generic logger.
+-- | Make a custom generic logger. With this you could, for example,
+-- write to a database or a log digestion service. For example:
+--
+-- > mkGLogFunc (\stack msg -> send (Data.Aeson.encode (JsonLog stack msg)))
 --
 -- @since 0.1.12.0
 mkGLogFunc :: (CallStack -> msg -> IO ()) -> GLogFunc msg
@@ -755,7 +769,8 @@ class HasLogLevel msg where
 class HasLogSource msg where
   getLogSource :: msg -> LogSource
 
--- | Make a 'GLogFunc' via classic 'LogFunc'.
+-- | Make a 'GLogFunc' via classic 'LogFunc'. Use this if you'd like
+-- to log your generic data type via the classic RIO terminal logger.
 --
 -- @since 0.1.12.0
 gLogFuncClassic ::
