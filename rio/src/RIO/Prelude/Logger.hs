@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -689,13 +690,15 @@ noLogging = local (set logFuncL mempty)
 -- | An app is capable of generic logging if it implements this.
 --
 -- @since 0.1.12.0
-class HasGLogFunc env msg | env -> msg where
-  gLogFuncL :: Lens' env (GLogFunc msg)
+class HasGLogFunc env where
+  type GMsg env
+  gLogFuncL :: Lens' env (GLogFunc (GMsg env))
 
 -- | Quick way to run a RIO that only has a logger in its environment.
 --
 -- @since 0.1.12.0
-instance HasGLogFunc (GLogFunc msg) msg where
+instance HasGLogFunc (GLogFunc msg) where
+  type GMsg (GLogFunc msg) = msg
   gLogFuncL = id
 
 -- | A generic logger of some type @msg@.
@@ -743,11 +746,11 @@ mkGLogFunc = GLogFunc
 --
 -- @since 0.1.12.0
 glog ::
-     (MonadIO m, HasCallStack, HasGLogFunc env msg, MonadReader env m)
-  => msg
+     (MonadIO m, HasCallStack, HasGLogFunc env, MonadReader env m)
+  => GMsg env
   -> m ()
 glog t = do
-  GLogFunc gLogFunc <- asks (view gLogFuncL)
+  GLogFunc gLogFunc <- view gLogFuncL
   liftIO (gLogFunc callStack t)
 
 --------------------------------------------------------------------------------
