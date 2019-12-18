@@ -713,12 +713,18 @@ instance HasGLogFunc (GLogFunc msg) where
 -- @since 0.1.12.0
 newtype GLogFunc msg = GLogFunc (CallStack -> msg -> IO ())
 
+#if MIN_VERSION_base(4,12,0)
+-- https://hackage.haskell.org/package/base-4.12.0.0/docs/Data-Functor-Contravariant.html
+
 -- | Use this instance to wrap sub-loggers via 'RIO.mapRIO'.
+--
+-- The 'Contravariant' class is available in base 4.12.0.
 --
 -- @since 0.1.12.0
 instance Contravariant GLogFunc where
   contramap f (GLogFunc io) = GLogFunc (\stack msg -> io stack (f msg))
   {-# INLINABLE contramap #-}
+#endif
 
 -- | Perform both sets of actions per log entry.
 --
@@ -752,6 +758,7 @@ glog ::
 glog t = do
   GLogFunc gLogFunc <- view gLogFuncL
   liftIO (gLogFunc callStack t)
+{-# INLINABLE glog #-}
 
 --------------------------------------------------------------------------------
 -- Integration with classical logger framework
