@@ -688,6 +688,59 @@ noLogging = local (set logFuncL mempty)
 -- There is only one function to log in this system: the 'glog'
 -- function, which can log any message. You determine the log levels
 -- or severity of messages when needed.
+--
+-- Using 'RIO.Prelude.mapRIO' and 'contramapGLogFunc' (or
+-- 'contramapMaybeGLogFunc'), you can build hierarchies of loggers.
+--
+-- Example:
+--
+-- @
+-- import RIO
+--
+-- data DatabaseMsg = Connected String | Query String | Disconnected deriving Show
+-- data WebMsg = Request String | Error String | DatabaseMsg DatabaseMsg deriving Show
+-- data AppMsg = InitMsg String | WebMsg WebMsg deriving Show
+--
+-- main :: IO ()
+-- main =
+--   runRIO
+--     (mkGLogFunc (\stack msg -> print msg))
+--     (do glog (InitMsg "Ready to go!")
+--         runWeb
+--           (do glog (Request "/foo")
+--               runDB (do glog (Connected "127.0.0.1")
+--                         glog (Query "SELECT 1"))
+--               glog (Error "Oh noes!")))
+--
+-- runDB :: RIO (GLogFunc DatabaseMsg) () -> RIO (GLogFunc WebMsg) ()
+-- runDB = mapRIO (contramapGLogFunc DatabaseMsg)
+--
+-- runWeb :: RIO (GLogFunc WebMsg) () -> RIO (GLogFunc AppMsg) ()
+-- runWeb = mapRIO (contramapGLogFunc WebMsg)
+-- @
+--
+-- If we instead decided that we only wanted to log database queries,
+-- and not bother the upstream with connect/disconnect messages, we
+-- could simplify the constructor to @DatabaseQuery String@:
+--
+-- @
+-- data WebMsg = Request String | Error String | DatabaseQuery String deriving Show
+-- @
+--
+-- And then @runDB@ could use 'contramapMaybeGLogFunc' to parse only queries:
+--
+-- @
+-- runDB =
+--   mapRIO
+--     (contramapMaybeGLogFunc
+--        (\msg ->
+--           case msg of
+--             Query string -> pure (DatabaseQuery string)
+--             _ -> Nothing))
+-- @
+--
+-- This way, upstream only has to care about queries and not
+-- connect/disconnect constructors.
 
 -- | An app is capable of generic logging if it implements this.
 --
