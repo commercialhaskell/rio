@@ -37,6 +37,7 @@ module RIO
     -- * @MonadIO@ and @MonadUnliftIO@
   , module Control.Monad.IO.Unlift
     -- * Logger
+    -- $logging-intro
   , module RIO.Prelude.Logger
     -- * Display
   , module RIO.Prelude.Display
@@ -115,3 +116,24 @@ import UnliftIO.STM
 import UnliftIO.Temporary
 import UnliftIO.Timeout
 import UnliftIO.Concurrent
+
+--------------------------------------------------------------------------------
+-- $logging-intro
+--
+-- The logging system in RIO is built upon "log functions", which are
+-- accessed in RIO's environment via a class like "has log
+-- function". There are two provided:
+--
+-- * In the common case: for logging plain text (via 'Utf8Builder')
+--   efficiently, there is 'LogFunc', which can be created via
+--   'withLogFunc', and is accessed via 'HasLogFunc'. This provides
+--   all the classical logging facilities: timestamped text output
+--   with log levels and colors (if terminal-supported) to the
+--   terminal. We log output via 'logInfo', 'logDebug', etc.
+--
+-- * In the advanced case: where logging takes on a more semantic
+--   meaning and the logs need to be digested, acted upon, translated
+--   or serialized upstream (to e.g. a JSON logging server), we have
+--   'GLogFunc' (as in "generic log function"), and is accessed via
+--   'HasGLogFunc'. In this case, we log output via 'glog'. See the
+--   Type-generic logger section for more information.

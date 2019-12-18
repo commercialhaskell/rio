@@ -1,3 +1,7 @@
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -50,6 +54,17 @@ module RIO.Prelude.Logger
   , noLogging
     -- ** Accessors
   , logFuncUseColorL
+    -- * Type-generic logger
+    -- $type-generic-intro
+  , glog
+  , GLogFunc
+  , gLogFuncClassic
+  , mkGLogFunc
+  , contramapMaybeGLogFunc
+  , contramapGLogFunc
+  , HasGLogFunc(..)
+  , HasLogLevel(..)
+  , HasLogSource(..)
   ) where
 
 import RIO.Prelude.Reexports hiding ((<>))
@@ -72,6 +87,10 @@ import qualified Data.ByteString as B
 import           System.IO                  (localeEncoding)
 import           GHC.Foreign                (peekCString, withCString)
 import Data.Semigroup (Semigroup (..))
+
+#if MIN_VERSION_base(4,12,0)
+import Data.Functor.Contravariant
+#endif
 
 -- | The log level of a message.
 --
@@ -659,3 +678,190 @@ logFuncUseColorL = logFuncL.to (maybe False logUseColor . lfOptions)
 -- @since 0.1.5.0
 noLogging :: (HasLogFunc env, MonadReader env m) => m a -> m a
 noLogging = local (set logFuncL mempty)
+
+--------------------------------------------------------------------------------
+--
+-- $type-generic-intro
+--
+-- When logging takes on a more semantic meaning and the logs need to
+-- be digested, acted upon, translated or serialized upstream (to
+-- e.g. a JSON logging server), we have 'GLogFunc' (as in "generic log
+-- function"), and is accessed via 'HasGLogFunc'.
+--
+-- There is only one function to log in this system: the 'glog'
+-- function, which can log any message. You determine the log levels
+-- or severity of messages when needed.
+--
+-- Using 'RIO.Prelude.mapRIO' and 'contramapGLogFunc' (or
+-- 'contramapMaybeGLogFunc'), you can build hierarchies of loggers.
+--
+-- Example:
+--
+-- @
+-- import RIO
+--
+-- data DatabaseMsg = Connected String | Query String | Disconnected deriving Show
+-- data WebMsg = Request String | Error String | DatabaseMsg DatabaseMsg deriving Show
+-- data AppMsg = InitMsg String | WebMsg WebMsg deriving Show
+--
+-- main :: IO ()
+-- main =
+--   runRIO
+--     (mkGLogFunc (\stack msg -> print msg))
+--     (do glog (InitMsg "Ready to go!")
+--         runWeb
+--           (do glog (Request "/foo")
+--               runDB (do glog (Connected "127.0.0.1")
+--                         glog (Query "SELECT 1"))
+--               glog (Error "Oh noes!")))
+--
+-- runDB :: RIO (GLogFunc DatabaseMsg) () -> RIO (GLogFunc WebMsg) ()
+-- runDB = mapRIO (contramapGLogFunc DatabaseMsg)
+--
+-- runWeb :: RIO (GLogFunc WebMsg) () -> RIO (GLogFunc AppMsg) ()
+-- runWeb = mapRIO (contramapGLogFunc WebMsg)
+-- @
+--
+-- If we instead decided that we only wanted to log database queries,
+-- and not bother the upstream with connect/disconnect messages, we
+-- could simplify the constructor to @DatabaseQuery String@:
+--
+-- @
+-- data WebMsg = Request String | Error String | DatabaseQuery String deriving Show
+-- @
+--
+-- And then @runDB@ could use 'contramapMaybeGLogFunc' to parse only queries:
+--
+-- @
+-- runDB =
+--   mapRIO
+--     (contramapMaybeGLogFunc
+--        (\msg ->
+--           case msg of
+--             Query string -> pure (DatabaseQuery string)
+--             _ -> Nothing))
+-- @
+--
+-- This way, upstream only has to care about queries and not
+-- connect/disconnect constructors.
+
+-- | An app is capable of generic logging if it implements this.
+--
+-- @since 0.1.12.0
+class HasGLogFunc env where
+  type GMsg env
+  gLogFuncL :: Lens' env (GLogFunc (GMsg env))
+
+-- | Quick way to run a RIO that only has a logger in its environment.
+--
+-- @since 0.1.12.0
+instance HasGLogFunc (GLogFunc msg) where
+  type GMsg (GLogFunc msg) = msg
+  gLogFuncL = id
+
+-- | A generic logger of some type @msg@.
+--
+-- Your 'GLocFunc' can re-use the existing classical logging framework
+-- of RIO, and/or implement additional transforms,
+-- filters. Alternatively, you may log to a JSON source in a database,
+-- or anywhere else as needed. You can decide how to log levels or
+-- severities based on the constructors in your type. You will
+-- normally determine this in your main app entry point.
+--
+-- @since 0.1.12.0
+newtype GLogFunc msg = GLogFunc (CallStack -> msg -> IO ())
+
+#if MIN_VERSION_base(4,12,0)
+-- https://hackage.haskell.org/package/base-4.12.0.0/docs/Data-Functor-Contravariant.html
+
+-- | Use this instance to wrap sub-loggers via 'RIO.mapRIO'.
+--
+-- The 'Contravariant' class is available in base 4.12.0.
+--
+-- @since 0.1.12.0
+instance Contravariant GLogFunc where
+  contramap = contramapGLogFunc
+  {-# INLINABLE contramap #-}
+#endif
+
+-- | Perform both sets of actions per log entry.
+--
+-- @since 0.1.12.0
+instance Semigroup (GLogFunc msg) where
+  GLogFunc f <> GLogFunc g = GLogFunc (\a b -> f a b *> g a b)
+
+-- | 'mempty' peforms no logging.
+--
+-- @since 0.1.12.0
+instance Monoid (GLogFunc msg) where
+  mempty = mkGLogFunc $ \_ _ -> return ()
+  mappend = (<>)
+
+-- | A vesion of 'contramapMaybeGLogFunc' which supports filering.
+--
+-- @since 0.1.12.0
+contramapMaybeGLogFunc :: (a -> Maybe b) -> GLogFunc b -> GLogFunc a
+contramapMaybeGLogFunc f (GLogFunc io) =
+  GLogFunc (\stack msg -> maybe (pure ()) (io stack) (f msg))
+{-# INLINABLE contramapMaybeGLogFunc #-}
+
+-- | A contramap. Use this to wrap sub-loggers via 'RIO.mapRIO'.
+--
+-- If you are on base > 4.12.0, you can just use 'contramap'.
+--
+-- @since 0.1.12.0
+contramapGLogFunc :: (a -> b) -> GLogFunc b -> GLogFunc a
+contramapGLogFunc f (GLogFunc io) = GLogFunc (\stack msg -> io stack (f msg))
+{-# INLINABLE contramapGLogFunc #-}
+
+-- | Make a custom generic logger. With this you could, for example,
+-- write to a database or a log digestion service. For example:
+--
+-- > mkGLogFunc (\stack msg -> send (Data.Aeson.encode (JsonLog stack msg)))
+--
+-- @since 0.1.12.0
+mkGLogFunc :: (CallStack -> msg -> IO ()) -> GLogFunc msg
+mkGLogFunc = GLogFunc
+
+-- | Log a value generically.
+--
+-- @since 0.1.12.0
+glog ::
+     (MonadIO m, HasCallStack, HasGLogFunc env, MonadReader env m)
+  => GMsg env
+  -> m ()
+glog t = do
+  GLogFunc gLogFunc <- view gLogFuncL
+  liftIO (gLogFunc callStack t)
+{-# INLINABLE glog #-}
+
+--------------------------------------------------------------------------------
+-- Integration with classical logger framework
+
+-- | Level, if any, of your logs. If unknown, use 'LogOther'. Use for
+-- your generic log data types that want to sit inside the classic log
+-- framework.
+--
+-- @since 0.1.12.0
+class HasLogLevel msg where
+  getLogLevel :: msg -> LogLevel
+
+-- | Source of a log. This can be whatever you want. Use for your
+-- generic log data types that want to sit inside the classic log
+-- framework.
+--
+-- @since 0.1.12.0
+class HasLogSource msg where
+  getLogSource :: msg -> LogSource
+
+-- | Make a 'GLogFunc' via classic 'LogFunc'. Use this if you'd like
+-- to log your generic data type via the classic RIO terminal logger.
+--
+-- @since 0.1.12.0
+gLogFuncClassic ::
+     (HasLogLevel msg, HasLogSource msg, Display msg) => LogFunc -> GLogFunc msg
+gLogFuncClassic (LogFunc {unLogFunc = io}) =
+  mkGLogFunc
+    (\theCallStack msg ->
+       liftIO
+         (io theCallStack (getLogSource msg) (getLogLevel msg) (display msg)))
