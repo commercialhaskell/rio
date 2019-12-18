@@ -60,6 +60,8 @@ module RIO.Prelude.Logger
   , GLogFunc
   , gLogFuncClassic
   , mkGLogFunc
+  , contramapMaybeGLogFunc
+  , contramapGLogFunc
   , HasGLogFunc(..)
   , HasLogLevel(..)
   , HasLogSource(..)
@@ -722,7 +724,7 @@ newtype GLogFunc msg = GLogFunc (CallStack -> msg -> IO ())
 --
 -- @since 0.1.12.0
 instance Contravariant GLogFunc where
-  contramap f (GLogFunc io) = GLogFunc (\stack msg -> io stack (f msg))
+  contramap = contramapGLogFunc
   {-# INLINABLE contramap #-}
 #endif
 
@@ -738,6 +740,23 @@ instance Semigroup (GLogFunc msg) where
 instance Monoid (GLogFunc msg) where
   mempty = mkGLogFunc $ \_ _ -> return ()
   mappend = (<>)
+
+-- | A vesion of 'contramapMaybeGLogFunc' which supports filering.
+--
+-- @since 0.1.12.0
+contramapMaybeGLogFunc :: (a -> Maybe b) -> GLogFunc b -> GLogFunc a
+contramapMaybeGLogFunc f (GLogFunc io) =
+  GLogFunc (\stack msg -> maybe (pure ()) (io stack) (f msg))
+{-# INLINABLE contramapMaybeGLogFunc #-}
+
+-- | A contramap. Use this to wrap sub-loggers via 'RIO.mapRIO'.
+--
+-- If you are on base > 4.12.0, you can just use 'contramap'.
+--
+-- @since 0.1.12.0
+contramapGLogFunc :: (a -> b) -> GLogFunc b -> GLogFunc a
+contramapGLogFunc f (GLogFunc io) = GLogFunc (\stack msg -> io stack (f msg))
+{-# INLINABLE contramapGLogFunc #-}
 
 -- | Make a custom generic logger. With this you could, for example,
 -- write to a database or a log digestion service. For example:
