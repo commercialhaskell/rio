@@ -71,7 +71,6 @@ import RIO.Prelude.Reexports hiding ((<>))
 import RIO.Prelude.Renames
 import RIO.Prelude.Display
 import RIO.Prelude.Lens
-import Data.Functor.Contravariant
 import Data.Text (Text)
 import qualified Data.Text as T
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -88,6 +87,10 @@ import qualified Data.ByteString as B
 import           System.IO                  (localeEncoding)
 import           GHC.Foreign                (peekCString, withCString)
 import Data.Semigroup (Semigroup (..))
+
+#if MIN_VERSION_base(4,12,0)
+import Data.Functor.Contravariant
+#endif
 
 -- | The log level of a message.
 --
