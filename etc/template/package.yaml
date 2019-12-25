@@ -21,7 +21,7 @@ description:         DESCRIPTION
 
 dependencies:
 - base >= 4.11 && < 10
-- rio >= 0.1.9.0
+- rio >= 0.1.12.0
 
 ghc-options:
 - -Wall
