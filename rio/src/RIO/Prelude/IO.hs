@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 module RIO.Prelude.IO
   ( withLazyFile
+  , withLazyFileUtf8
   , readFileBinary
   , writeFileBinary
   , readFileUtf8
@@ -12,6 +13,8 @@ import           RIO.Prelude.Reexports
 import qualified Data.ByteString         as B
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy    as BL
+import qualified Data.Text.Lazy          as TL
+import qualified Data.Text.Lazy.IO       as TL
 import qualified Data.Text.IO            as T
 import           System.IO               (hSetEncoding, utf8)
 
@@ -21,6 +24,13 @@ import           System.IO               (hSetEncoding, utf8)
 -- immediately.
 withLazyFile :: MonadUnliftIO m => FilePath -> (BL.ByteString -> m a) -> m a
 withLazyFile fp inner = withBinaryFile fp ReadMode $ inner <=< liftIO . BL.hGetContents
+
+-- | Lazily read a file in UTF8 encoding.
+--
+-- @since 0.1.13
+withLazyFileUtf8 :: MonadUnliftIO m => FilePath -> (TL.Text -> m a) -> m a
+withLazyFileUtf8 fp inner = withFile fp ReadMode $ \h ->
+  inner =<< liftIO (hSetEncoding h utf8 >> TL.hGetContents h)
 
 -- | Write a file in UTF8 encoding
 --
