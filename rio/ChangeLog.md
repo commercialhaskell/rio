@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.13.0
+
+* Add `withLazyFileUtf8`.
+
 ## 0.1.12.0
 
 * Add `logFormat` and `setLogFormat` for `LogOptions`.
