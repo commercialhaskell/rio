@@ -61,7 +61,7 @@ liftRIO rio = do
 
 -- | Lift one RIO env to another.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 mapRIO :: (outer -> inner) -> RIO inner a -> RIO outer a
 mapRIO f m = do
   outer <- ask

@@ -2,7 +2,10 @@
 
 ## 0.1.13.0
 
-* Add `withLazyFileUtf8`.
+* Add `withLazyFileUtf8`
+* Add `mapRIO`
+* Add generic logger
+* Add `exeExtensions` and improve `findExecutable` on Windows [#205](https://github.com/commercialhaskell/rio/issues/205)
 
 ## 0.1.12.0
 

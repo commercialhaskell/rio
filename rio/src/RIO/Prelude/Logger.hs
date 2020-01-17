@@ -525,7 +525,7 @@ setLogUseLoc l options = options { logUseLoc = l }
 --
 -- Default: `id`
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 setLogFormat :: (Utf8Builder -> Utf8Builder) -> LogOptions -> LogOptions
 setLogFormat f options = options { logFormat = f }
 
@@ -747,14 +747,14 @@ noLogging = local (set logFuncL mempty)
 
 -- | An app is capable of generic logging if it implements this.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 class HasGLogFunc env where
   type GMsg env
   gLogFuncL :: Lens' env (GLogFunc (GMsg env))
 
 -- | Quick way to run a RIO that only has a logger in its environment.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 instance HasGLogFunc (GLogFunc msg) where
   type GMsg (GLogFunc msg) = msg
   gLogFuncL = id
@@ -768,7 +768,7 @@ instance HasGLogFunc (GLogFunc msg) where
 -- severities based on the constructors in your type. You will
 -- normally determine this in your main app entry point.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 newtype GLogFunc msg = GLogFunc (CallStack -> msg -> IO ())
 
 #if MIN_VERSION_base(4,12,0)
@@ -778,7 +778,7 @@ newtype GLogFunc msg = GLogFunc (CallStack -> msg -> IO ())
 --
 -- The 'Contravariant' class is available in base 4.12.0.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 instance Contravariant GLogFunc where
   contramap = contramapGLogFunc
   {-# INLINABLE contramap #-}
@@ -786,20 +786,20 @@ instance Contravariant GLogFunc where
 
 -- | Perform both sets of actions per log entry.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 instance Semigroup (GLogFunc msg) where
   GLogFunc f <> GLogFunc g = GLogFunc (\a b -> f a b *> g a b)
 
 -- | 'mempty' peforms no logging.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 instance Monoid (GLogFunc msg) where
   mempty = mkGLogFunc $ \_ _ -> return ()
   mappend = (<>)
 
 -- | A vesion of 'contramapMaybeGLogFunc' which supports filering.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 contramapMaybeGLogFunc :: (a -> Maybe b) -> GLogFunc b -> GLogFunc a
 contramapMaybeGLogFunc f (GLogFunc io) =
   GLogFunc (\stack msg -> maybe (pure ()) (io stack) (f msg))
@@ -809,7 +809,7 @@ contramapMaybeGLogFunc f (GLogFunc io) =
 --
 -- If you are on base > 4.12.0, you can just use 'contramap'.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 contramapGLogFunc :: (a -> b) -> GLogFunc b -> GLogFunc a
 contramapGLogFunc f (GLogFunc io) = GLogFunc (\stack msg -> io stack (f msg))
 {-# INLINABLE contramapGLogFunc #-}
@@ -819,13 +819,13 @@ contramapGLogFunc f (GLogFunc io) = GLogFunc (\stack msg -> io stack (f msg))
 --
 -- > mkGLogFunc (\stack msg -> send (Data.Aeson.encode (JsonLog stack msg)))
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 mkGLogFunc :: (CallStack -> msg -> IO ()) -> GLogFunc msg
 mkGLogFunc = GLogFunc
 
 -- | Log a value generically.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 glog ::
      (MonadIO m, HasCallStack, HasGLogFunc env, MonadReader env m)
   => GMsg env
@@ -842,7 +842,7 @@ glog t = do
 -- your generic log data types that want to sit inside the classic log
 -- framework.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 class HasLogLevel msg where
   getLogLevel :: msg -> LogLevel
 
@@ -850,14 +850,14 @@ class HasLogLevel msg where
 -- generic log data types that want to sit inside the classic log
 -- framework.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 class HasLogSource msg where
   getLogSource :: msg -> LogSource
 
 -- | Make a 'GLogFunc' via classic 'LogFunc'. Use this if you'd like
 -- to log your generic data type via the classic RIO terminal logger.
 --
--- @since 0.1.12.0
+-- @since 0.1.13.0
 gLogFuncClassic ::
      (HasLogLevel msg, HasLogSource msg, Display msg) => LogFunc -> GLogFunc msg
 gLogFuncClassic (LogFunc {unLogFunc = io}) =
