@@ -44,6 +44,7 @@ module RIO.Process
   , mkDefaultProcessContext
   , modifyEnvVars
   , withModifyEnvVars
+  , lookupEnvFromContext
   , withWorkingDir
     -- ** Lenses
   , workingDirL
@@ -296,6 +297,7 @@ mkProcessContext tm' = do
     -- is incomplete.)
     defaultPATHEXT = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
 
+
 -- | Reset the executable cache.
 --
 -- @since 0.0.3.0
@@ -331,7 +333,7 @@ modifyEnvVars pc f = do
   pc' <- mkProcessContext (f $ pcTextMap pc)
   return pc' { pcWorkingDir = pcWorkingDir pc }
 
--- | Use 'modifyEnvVarMap' to create a new 'ProcessContext', and then
+-- | Use 'modifyEnvVars' to create a new 'ProcessContext', and then
 -- use it in the provided action.
 --
 -- @since 0.0.3.0
@@ -344,6 +346,13 @@ withModifyEnvVars f inner = do
   pc <- view processContextL
   pc' <- modifyEnvVars pc f
   local (set processContextL pc') inner
+
+-- | Look into the `ProcessContext` and return the specified environmet variable if one is
+-- available.
+--
+-- @since 0.1.14.0
+lookupEnvFromContext :: (MonadReader env m, HasProcessContext env) => Text -> m (Maybe Text)
+lookupEnvFromContext envName = Map.lookup envName <$> view envVarsL
 
 -- | Set the working directory to be used by child processes.
 --

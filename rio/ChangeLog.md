@@ -1,5 +1,10 @@
 # Changelog for rio
 
+## 0.1.14.0
+
+* Addition of `mkSimpleApp`
+* Addition of `lookupEnvFromContext`
+
 ## 0.1.13.0
 
 * Add `withLazyFileUtf8`
