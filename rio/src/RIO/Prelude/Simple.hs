@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
--- | Provide a @SimpleApp@ datatype, for providing a basic @App@-like
+-- | Provide a @`SimpleApp`@ datatype, for providing a basic @App@-like
 -- environment with common functionality built in. This is intended to
 -- make it easier to, e.g., use rio's logging and process code from
 -- within short scripts.
@@ -7,6 +7,7 @@
 -- @since 0.1.3.0
 module RIO.Prelude.Simple
   ( SimpleApp
+  , mkSimpleApp
   , runSimpleApp
   ) where
 
@@ -31,6 +32,17 @@ instance HasLogFunc SimpleApp where
 instance HasProcessContext SimpleApp where
   processContextL = lens saProcessContext (\x y -> x { saProcessContext = y })
 
+
+-- | Constructor for `SimpleApp`. In case when `ProcessContext` is not supplied
+-- `mkDefaultProcessContext` will be used to create it.
+--
+-- @since 0.1.14.0
+mkSimpleApp :: MonadIO m => LogFunc -> Maybe ProcessContext -> m SimpleApp
+mkSimpleApp logFunc mProcessContext = do
+  processContext <- maybe mkDefaultProcessContext pure mProcessContext
+  pure $ SimpleApp {saLogFunc = logFunc, saProcessContext = processContext}
+
+
 -- | Run with a default configured @SimpleApp@, consisting of:
 --
 -- * Logging to stderr
@@ -45,10 +57,6 @@ runSimpleApp :: MonadIO m => RIO SimpleApp a -> m a
 runSimpleApp m = liftIO $ do
   verbose <- isJust <$> lookupEnv "RIO_VERBOSE"
   lo <- logOptionsHandle stderr verbose
-  pc <- mkDefaultProcessContext
-  withLogFunc lo $ \lf ->
-    let simpleApp = SimpleApp
-          { saLogFunc = lf
-          , saProcessContext = pc
-          }
-     in runRIO simpleApp m
+  withLogFunc lo $ \lf -> do
+    simpleApp <- mkSimpleApp lf Nothing
+    runRIO simpleApp m
