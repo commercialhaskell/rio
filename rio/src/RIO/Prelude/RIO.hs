@@ -68,9 +68,8 @@ mapRIO f m = do
   runRIO (f outer) m
 
 instance MonadUnliftIO (RIO env) where
-    askUnliftIO = RIO $ ReaderT $ \r ->
-                  withUnliftIO $ \u ->
-                  return (UnliftIO (unliftIO u . flip runReaderT r . unRIO))
+  withRunInIO inner = RIO $ withRunInIO $ \run -> inner (run . unRIO)
+  {-# INLINE withRunInIO #-}
 
 instance PrimMonad (RIO env) where
     type PrimState (RIO env) = PrimState IO

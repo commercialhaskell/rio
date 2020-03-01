@@ -1,5 +1,5 @@
 name: rio
-version: 0.1.14.0
+version: 0.1.14.1
 synopsis: A standard library for Haskell
 description: See README and Haddocks at <https://www.stackage.org/package/rio>
 license: MIT

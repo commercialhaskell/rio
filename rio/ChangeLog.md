@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.14.1
+
+* Support `unliftio-core` 0.2
+
 ## 0.1.14.0
 
 * Addition of `mkSimpleApp`
