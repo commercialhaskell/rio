@@ -1,0 +1,171 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 6b5196ca703656226be396b57dc1cad657e697252fabe2a5da4c27bb45262263
+
+name:           rio
+version:        0.1.14.1
+synopsis:       A standard library for Haskell
+description:    See README and Haddocks at <https://www.stackage.org/package/rio>
+category:       Control
+homepage:       https://github.com/commercialhaskell/rio#readme
+bug-reports:    https://github.com/commercialhaskell/rio/issues
+author:         Michael Snoyman
+maintainer:     michael@snoyman.com
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/commercialhaskell/rio
+
+library
+  exposed-modules:
+      RIO
+      RIO.ByteString
+      RIO.ByteString.Lazy
+      RIO.ByteString.Lazy.Partial
+      RIO.ByteString.Partial
+      RIO.Char
+      RIO.Char.Partial
+      RIO.Deque
+      RIO.Directory
+      RIO.File
+      RIO.FilePath
+      RIO.HashMap
+      RIO.HashMap.Partial
+      RIO.HashSet
+      RIO.List
+      RIO.List.Partial
+      RIO.Map
+      RIO.Map.Partial
+      RIO.Map.Unchecked
+      RIO.NonEmpty
+      RIO.NonEmpty.Partial
+      RIO.Partial
+      RIO.Prelude
+      RIO.Prelude.Simple
+      RIO.Prelude.Types
+      RIO.Process
+      RIO.Seq
+      RIO.Set
+      RIO.Set.Partial
+      RIO.Set.Unchecked
+      RIO.State
+      RIO.Text
+      RIO.Text.Lazy
+      RIO.Text.Lazy.Partial
+      RIO.Text.Partial
+      RIO.Time
+      RIO.Vector
+      RIO.Vector.Boxed
+      RIO.Vector.Boxed.Partial
+      RIO.Vector.Boxed.Unsafe
+      RIO.Vector.Partial
+      RIO.Vector.Storable
+      RIO.Vector.Storable.Partial
+      RIO.Vector.Storable.Unsafe
+      RIO.Vector.Unboxed
+      RIO.Vector.Unboxed.Partial
+      RIO.Vector.Unboxed.Unsafe
+      RIO.Vector.Unsafe
+      RIO.Writer
+  other-modules:
+      RIO.Prelude.Display
+      RIO.Prelude.Exit
+      RIO.Prelude.Extra
+      RIO.Prelude.IO
+      RIO.Prelude.Lens
+      RIO.Prelude.Logger
+      RIO.Prelude.Reexports
+      RIO.Prelude.Renames
+      RIO.Prelude.RIO
+      RIO.Prelude.Text
+      RIO.Prelude.Trace
+      RIO.Prelude.URef
+  hs-source-dirs:
+      src/
+  build-depends:
+      base >=4.10 && <10
+    , bytestring
+    , containers
+    , deepseq
+    , directory
+    , exceptions
+    , filepath
+    , hashable
+    , microlens
+    , mtl
+    , primitive
+    , process
+    , text
+    , time
+    , typed-process >=0.2.5.0
+    , unliftio >=0.2.12
+    , unliftio-core
+    , unordered-containers
+    , vector
+  if os(windows)
+    cpp-options: -DWINDOWS
+    build-depends:
+        Win32
+  else
+    build-depends:
+        unix
+  default-language: Haskell2010
+
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      RIO.DequeSpec
+      RIO.FileSpec
+      RIO.ListSpec
+      RIO.LoggerSpec
+      RIO.Prelude.ExtraSpec
+      RIO.Prelude.IOSpec
+      RIO.Prelude.RIOSpec
+      RIO.Prelude.SimpleSpec
+      RIO.PreludeSpec
+      RIO.TextSpec
+      Paths_rio
+  hs-source-dirs:
+      test
+  build-depends:
+      QuickCheck
+    , base >=4.10 && <10
+    , bytestring
+    , containers
+    , deepseq
+    , directory
+    , exceptions
+    , filepath
+    , hashable
+    , hspec
+    , microlens
+    , mtl
+    , primitive
+    , process
+    , rio
+    , text
+    , time
+    , typed-process >=0.2.5.0
+    , unliftio >=0.2.12
+    , unliftio-core
+    , unordered-containers
+    , vector
+  if os(windows)
+    cpp-options: -DWINDOWS
+    build-depends:
+        Win32
+  else
+    build-depends:
+        unix
+  default-language: Haskell2010
