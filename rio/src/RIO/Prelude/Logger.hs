@@ -35,6 +35,8 @@ module RIO.Prelude.Logger
   , logSticky
   , logStickyDone
     -- *** With source
+    --
+    -- $withSource
   , logDebugS
   , logInfoS
   , logWarnS
@@ -203,6 +205,17 @@ logOther
   -> Utf8Builder
   -> m ()
 logOther = logGeneric "" . LevelOther
+
+-- $withSource
+--
+-- There is a set of logging functions that take an extra 'LogSource'
+-- argument to provide context, typically detailing what part of an
+-- application the message comes from.
+--
+-- For example, in verbose mode, @infoLogS "database" "connected"@ will
+-- result in
+--
+-- > [info] (database) connected
 
 -- | Log a debug level message with the given source.
 --
@@ -530,7 +543,7 @@ setLogFormat :: (Utf8Builder -> Utf8Builder) -> LogOptions -> LogOptions
 setLogFormat f options = options { logFormat = f }
 
 simpleLogFunc :: LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
-simpleLogFunc lo cs _src level msg = do
+simpleLogFunc lo cs src level msg = do
     logLevel   <- logMinLevel lo
     logVerbose <- logVerboseFormat lo
 
@@ -540,6 +553,7 @@ simpleLogFunc lo cs _src level msg = do
         timestamp <>
         getLevel logVerbose <>
         ansi reset <>
+        getSource <>
         logFormat lo msg <>
         getLoc <>
         ansi reset <>
@@ -581,6 +595,11 @@ simpleLogFunc lo cs _src level msg = do
              display name <>
              "] "
      | otherwise = mempty
+
+   getSource :: Utf8Builder
+   getSource = case src of
+     "" -> ""
+     _  -> "(" <> display src <> ") "
 
    getLoc :: Utf8Builder
    getLoc
