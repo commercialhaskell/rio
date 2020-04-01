@@ -80,3 +80,20 @@ spec = do
       logInfoS "tests" "should appear"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "[info] should appear\n"
+  it "sourceWithCustomLogFunc" $ do
+    ref <- newIORef mempty
+    let sendLog :: Builder -> IO ()
+        sendLog = \new -> atomicModifyIORef' ref $ \old -> (old <> new, ())
+        displayLevel level = case level of
+          LevelInfo -> "[info] "
+          _ -> "[other] "
+        displaySource src = case src of
+          "" -> ""
+          _ -> display src <> ": "
+        displayLog src level msg = displayLevel level <> displaySource src <> msg <> "\n"
+        logFunc = mkLogFunc $ \_ src level msg ->
+          sendLog $ getUtf8Builder $ displayLog src level msg
+    runRIO logFunc $ do
+      logInfoS "tests" "should appear"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "[info] tests: should appear\n"
