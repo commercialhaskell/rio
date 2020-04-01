@@ -35,6 +35,8 @@ module RIO.Prelude.Logger
   , logSticky
   , logStickyDone
     -- *** With source
+    --
+    -- $withSource
   , logDebugS
   , logInfoS
   , logWarnS
@@ -203,6 +205,37 @@ logOther
   -> Utf8Builder
   -> m ()
 logOther = logGeneric "" . LevelOther
+
+-- $withSource
+--
+-- There is a set of logging functions that take an extra 'LogSource'
+-- argument to provide context, typically detailing what part of an
+-- application the message comes from.
+--
+-- The built-in log functions as constructed with 'withLogFunc' and
+-- 'LogOptions' ignore the source argument. To make use of it, define
+-- a custom log function along the lines of:
+--
+-- > mkCustomLogFunc :: Handle -> LogFunc
+-- > mkCustomLogFunc handle = mkLogFunc printLog
+-- >   where
+-- >     printLog _cs src level msg =
+-- >       hPutBuilder handle $ getUtf8Builder $
+-- >       displayLevel level <> displaySource src <> msg
+-- >     displayLevel level = case level of
+-- >       LevelDebug -> "[debug] "
+-- >       LevelInfo -> "[info] "
+-- >       LevelWarn -> "[warn] "
+-- >       LevelError -> "[error] "
+-- >       LevelOther name -> "[" <> display name <> "] "
+-- >     displaySource src = case src of
+-- >       "" -> ""
+-- >       _ -> display src <> ": "
+--
+-- With this log function, @infoLogS "database" "connected"@ would
+-- result in
+--
+-- > [info] database: connected
 
 -- | Log a debug level message with the given source.
 --
