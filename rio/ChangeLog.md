@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.15.0
+
+* Include source in log messages
+
 ## 0.1.14.1
 
 * Support `unliftio-core` 0.2
