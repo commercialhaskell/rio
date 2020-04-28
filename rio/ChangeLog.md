@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.15.1
+
+* Replace `canonicalizePath` with `makeAbsolute` [#217](https://github.com/commercialhaskell/rio/issues/217)
+
 ## 0.1.15.0
 
 * Include source in log messages

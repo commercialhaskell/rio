@@ -588,7 +588,7 @@ findExecutable
   -- ^ Full path to that executable on success
 findExecutable name | any FP.isPathSeparator name = do
   names <- addPcExeExtensions name
-  testFPs (pure $ Left $ ExecutableNotFoundAt name) D.canonicalizePath names
+  testFPs (pure $ Left $ ExecutableNotFoundAt name) D.makeAbsolute names
 findExecutable name = do
   pc <- view processContextL
   m <- readIORef $ pcExeCache pc
