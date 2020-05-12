@@ -271,7 +271,7 @@ module RIO.Prelude.Types
 
     -- * @hashable@
     -- ** @Hashable@
-  , Data.Hashable.Hashable
+  , Data.Hashable.Hashable(..)
 
     -- * @unordered-containers@
     -- ** @HashMap@
