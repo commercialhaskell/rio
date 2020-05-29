@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 30ccd150c619c6c6fa96ebc7d3b33d6cb4ea1b2e45228e4cba5c35c1bc64cd63
+-- hash: 11b6bee06843c7a494b7af4c3490da6ca8ad82e3a888e9e613de01a9bf75d6ed
 
 name:           rio
 version:        0.1.15.1
@@ -42,6 +42,7 @@ library
       RIO.HashMap
       RIO.HashMap.Partial
       RIO.HashSet
+      RIO.Lens
       RIO.List
       RIO.List.Partial
       RIO.Map
@@ -102,6 +103,7 @@ library
     , filepath
     , hashable
     , microlens
+    , microlens-mtl
     , mtl
     , primitive
     , process
@@ -150,6 +152,7 @@ test-suite spec
     , hashable
     , hspec
     , microlens
+    , microlens-mtl
     , mtl
     , primitive
     , process
