@@ -1,5 +1,10 @@
 # Changelog for rio
 
+## 0.1.16.0
+
+* Expand the number of `microlens` functions exported by the RIO prelude.
+* Add new module `RIO.Lens` which provides the rest of `microlens`.
+
 ## 0.1.15.1
 
 * Replace `canonicalizePath` with `makeAbsolute` [#217](https://github.com/commercialhaskell/rio/issues/217)

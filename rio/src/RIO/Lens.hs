@@ -1,4 +1,11 @@
--- | Extra utilities from @microlens@.
+-- |
+-- Module    : RIO.Lens
+-- License   : MIT
+-- Maintainer: Colin Woodbury <colin@fosskers.ca>
+--
+-- Extra utilities from @microlens@.
+--
+-- @since: 0.1.16.0
 module RIO.Lens
   ( -- * Fold
     SimpleFold
