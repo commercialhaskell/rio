@@ -1,5 +1,5 @@
 name: rio
-version: 0.1.15.1
+version: 0.1.16.0
 synopsis: A standard library for Haskell
 description: See README and Haddocks at <https://www.stackage.org/package/rio>
 license: MIT
@@ -7,6 +7,7 @@ author: Michael Snoyman
 maintainer: michael@snoyman.com
 github: commercialhaskell/rio
 category: Control
+
 extra-source-files:
 - README.md
 - ChangeLog.md
@@ -21,6 +22,7 @@ dependencies:
 - filepath
 - hashable
 - microlens
+- microlens-mtl
 - mtl
 - primitive
 - text
@@ -61,6 +63,7 @@ library:
     - RIO.HashMap
     - RIO.HashMap.Partial
     - RIO.HashSet
+    - RIO.Lens
     - RIO.List
     - RIO.List.Partial
     - RIO.Map

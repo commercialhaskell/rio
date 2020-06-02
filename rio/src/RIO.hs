@@ -41,7 +41,8 @@ module RIO
   , module RIO.Prelude.Logger
     -- * Display
   , module RIO.Prelude.Display
-    -- * Lens
+    -- * Optics
+    -- | @microlens@-based Lenses, Traversals, etc.
   , module RIO.Prelude.Lens
     -- * Concurrency
   , UnliftIO.Concurrent.ThreadId
