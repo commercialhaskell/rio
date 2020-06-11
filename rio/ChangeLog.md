@@ -1,6 +1,6 @@
 # Changelog for rio
 
-## 0.2.0.0
+## 0.1.17.0
 
 * Expose `Bifunctor`, `Bifoldable`, and `Bitraversable`.
 * The `first` and `second` functions exported by `RIO` formerly originated from
