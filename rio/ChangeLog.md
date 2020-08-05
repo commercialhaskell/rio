@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.18.0
+
+* Add colours to the `LogOption` constructor [#222](https://github.com/commercialhaskell/rio/pull/222)
+
 ## 0.1.17.0
 
 * Expose `Bifunctor`, `Bifoldable`, and `Bitraversable`.
