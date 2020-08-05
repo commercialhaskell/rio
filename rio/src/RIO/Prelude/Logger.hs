@@ -24,6 +24,9 @@ module RIO.Prelude.Logger
   , setLogUseColor
   , setLogUseLoc
   , setLogFormat
+  , setLogLevelColors
+  , setLogSecondaryColor
+  , setLogAccentColors
     -- ** Standard logging functions
   , logDebug
   , logInfo
@@ -56,6 +59,9 @@ module RIO.Prelude.Logger
   , noLogging
     -- ** Accessors
   , logFuncUseColorL
+  , logFuncLogLevelColorsL
+  , logFuncSecondaryColorL
+  , logFuncAccentColorsL
     -- * Type-generic logger
     -- $type-generic-intro
   , glog
@@ -319,6 +325,7 @@ logOptionsMemory = do
         , logTerminal = True
         , logUseTime = False
         , logUseColor = False
+        , logColors = defaultLogColors
         , logUseLoc = False
         , logFormat = id
         , logSend = \new -> atomicModifyIORef' ref $ \old -> (old <> new, ())
@@ -357,6 +364,7 @@ logOptionsHandle handle' verbose = liftIO $ do
 #else
     , logUseColor = verbose && terminal
 #endif
+    , logColors = defaultLogColors
     , logUseLoc = verbose
     , logFormat = id
     , logSend = \builder ->
@@ -459,10 +467,44 @@ data LogOptions = LogOptions
   , logTerminal :: !Bool
   , logUseTime :: !Bool
   , logUseColor :: !Bool
+  , logColors :: !LogColors
   , logUseLoc :: !Bool
   , logFormat :: !(Utf8Builder -> Utf8Builder)
   , logSend :: !(Builder -> IO ())
   }
+
+-- | ANSI color codes for use in the configuration of the creation of a
+-- 'LogFunc'.
+--
+-- @since 0.1.18.0
+data LogColors = LogColors
+  { -- | The color associated with each 'LogLevel'.
+    logColorLogLevels :: !(LogLevel -> Utf8Builder)
+    -- | The color of secondary content.
+  , logColorSecondary :: !Utf8Builder
+    -- | The color of accents, which are indexed by 'Int'.
+  , logColorAccents :: !(Int -> Utf8Builder)
+  }
+
+defaultLogColors :: LogColors
+defaultLogColors = LogColors
+  { logColorLogLevels = defaultLogLevelColors
+  , logColorSecondary = defaultLogSecondaryColor
+  , logColorAccents = defaultLogAccentColors
+  }
+
+defaultLogLevelColors :: LogLevel -> Utf8Builder
+defaultLogLevelColors LevelDebug = "\ESC[32m" -- Green
+defaultLogLevelColors LevelInfo = "\ESC[34m" -- Blue
+defaultLogLevelColors LevelWarn = "\ESC[33m" -- Yellow
+defaultLogLevelColors LevelError = "\ESC[31m" -- Red
+defaultLogLevelColors (LevelOther _) = "\ESC[35m" -- Magenta
+
+defaultLogSecondaryColor :: Utf8Builder
+defaultLogSecondaryColor = "\ESC[90m"  -- Bright black (gray)
+
+defaultLogAccentColors :: Int -> Utf8Builder
+defaultLogAccentColors = const "\ESC[92m" -- Bright green
 
 -- | Set the minimum log level. Messages below this level will not be
 -- printed.
@@ -526,6 +568,44 @@ setLogUseTime t options = options { logUseTime = t }
 setLogUseColor :: Bool -> LogOptions -> LogOptions
 setLogUseColor c options = options { logUseColor = c }
 
+-- | ANSI color codes for 'LogLevel' in the log output.
+--
+-- Default: 'LevelDebug'   = \"\\ESC[32m\" -- Green
+--          'LevelInfo'    = \"\\ESC[34m\" -- Blue
+--          'LevelWarn'    = \"\\ESC[33m\" -- Yellow
+--          'LevelError'   = \"\\ESC[31m\" -- Red
+--          'LevelOther' _ = \"\\ESC[35m\" -- Magenta
+--
+-- @since 0.1.18.0
+setLogLevelColors :: (LogLevel -> Utf8Builder) -> LogOptions -> LogOptions
+setLogLevelColors logLevelColors options =
+  let lc = (logColors options){ logColorLogLevels = logLevelColors }
+  in  options { logColors = lc }
+
+-- | ANSI color codes for secondary content in the log output.
+--
+-- Default: \"\\ESC[90m\" -- Bright black (gray)
+--
+-- @since 0.1.18.0
+setLogSecondaryColor :: Utf8Builder -> LogOptions -> LogOptions
+setLogSecondaryColor c options =
+  let lc = (logColors options){ logColorSecondary = c }
+  in  options { logColors = lc }
+
+-- | ANSI color codes for accents in the log output. Accent colors are indexed
+-- by 'Int'.
+--
+-- Default: 'const' \"\\ESC[92m\" -- Bright green, for all indicies
+--
+-- @since 0.1.18.0
+setLogAccentColors
+  :: (Int -> Utf8Builder)  -- ^ This should be a total function.
+  -> LogOptions
+  -> LogOptions
+setLogAccentColors accentColors options =
+  let lc = (logColors options){ logColorAccents = accentColors }
+  in  options { logColors = lc }
+
 -- | Use code location in the log output.
 --
 -- Default: `True` if in verbose mode, `False` otherwise.
@@ -560,12 +640,10 @@ simpleLogFunc lo cs src level msg = do
         "\n"
   where
    reset = "\ESC[0m"
-   setBlack = "\ESC[90m"
-   setGreen = "\ESC[32m"
-   setBlue = "\ESC[34m"
-   setYellow = "\ESC[33m"
-   setRed = "\ESC[31m"
-   setMagenta = "\ESC[35m"
+   lc = logColors lo
+   levelColor = logColorLogLevels lc level
+   timestampColor = logColorSecondary lc
+   locColor = logColorSecondary lc
 
    ansi :: Utf8Builder -> Utf8Builder
    ansi xs | logUseColor lo = xs
@@ -575,7 +653,7 @@ simpleLogFunc lo cs src level msg = do
    getTimestamp logVerbose
      | logVerbose && logUseTime lo =
        do now <- getZonedTime
-          return $ ansi setBlack <> fromString (formatTime' now) <> ": "
+          return $ ansi timestampColor <> fromString (formatTime' now) <> ": "
      | otherwise = return mempty
      where
        formatTime' =
@@ -583,14 +661,13 @@ simpleLogFunc lo cs src level msg = do
 
    getLevel :: Bool -> Utf8Builder
    getLevel logVerbose
-     | logVerbose =
+     | logVerbose = ansi levelColor <>
          case level of
-           LevelDebug -> ansi setGreen <> "[debug] "
-           LevelInfo -> ansi setBlue <> "[info] "
-           LevelWarn -> ansi setYellow <> "[warn] "
-           LevelError -> ansi setRed <> "[error] "
+           LevelDebug -> "[debug] "
+           LevelInfo -> "[info] "
+           LevelWarn -> "[warn] "
+           LevelError -> "[error] "
            LevelOther name ->
-             ansi setMagenta <>
              "[" <>
              display name <>
              "] "
@@ -603,7 +680,7 @@ simpleLogFunc lo cs src level msg = do
 
    getLoc :: Utf8Builder
    getLoc
-     | logUseLoc lo = ansi setBlack <> "\n@(" <> displayCallStack cs <> ")"
+     | logUseLoc lo = ansi locColor <> "\n@(" <> displayCallStack cs <> ")"
      | otherwise = mempty
 
 -- | Convert a 'CallStack' value into a 'Utf8Builder' indicating
@@ -688,6 +765,42 @@ utf8CharacterCount = go 0
 -- @since 0.1.0.0
 logFuncUseColorL :: HasLogFunc env => SimpleGetter env Bool
 logFuncUseColorL = logFuncL.to (maybe False logUseColor . lfOptions)
+
+-- | What color is the log func configured to use for each 'LogLevel'?
+--
+-- Intended for use by code which wants to optionally add additional color to
+-- its log messages.
+--
+-- @since 0.1.18.0
+logFuncLogLevelColorsL :: HasLogFunc env
+                       => SimpleGetter env (LogLevel -> Utf8Builder)
+logFuncLogLevelColorsL = logFuncL.to
+                           (maybe defaultLogLevelColors
+                                  (logColorLogLevels . logColors) . lfOptions)
+
+-- | What color is the log func configured to use for secondary content?
+--
+-- Intended for use by code which wants to optionally add additional color to
+-- its log messages.
+--
+-- @since 0.1.18.0
+logFuncSecondaryColorL :: HasLogFunc env
+                       => SimpleGetter env Utf8Builder
+logFuncSecondaryColorL = logFuncL.to
+                           (maybe defaultLogSecondaryColor
+                                  (logColorSecondary . logColors) . lfOptions)
+
+-- | What accent colors, indexed by 'Int', is the log func configured to use?
+--
+-- Intended for use by code which wants to optionally add additional color to
+-- its log messages.
+--
+-- @since 0.1.18.0
+logFuncAccentColorsL :: HasLogFunc env
+                       => SimpleGetter env (Int -> Utf8Builder)
+logFuncAccentColorsL = logFuncL.to
+                           (maybe defaultLogAccentColors
+                                  (logColorAccents . logColors) . lfOptions)
 
 -- | Disable logging capabilities in a given sub-routine
 --

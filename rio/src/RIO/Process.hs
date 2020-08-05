@@ -407,9 +407,10 @@ withProcessTimeLog mdir name args proc' = do
   end <- getMonotonicTime
   let diff = end - start
   useColor <- view logFuncUseColorL
+  accentColors <- view logFuncAccentColorsL
   logDebug
       ("Process finished in " <>
-      (if useColor then "\ESC[92m" else "") <> -- green
+      (if useColor then accentColors 0 else "") <> -- accent color 0
       timeSpecMilliSecondText diff <>
       (if useColor then "\ESC[0m" else "") <> -- reset
        ": " <> display cmdText)
