@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.19.0
+
+* Expose `fromLeft` and `fromRight`
+
 ## 0.1.18.0
 
 * Add colours to the `LogOption` constructor [#222](https://github.com/commercialhaskell/rio/pull/222)
