@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 087056e2734e9ef4da6545d2654c71c939cf6f9a04aac90c5427c43597cb8b88
+-- hash: 2b9ea9ee3e7bdfefbc63c62e72ff3ce7b348803d398dcc3e394879db5522fa1b
 
 name:           rio
-version:        0.1.18.0
+version:        0.1.19.0
 synopsis:       A standard library for Haskell
 description:    See README and Haddocks at <https://www.stackage.org/package/rio>
 category:       Control
