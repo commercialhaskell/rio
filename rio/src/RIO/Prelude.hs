@@ -28,6 +28,8 @@ module RIO.Prelude
     -- * @Either@
     -- | Re-exported from "Data.Either":
   , Data.Either.either
+  , Data.Either.fromLeft
+  , Data.Either.fromRight
   , Data.Either.isLeft
   , Data.Either.isRight
   , RIO.Prelude.Extra.mapLeft
