@@ -5,3 +5,6 @@ packages:
 extra-deps:
 - typed-process-0.2.6.0@sha256:c901c13d491441830eb23132ad6968243a56b98161629d260a26c0b13c735fcd,2136
 - unliftio-0.2.12@sha256:b089fbc2ff2628a963c2c4b12143f2020874e3e5144ffd6c62b25639a0ca1483,3325
+
+nix:
+  packages: [zlib]
