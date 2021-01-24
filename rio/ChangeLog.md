@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.20.0
+
+* Export `UnliftIO.QSem` and `UnliftIO.QSemN` in `RIO`
+
 ## 0.1.19.0
 
 * Expose `fromLeft` and `fromRight`

@@ -79,6 +79,10 @@ module RIO
   , module UnliftIO.IORef
     -- ** MVar
   , module UnliftIO.MVar
+    -- ** QSem
+  , module UnliftIO.QSem
+    -- ** QSemN
+  , module UnliftIO.QSemN
     -- ** Memoize
   , module UnliftIO.Memoize
     -- ** Deque
@@ -113,6 +117,8 @@ import UnliftIO.IO
 import UnliftIO.IORef
 import UnliftIO.Memoize
 import UnliftIO.MVar
+import UnliftIO.QSem
+import UnliftIO.QSemN
 import UnliftIO.STM
 import UnliftIO.Temporary
 import UnliftIO.Timeout
