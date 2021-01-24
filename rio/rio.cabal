@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2b9ea9ee3e7bdfefbc63c62e72ff3ce7b348803d398dcc3e394879db5522fa1b
+-- hash: f3c92fe72c8e7fd35fdebcde2b50c754eec24d9c4d5bc1bded6f7876503fb693
 
 name:           rio
-version:        0.1.19.0
+version:        0.1.20.0
 synopsis:       A standard library for Haskell
 description:    See README and Haddocks at <https://www.stackage.org/package/rio>
 category:       Control
@@ -110,7 +110,7 @@ library
     , text
     , time
     , typed-process >=0.2.5.0
-    , unliftio >=0.2.12
+    , unliftio >=0.2.14
     , unliftio-core
     , unordered-containers
     , vector
@@ -160,7 +160,7 @@ test-suite spec
     , text
     , time
     , typed-process >=0.2.5.0
-    , unliftio >=0.2.12
+    , unliftio >=0.2.14
     , unliftio-core
     , unordered-containers
     , vector

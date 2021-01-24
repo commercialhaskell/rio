@@ -12,12 +12,12 @@ packages:
   original:
     hackage: typed-process-0.2.6.0@sha256:c901c13d491441830eb23132ad6968243a56b98161629d260a26c0b13c735fcd,2136
 - completed:
-    hackage: unliftio-0.2.12@sha256:b089fbc2ff2628a963c2c4b12143f2020874e3e5144ffd6c62b25639a0ca1483,3325
+    hackage: unliftio-0.2.14@sha256:7e6d3de70ad13e2efd14d417a19c1c5b33250cf0f6be9dfc907b39535a661c4a,3366
     pantry-tree:
-      size: 2229
-      sha256: 4971b43f3d473eff868eb1a0c359729b49f1779e78c462ba45ef0d1eda677699
+      size: 2352
+      sha256: 7f07d0b0ed71be25a9ea235b2974e1d2ff282210f968fbf25b932cb69351b293
   original:
-    hackage: unliftio-0.2.12@sha256:b089fbc2ff2628a963c2c4b12143f2020874e3e5144ffd6c62b25639a0ca1483,3325
+    hackage: unliftio-0.2.14@sha256:7e6d3de70ad13e2efd14d417a19c1c5b33250cf0f6be9dfc907b39535a661c4a,3366
 snapshots:
 - completed:
     size: 499889
