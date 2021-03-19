@@ -1,0 +1,117 @@
+name:                PROJECTNAME
+version:             0.1.0.0
+github:              GITHUB
+license:             BSD3
+author:              AUTHOR
+maintainer:          MAINTAINER
+copyright:           COPYRIGHT
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         DESCRIPTION
+
+dependencies:
+  - name: base
+    version: ">= 4.11 && <10"
+    mixin: &base-mixin
+      - hiding (Prelude)
+  - name: rio
+    version: ">= 0.1.12.0"
+    mixin: &rio-mixin
+      - (RIO as RIO)
+      - (RIO.List                     as Prelude.List)
+      - (RIO.ByteString               as Prelude.ByteString)
+      - (RIO.ByteString.Lazy          as Prelude.ByteString.Lazy)
+      - (RIO.ByteString.Lazy.Partial  as Prelude.ByteString.Lazy.Partial)
+      - (RIO.ByteString.Partial       as Prelude.ByteString.Partial)
+      - (RIO.Char                     as Prelude.Char)
+      - (RIO.Char.Partial             as Prelude.Char.Partial)
+      - (RIO.Deque                    as Prelude.Deque)
+      - (RIO.Directory                as Prelude.Directory)
+      - (RIO.File                     as Prelude.File)
+      - (RIO.FilePath                 as Prelude.FilePath)
+      - (RIO.HashMap                  as Prelude.HashMap)
+      - (RIO.HashMap.Partial          as Prelude.HashMap.Partial)
+      - (RIO.HashSet                  as Prelude.HashSet)
+      - (RIO.List                     as Prelude.List)
+      - (RIO.List.Partial             as Prelude.List.Partial)
+      - (RIO.Map                      as Prelude.Map)
+      - (RIO.Map.Partial              as Prelude.Map.Partial)
+      - (RIO.Map.Unchecked            as Prelude.Map.Unchecked)
+      - (RIO.NonEmpty                 as Prelude.NonEmpty)
+      - (RIO.NonEmpty.Partial         as Prelude.NonEmpty.Partial)
+      - (RIO.Partial                  as Prelude.Partial)
+      - (RIO.Prelude                  as Prelude.Prelude)
+      - (RIO.Prelude.Simple           as Prelude.Prelude.Simple)
+      - (RIO.Prelude.Types            as Prelude.Prelude.Types)
+      - (RIO.Process                  as Prelude.Process)
+      - (RIO.Seq                      as Prelude.Seq)
+      - (RIO.Set                      as Prelude.Set)
+      - (RIO.Set.Partial              as Prelude.Set.Partial)
+      - (RIO.Set.Unchecked            as Prelude.Set.Unchecked)
+      - (RIO.State                    as Prelude.State)
+      - (RIO.Text                     as Prelude.Text)
+      - (RIO.Text.Lazy                as Prelude.Text.Lazy)
+      - (RIO.Text.Lazy.Partial        as Prelude.Text.Lazy.Partial)
+      - (RIO.Text.Partial             as Prelude.Text.Partial)
+      - (RIO.Time                     as Prelude.Time)
+      - (RIO.Vector                   as Prelude.Vector)
+      - (RIO.Vector.Boxed             as Prelude.Vector.Boxed)
+      - (RIO.Vector.Boxed.Partial     as Prelude.Vector.Boxed.Partial)
+      - (RIO.Vector.Boxed.Unsafe      as Prelude.Vector.Boxed.Unsafe)
+      - (RIO.Vector.Partial           as Prelude.Vector.Partial)
+      - (RIO.Vector.Storable          as Prelude.Vector.Storable)
+      - (RIO.Vector.Storable.Partial  as Prelude.Vector.Storable.Partial)
+      - (RIO.Vector.Storable.Unsafe   as Prelude.Vector.Storable.Unsafe)
+      - (RIO.Vector.Unboxed           as Prelude.Vector.Unboxed)
+      - (RIO.Vector.Unboxed.Partial   as Prelude.Vector.Unboxed.Partial)
+      - (RIO.Vector.Unboxed.Unsafe    as Prelude.Vector.Unboxed.Unsafe)
+      - (RIO.Vector.Unsafe            as Prelude.Vector.Unsafe)
+      - (RIO.Writer                   as Prelude.Writer)
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+
+executables:
+  PROJECTNAME-exe:
+    main:                Main.hs
+    source-dirs:         app
+    dependencies:
+    - PROJECTNAME
+    - optparse-simple
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
+tests:
+  PROJECTNAME-test:
+    main:                Spec.hs
+    source-dirs:         test
+    dependencies:
+    - PROJECTNAME
+    - hspec
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
