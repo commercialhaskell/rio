@@ -7,7 +7,7 @@ cabal-version: 1.12
 -- hash: dd6b35b998c98b016949383b90c84c7de4983d5f2b68acaf535908f0c342ad6c
 
 name:           rio-orphans
-version:        0.1.1.0
+version:        0.1.2.0
 synopsis:       Orphan instances for the RIO type in the rio package
 description:    See README and Haddocks at <https://www.stackage.org/package/rio-orphans>
 category:       Control
@@ -42,6 +42,7 @@ library
     , resourcet
     , rio
     , transformers-base
+    , unliftio-core
   default-language: Haskell2010
 
 test-suite rio-orphans-test
@@ -64,4 +65,5 @@ test-suite rio-orphans-test
     , rio
     , rio-orphans
     , transformers-base
+    , unliftio-core
   default-language: Haskell2010
