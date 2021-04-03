@@ -21,6 +21,7 @@ dependencies:
 - monad-logger
 - fast-logger
 - transformers-base
+- unliftio-core
 
 library:
   source-dirs: src

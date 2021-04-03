@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: dd6b35b998c98b016949383b90c84c7de4983d5f2b68acaf535908f0c342ad6c
+-- hash: 73b0abe6a63aaeca941c08d21e429b2221d75c0121c5d65d2dcd362f0beb6f2e
 
 name:           rio-orphans
 version:        0.1.2.0
