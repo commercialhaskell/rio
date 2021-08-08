@@ -190,7 +190,7 @@ data ProcessException
     | ExecutableNotFound String [FilePath]
     | ExecutableNotFoundAt FilePath
     | PathsInvalidInPath [FilePath]
-    deriving Typeable
+    deriving (Typeable, Eq)
 instance Show ProcessException where
     show NoPathFound = "PATH not found in ProcessContext"
     show (ExecutableNotFound name path) = concat
@@ -654,7 +654,8 @@ exeExtensions = do
   pc <- view processContextL
   return $ pcExeExtensions pc
 
--- | Augment the PATH environment variable with the given extra paths.
+-- | Augment the PATH environment variable with the given extra paths,
+-- which are prepended (as in: they take precedence).
 --
 -- @since 0.0.3.0
 augmentPath :: [FilePath] -> Maybe Text -> Either ProcessException Text
@@ -672,9 +673,21 @@ augmentPath dirs mpath =
 augmentPathMap :: [FilePath] -> EnvVars -> Either ProcessException EnvVars
 augmentPathMap dirs origEnv =
   do path <- augmentPath dirs mpath
-     return $ Map.insert "PATH" path origEnv
+     return $ Map.insert "PATH" path normEnv
   where
-    mpath = Map.lookup "PATH" origEnv
+    -- On windows, env vars are case insensitive.
+    -- We pick the "last" PATH variable and ensure
+    -- it's full uppercase.
+    -- See https://github.com/commercialhaskell/rio/issues/234
+    normEnv 
+      | isWindows = Map.foldrWithKey
+          (\k v m -> case T.toLower k of
+            "path" -> Map.insert "PATH" v m
+            _      -> Map.insert k v m)
+          mempty
+          origEnv
+      | otherwise = origEnv
+    mpath = Map.lookup "PATH" normEnv
 
 -- | Show a process arg including speechmarks when necessary. Just for
 -- debugging purposes, not functionally important.
