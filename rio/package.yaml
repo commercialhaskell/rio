@@ -122,3 +122,6 @@ tests:
     - rio
     - hspec
     - QuickCheck
+    verbatim: |
+      build-tool-depends:
+          hspec-discover:hspec-discover
