@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | Interacting with external processes.
 --
@@ -190,7 +191,7 @@ data ProcessException
     | ExecutableNotFound String [FilePath]
     | ExecutableNotFoundAt FilePath
     | PathsInvalidInPath [FilePath]
-    deriving Typeable
+    deriving (Typeable, Eq)
 instance Show ProcessException where
     show NoPathFound = "PATH not found in ProcessContext"
     show (ExecutableNotFound name path) = concat
@@ -269,7 +270,7 @@ exeSearchPathL = processContextL.to pcPath
 --
 -- @since 0.0.3.0
 mkProcessContext :: MonadIO m => EnvVars -> m ProcessContext
-mkProcessContext tm' = do
+mkProcessContext (normalizePathEnv -> tm) = do
     ref <- newIORef Map.empty
     return ProcessContext
         { pcTextMap = tm
@@ -287,15 +288,19 @@ mkProcessContext tm' = do
         , pcWorkingDir = Nothing
         }
   where
-    -- Fix case insensitivity of the PATH environment variable on Windows.
-    tm
-        | isWindows = Map.fromList $ map (first T.toUpper) $ Map.toList tm'
-        | otherwise = tm'
     -- Default value for PATHTEXT on Windows versions after Windows XP. (The
     -- documentation of the default at
     -- https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/start
     -- is incomplete.)
     defaultPATHEXT = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
+
+
+-- Fix case insensitivity of the PATH environment variable on Windows,
+-- by forcing all keys full uppercase.
+normalizePathEnv :: EnvVars -> EnvVars
+normalizePathEnv env
+  | isWindows = Map.fromList $ map (first T.toUpper) $ Map.toList env
+  | otherwise = env
 
 
 -- | Reset the executable cache.
@@ -654,7 +659,8 @@ exeExtensions = do
   pc <- view processContextL
   return $ pcExeExtensions pc
 
--- | Augment the PATH environment variable with the given extra paths.
+-- | Augment the PATH environment variable with the given extra paths,
+-- which are prepended (as in: they take precedence).
 --
 -- @since 0.0.3.0
 augmentPath :: [FilePath] -> Maybe Text -> Either ProcessException Text
@@ -670,7 +676,7 @@ augmentPath dirs mpath =
 --
 -- @since 0.0.3.0
 augmentPathMap :: [FilePath] -> EnvVars -> Either ProcessException EnvVars
-augmentPathMap dirs origEnv =
+augmentPathMap dirs (normalizePathEnv -> origEnv) =
   do path <- augmentPath dirs mpath
      return $ Map.insert "PATH" path origEnv
   where
