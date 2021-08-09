@@ -1,4 +1,4 @@
-resolver: lts-13.26
+resolver: lts-18.5
 packages:
 - rio
 - rio-orphans

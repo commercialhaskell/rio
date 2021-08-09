@@ -13,7 +13,7 @@ extra-source-files:
 - ChangeLog.md
 
 dependencies:
-- base >= 4.10 && < 10
+- base >= 4.12 && < 10
 - exceptions
 - resourcet
 - rio

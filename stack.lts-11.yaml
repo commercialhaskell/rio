@@ -1,7 +1,0 @@
-resolver: lts-11.22
-packages:
-- rio
-- rio-orphans
-extra-deps:
-- typed-process-0.2.6.0@sha256:c901c13d491441830eb23132ad6968243a56b98161629d260a26c0b13c735fcd,2136
-- unliftio-0.2.14@sha256:7e6d3de70ad13e2efd14d417a19c1c5b33250cf0f6be9dfc907b39535a661c4a,3366
