@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.21.0
+
+* Fix minor bug in `augmentPathMap` on windows wrt [#234](https://github.com/commercialhaskell/rio/issues/234) not adhering to case-insensitive semantics
+
 ## 0.1.20.0
 
 * Export `UnliftIO.QSem` and `UnliftIO.QSemN` in `RIO`
