@@ -544,7 +544,7 @@ setLogVerboseFormatIO :: IO Bool -> LogOptions -> LogOptions
 setLogVerboseFormatIO getVerboseLevel options =
   options { logVerboseFormat = getVerboseLevel }
 
--- | Do we treat output as a terminal. If @True@, we will enabled
+-- | Do we treat output as a terminal. If @True@, we will enable
 -- sticky logging functionality.
 --
 -- Default: checks if the @Handle@ provided to 'logOptionsHandle' is a
