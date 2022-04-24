@@ -77,6 +77,7 @@ module RIO.Process
   , exeExtensions
   , augmentPath
   , augmentPathMap
+  , augmentPathMap'
   , showProcessArgDebug
     -- * Reexports
   , P.ProcessConfig
@@ -659,8 +660,9 @@ exeExtensions = do
   pc <- view processContextL
   return $ pcExeExtensions pc
 
--- | Augment the PATH environment variable with the given extra paths,
--- which are prepended (as in: they take precedence).
+-- | Augment the given value (assumed to be that of an environment variable
+-- that lists paths, such as PATH; this is not checked) with the given extra
+-- paths. Those paths are prepended (as in: they take precedence).
 --
 -- @since 0.0.3.0
 augmentPath :: [FilePath] -> Maybe Text -> Either ProcessException Text
@@ -672,15 +674,29 @@ augmentPath dirs mpath =
             ++ maybeToList mpath
     illegal -> Left $ PathsInvalidInPath illegal
 
--- | Apply 'augmentPath' on the PATH value in the given 'EnvVars'.
+-- | Apply 'augmentPath' on the value of the PATH environment variable in the
+-- given 'EnvVars'.
 --
 -- @since 0.0.3.0
 augmentPathMap :: [FilePath] -> EnvVars -> Either ProcessException EnvVars
-augmentPathMap dirs (normalizePathEnv -> origEnv) =
+augmentPathMap = augmentPathMap' "PATH"
+
+-- | Apply 'augmentPath' on the value of the given environment variable in the
+-- given 'EnvVars'.
+--
+-- @since 0.1.22.0
+augmentPathMap'
+  :: Text
+  -- ^ Environment variable. If it does not already exist in the given
+  -- 'EnvVars', it will be created.
+  -> [FilePath]
+  -> EnvVars
+  -> Either ProcessException EnvVars
+augmentPathMap' envVar dirs (normalizePathEnv -> origEnv) =
   do path <- augmentPath dirs mpath
-     return $ Map.insert "PATH" path origEnv
+     return $ Map.insert envVar path origEnv
   where
-    mpath = Map.lookup "PATH" origEnv
+    mpath = Map.lookup envVar origEnv
 
 -- | Show a process arg including speechmarks when necessary. Just for
 -- debugging purposes, not functionally important.
