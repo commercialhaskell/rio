@@ -120,7 +120,7 @@ class HasStateRef s env | env -> s where
 --
 -- @since 0.1.4.0
 instance HasStateRef a (SomeRef a) where
-  stateRefL = lens id (\_ x -> x)
+  stateRefL = id
 
 -- | Environment values with writing capabilities to SomeRef
 --
@@ -132,7 +132,7 @@ class HasWriteRef w env | env -> w where
 --
 -- @since 0.1.4.0
 instance HasWriteRef a (SomeRef a) where
-  writeRefL = lens id (\_ x -> x)
+  writeRefL = id
 
 instance HasStateRef s env => MonadState s (RIO env) where
   get = do
