@@ -21,7 +21,7 @@ dependencies:
 - exceptions
 - filepath
 - hashable
-- microlens
+- microlens >= 0.4.2.0
 - microlens-mtl
 - mtl
 - primitive
