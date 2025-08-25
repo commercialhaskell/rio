@@ -1,4 +1,4 @@
-snapshot: lts-24.10
+snapshot: lts-24.10 # GHC 9.10.2
 packages:
 - rio
 - rio-orphans
