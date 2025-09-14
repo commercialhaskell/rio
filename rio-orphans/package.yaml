@@ -1,12 +1,12 @@
-name:        rio-orphans
-version:     0.1.2.0
-synopsis:    Orphan instances for the RIO type in the rio package
+name: rio-orphans
+version: 0.1.2.0
+synopsis: Orphan instances for the RIO type in the rio package
 description: See README and Haddocks at <https://www.stackage.org/package/rio-orphans>
-license:     MIT
-author:      Michael Snoyman
-maintainer:  michael@snoyman.com
-github:      commercialhaskell/rio
-category:    Control
+license: MIT
+author: Michael Snoyman
+maintainer: michael@snoyman.com
+github: commercialhaskell/rio
+category: Control
 
 extra-source-files:
 - README.md
@@ -28,8 +28,8 @@ library:
 
 tests:
   rio-orphans-test:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
     ghc-options:
     - -threaded
     - -rtsopts

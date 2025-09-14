@@ -33,32 +33,32 @@ jobs:
           stack-yaml: stack-ghc-9.2.8.yaml # GHC 9.2.8
 
     steps:
-      - name: Clone project
-        uses: actions/checkout@v4
-      - name: Cache dependencies on Unix-like OS
-        if: startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS')
-        uses: actions/cache@v4
-        with:
-          path: ~/.stack
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.stack-yaml }}
-      - name: Cache dependencies on Windows
-        if: startsWith(runner.os, 'Windows')
-        uses: actions/cache@v4
-        with:
-          path: |
-             ~\AppData\Roaming\stack
-             ~\AppData\Local\Programs\stack
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.stack-yaml }}
-      - name: Build and run tests
-        shell: bash
-        run: |
-            set -ex
+    - name: Clone project
+      uses: actions/checkout@v4
+    - name: Cache dependencies on Unix-like OS
+      if: startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS')
+      uses: actions/cache@v4
+      with:
+        path: ~/.stack
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.stack-yaml }}
+    - name: Cache dependencies on Windows
+      if: startsWith(runner.os, 'Windows')
+      uses: actions/cache@v4
+      with:
+        path: |
+           ~\AppData\Roaming\stack
+           ~\AppData\Local\Programs\stack
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.stack-yaml }}
+    - name: Build and run tests
+      shell: bash
+      run: |
+        set -ex
 
-            if [[ "${{ matrix.os }}" == "macos-13" || "${{ matrix.os }}" == "macos-latest" ]]
-            then
-              # macos-13 and macos-latest do not include Haskell tools as at 2025-09-14.
-              curl -sSL https://get.haskellstack.org/ | sh
-            fi
+        if [[ "${{ matrix.os }}" == "macos-13" || "${{ matrix.os }}" == "macos-latest" ]]
+        then
+          # macos-13 and macos-latest do not include Haskell tools as at 2025-09-14.
+          curl -sSL https://get.haskellstack.org/ | sh
+        fi
 
-            stack --version
-            stack --stack-yaml=${{ matrix.stack-yaml }} test --fast --no-terminal
+        stack --version
+        stack --stack-yaml=${{ matrix.stack-yaml }} test --fast --no-terminal
