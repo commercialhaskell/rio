@@ -1,3 +1,8 @@
+{-# LANGUAGE CPP                #-}
+#if MIN_VERSION_base(4,17,0)
+{-# LANGUAGE ExplicitNamespaces #-}
+#endif
+
 module RIO.Prelude.Types
   (
     -- * @base@
@@ -198,6 +203,11 @@ module RIO.Prelude.Types
     -- | Re-exported from "GHC.Stack":
   , GHC.Stack.HasCallStack
 
+#if MIN_VERSION_base(4,17,0)
+    -- *** The equality types
+    -- | Re-exported from "Data.Type.Equality":
+  , type (Data.Type.Equality.~)
+#endif
 
     -- * @deepseq@
     -- ** @NFData@
@@ -346,6 +356,11 @@ import qualified Data.String (IsString, String)
 import qualified Data.Text (Text)
 import qualified Data.Text.Encoding.Error
 import qualified Data.Traversable
+-- See https://errors.haskell.org/messages/GHC-12003/
+-- From GHC 9.4.1, the type equality operator ~ is a regular type operator.
+#if MIN_VERSION_base(4,17,0)
+import qualified Data.Type.Equality (type (~))
+#endif
 import qualified Data.Typeable
 import qualified Data.Vector
 import qualified Data.Vector.Unboxed (Unbox)
