@@ -9,7 +9,7 @@
 The goal of the `rio` library is to make it easier to adopt Haskell
 for writing production software.  It is intended as a cross between:
 
-* Collection of well designed, trusted libraries
+* Collection of well-designed, trusted libraries
 * Useful `Prelude` replacement
 * A set of best practices for writing production quality Haskell code
 
@@ -197,7 +197,7 @@ StaticPointers
 
 ### GHC Options
 
-We recommend using these GHC complier warning flags on all projects, to catch
+We recommend using these GHC compiler warning flags on all projects, to catch
 problems that might otherwise go overlooked:
 
 * `-Wall`
