@@ -74,7 +74,7 @@ spec = do
               actual `shouldBe` expected
               case actual of
                 Just _ -> drain
-                Nothing -> return $! ()
+                Nothing -> return ()
         drain
       test name proxy = describe name $ do
         prop "arbitrary actions" $ runActions proxy

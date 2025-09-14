@@ -574,7 +574,7 @@ doesExecutableExist
   :: (MonadIO m, MonadReader env m, HasProcessContext env)
   => String            -- ^ Name of executable
   -> m Bool
-doesExecutableExist = liftM isRight . findExecutable
+doesExecutableExist = fmap isRight . findExecutable
 
 -- | Find the complete path for the given executable name.
 --

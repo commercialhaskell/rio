@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ViewPatterns #-}
 module RIO.Prelude.RIOSpec (spec) where
 
 import RIO
@@ -33,7 +32,7 @@ spec = do
       () <- runRIO ref $ pass $ do
         tell "hello\n"
         tell "world\n"
-        return ((), \a -> a <> "!")
+        return ((), (<> "!"))
       contents <- readSomeRef ref
       contents `shouldBe` "hello\nworld\n!"
 
@@ -42,13 +41,12 @@ spec = do
       ref <- newSomeRef (mempty :: Text)
       result <- runRIO ref $ do
         put "hello world"
-        x <- get
-        return x
+        get
       result `shouldBe` "hello world"
 
     it "state works" $ do
       ref <- newSomeRef (mempty :: Text)
       _newRef <- newSomeRef ("Hello World!" :: Text)
-      () <- runRIO ref $ state (\_ -> ((), "Hello World!"))
+      () <- runRIO ref $ state (const ((), "Hello World!"))
       contents <- readSomeRef ref
       contents `shouldBe` "Hello World!"
