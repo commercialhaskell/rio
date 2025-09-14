@@ -1,4 +1,7 @@
 *~
 tarballs/
-.stack-work/
 *.cabal
+
+# Haskell Tool Stack-related
+.stack-work/
+stack-ghc-*.yaml.lock
