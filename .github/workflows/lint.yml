@@ -1,0 +1,28 @@
+name: Linting
+
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+
+jobs:
+  style:
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone project
+      uses: actions/checkout@v4
+    - name: Apply yamllint
+      uses: ibiqlik/action-yamllint@v3
+      with:
+        format: github
+    - name: Set up HLint
+      uses: haskell-actions/hlint-setup@v2
+      with:
+        version: "3.10"
+    - name: Apply HLint
+      uses: haskell-actions/hlint-run@v2
+      with:
+        fail-on: suggestion
+        path: '["rio/", "rio-orphans/"]'

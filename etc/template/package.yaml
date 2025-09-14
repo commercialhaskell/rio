@@ -1,10 +1,10 @@
-name:                PROJECTNAME
-version:             0.1.0.0
-github:              GITHUB
-license:             BSD3
-author:              AUTHOR
-maintainer:          MAINTAINER
-copyright:           COPYRIGHT
+name: PROJECTNAME
+version: 0.1.0.0
+github: GITHUB
+license: BSD3
+author: AUTHOR
+maintainer: MAINTAINER
+copyright: COPYRIGHT
 
 extra-source-files:
 - README.md
@@ -17,7 +17,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         DESCRIPTION
+description: DESCRIPTION
 
 dependencies:
 - base >= 4.11 && < 10
@@ -37,8 +37,8 @@ library:
 
 executables:
   PROJECTNAME-exe:
-    main:                Main.hs
-    source-dirs:         app
+    main: Main.hs
+    source-dirs: app
     dependencies:
     - PROJECTNAME
     - optparse-simple
@@ -50,8 +50,8 @@ executables:
 
 tests:
   PROJECTNAME-test:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
     dependencies:
     - PROJECTNAME
     - hspec
