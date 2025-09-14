@@ -14,6 +14,7 @@ import           Data.ByteString          (ByteString)
 import qualified Data.ByteString.Lazy     as BL
 import qualified Data.ByteString.Builder  as BB
 import           Data.ByteString.Builder  (Builder)
+import           Data.Foldable            (fold)
 import           Data.Semigroup           (Semigroup(..))
 import           Data.Text                (Text)
 import qualified Data.Text.Lazy           as TL
@@ -39,7 +40,7 @@ instance Monoid Utf8Builder where
   {-# INLINE mempty #-}
   mappend = (Data.Semigroup.<>)
   {-# INLINE mappend #-}
-  mconcat = foldr mappend mempty
+  mconcat = fold
   {-# INLINE mconcat #-}
 
 -- | @since 0.1.0.0

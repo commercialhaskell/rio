@@ -89,7 +89,7 @@ newDeque
   => m (Deque v (PrimState m) a)
 newDeque = do
     v <- V.new baseSize
-    liftM Deque $ newMutVar (DequeState v 0 0)
+    Deque <$> newMutVar (DequeState v 0 0)
   where
     baseSize = 32
 {-# INLINE newDeque #-}
@@ -123,7 +123,7 @@ popFrontDeque (Deque var) = do
                     | start' >= V.length v = 0
                     | otherwise = start'
             writeMutVar var $! DequeState v start'' (size - 1)
-            return $! Just x
+            return (Just x)
 {-# INLINE popFrontDeque #-}
 
 -- | Pop the first value from the end of the 'Deque'
@@ -145,7 +145,7 @@ popBackDeque (Deque var) = do
                     | otherwise = end
             x <- V.unsafeRead v end'
             writeMutVar var $! DequeState v start size'
-            return $! Just x
+            return (Just x)
 {-# INLINE popBackDeque #-}
 
 -- | Push a new value to the beginning of the 'Deque'

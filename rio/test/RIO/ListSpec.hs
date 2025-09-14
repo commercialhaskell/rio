@@ -5,7 +5,7 @@ import Test.Hspec
 import RIO
 import qualified RIO.List as List
 
-data TestType = TestType { testTypeContents :: Int }
+newtype TestType = TestType { testTypeContents :: Int }
   deriving (Eq, Show)
 
 testTypeList :: [TestType]
@@ -21,7 +21,7 @@ spec = do
     it "absent" $ List.dropSuffix "foo" "foobar" `shouldBe` "foobar"
   describe "maximumByMaybe" $ do
     it "should support elements that do not have an Ord instance" $
-      List.maximumByMaybe (compare `on` testTypeContents) testTypeList `shouldBe` (Just TestType { testTypeContents = 1})
+      List.maximumByMaybe (compare `on` testTypeContents) testTypeList `shouldBe` Just TestType { testTypeContents = 1}
   describe "minimumByMaybe" $ do
     it "should support elements that do not have an Ord instance" $
-      List.minimumByMaybe (compare `on` testTypeContents) testTypeList `shouldBe` (Just TestType { testTypeContents = 0})
+      List.minimumByMaybe (compare `on` testTypeContents) testTypeList `shouldBe` Just TestType { testTypeContents = 0}

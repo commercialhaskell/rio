@@ -42,7 +42,7 @@ forMaybeA = flip mapMaybeA
 
 -- | Monadic 'mapMaybe'.
 mapMaybeM :: Monad m => (a -> m (Maybe b)) -> [a] -> m [b]
-mapMaybeM f = liftM catMaybes . mapM f
+mapMaybeM f = fmap catMaybes . mapM f
 
 -- | @'forMaybeM' '==' 'flip' 'mapMaybeM'@
 forMaybeM :: Monad m => [a] -> (a -> m (Maybe b)) -> m [b]

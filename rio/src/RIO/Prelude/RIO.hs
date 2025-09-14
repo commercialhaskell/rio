@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -99,12 +98,12 @@ writeSomeRef (SomeRef _ x) = liftIO . x
 -- @since 0.1.4.0
 modifySomeRef :: MonadIO m => SomeRef a -> (a -> a) -> m ()
 modifySomeRef (SomeRef read' write) f =
-  liftIO $ (f <$> read') >>= write
+  liftIO (read' >>= write . f)
 
 ioRefToSomeRef :: IORef a -> SomeRef a
 ioRefToSomeRef ref =
   SomeRef (readIORef ref)
-          (\val -> modifyIORef' ref (\_ -> val))
+          (modifyIORef' ref . const)
 
 uRefToSomeRef :: Unbox a => URef RealWorld a -> SomeRef a
 uRefToSomeRef ref =
@@ -175,4 +174,4 @@ newSomeRef a = do
 -- @since 0.1.4.0
 newUnboxedSomeRef :: (MonadIO m, Unbox a) => a -> m (SomeRef a)
 newUnboxedSomeRef a =
-  uRefToSomeRef <$> (liftIO $ newURef a)
+  uRefToSomeRef <$>   liftIO (newURef a)
