@@ -3,8 +3,8 @@ name: Tests
 on:
   pull_request:
   push:
-      branches:
-      - master
+    branches:
+    - master
   workflow_dispatch:
 
 jobs:
@@ -15,11 +15,22 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        snapshot:
-        - nightly # GHC 9.12.2
-        - lts-24 # GHC 9.10.2
-        - lts-23 # GHC 9.8.4
-        - lts-22 # GHC 9.6.7
+        stack-yaml:
+        - stack-ghc-9.12.2.yaml # GHC 9.12.2
+        - stack-ghc-9.10.3.yaml # GHC 9.10.3
+        - stack-ghc-9.8.4.yaml # GHC 9.8.4
+        - stack-ghc-9.6.7.yaml # GHC 9.6.7
+        - stack-ghc-8.6.5.yaml # GHC 8.6.5 and base-4.12.0.0
+        exclude:
+        # macos-latest is macOS/AArch64 and GHC 8.6.5 did not support it
+        - os: macos-latest
+          stack-yaml: stack-ghc-8.6.5.yaml
+        include:
+        # macos-latest is macOS/AArch64 and GHC 8.10.5 was first to support it.
+        # However, the GitHub runner can't find the LLVM version with
+        # GHC 8.10.7 or 9.0.2.
+        - os: macos-latest
+          stack-yaml: stack-ghc-9.2.8.yaml # GHC 9.2.8
 
     steps:
       - name: Clone project
@@ -29,7 +40,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.stack
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.snapshot }}
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.stack-yaml }}
       - name: Cache dependencies on Windows
         if: startsWith(runner.os, 'Windows')
         uses: actions/cache@v4
@@ -37,7 +48,7 @@ jobs:
           path: |
              ~\AppData\Roaming\stack
              ~\AppData\Local\Programs\stack
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.snapshot }}
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.stack-yaml }}
       - name: Build and run tests
         shell: bash
         run: |
@@ -50,4 +61,4 @@ jobs:
             fi
 
             stack --version
-            stack test --fast --no-terminal --snapshot=${{ matrix.snapshot }}
+            stack --stack-yaml=${{ matrix.stack-yaml }} test --fast --no-terminal

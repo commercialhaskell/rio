@@ -1,0 +1,4 @@
+snapshot: lts-20.26 # GHC 9.2.8
+packages:
+- rio
+- rio-orphans

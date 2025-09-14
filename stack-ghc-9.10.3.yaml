@@ -1,0 +1,6 @@
+snapshot: lts-24.10 # GHC 9.10.2
+compiler: ghc-9.10.3
+compiler-check: match-exact
+packages:
+- rio
+- rio-orphans
