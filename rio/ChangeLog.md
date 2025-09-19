@@ -1,5 +1,10 @@
 # Changelog for rio
 
+## 0.1.23.0
+
+* Support GHC 9.14
+* Re-export type operator `~`, from `base-4.17.0.0`
+
 ## 0.1.22.0
 
 * Expose `augmentPathMap'`
