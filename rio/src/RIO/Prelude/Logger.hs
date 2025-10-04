@@ -87,11 +87,9 @@ import qualified Data.Text.IO as TIO
 import Data.Bits
 import Data.ByteString.Builder (toLazyByteString, char7, byteString, hPutBuilder)
 import Data.ByteString.Builder.Extra (flush)
-import           GHC.IO.Handle.Internals         (wantWritableHandle)
 import           GHC.IO.Encoding.Types           (textEncodingName)
-import           GHC.IO.Handle.Types             (Handle__ (..))
 import qualified Data.ByteString as B
-import           System.IO                  (localeEncoding)
+import           System.IO                  (hGetEncoding, localeEncoding)
 import           GHC.Foreign                (peekCString, withCString)
 import Data.Semigroup (Semigroup (..))
 
@@ -301,9 +299,9 @@ logStickyDone = logOther "sticky-done"
 -- that encompasses the logSticky->logStickyDone pairing.
 
 canUseUtf8 :: MonadIO m => Handle -> m Bool
-canUseUtf8 h = liftIO $ wantWritableHandle "canUseUtf8" h $ \h_ -> do
-  -- TODO also handle haOutputNL for CRLF
-  return $ (textEncodingName <$> haCodec h_) == Just "UTF-8"
+canUseUtf8 h = liftIO $ do
+  maybeEnc <- hGetEncoding h
+  return $ fmap textEncodingName maybeEnc == Just "UTF-8"
 
 -- | Create a 'LogOptions' value which will store its data in
 -- memory. This is primarily intended for testing purposes. This will
