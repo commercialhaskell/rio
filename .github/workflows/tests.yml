@@ -49,14 +49,20 @@ jobs:
            ~\AppData\Roaming\stack
            ~\AppData\Local\Programs\stack
         key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.stack-yaml }}
+    # macos-latest can restrict permissions to TMPDIR, so we designate a
+    # different temporary directory.
+    - name: Set TMPDIR on macOS
+      if: startsWith(runner.os, 'macOS')
+      run: |
+        echo "TMPDIR=$RUNNER_TEMP" >> $GITHUB_ENV
     - name: Build and run tests
       shell: bash
       run: |
         set -ex
 
-        if [[ "${{ matrix.os }}" == "macos-13" || "${{ matrix.os }}" == "macos-latest" ]]
+        if [[ "${{ matrix.os }}" == "macos-latest" ]]
         then
-          # macos-13 and macos-latest do not include Haskell tools as at 2025-09-14.
+          # macos-latest does not include Haskell tools as at 2025-10-04.
           curl -sSL https://get.haskellstack.org/ | sh
         fi
 
