@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-14]
         stack-yaml:
         - stack-ghc-9.12.2.yaml # GHC 9.12.2
         - stack-ghc-9.10.3.yaml # GHC 9.10.3
@@ -54,9 +54,9 @@ jobs:
       run: |
         set -ex
 
-        if [[ "${{ matrix.os }}" == "macos-13" || "${{ matrix.os }}" == "macos-latest" ]]
+        if [[ "${{ matrix.os }}" == "macos-14" || "${{ matrix.os }}" == "macos-latest" ]]
         then
-          # macos-13 and macos-latest do not include Haskell tools as at 2025-09-14.
+          # macos-14 and macos-latest do not include Haskell tools as at 2025-09-14.
           curl -sSL https://get.haskellstack.org/ | sh
         fi
 
