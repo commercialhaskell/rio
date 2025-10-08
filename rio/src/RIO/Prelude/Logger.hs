@@ -90,6 +90,8 @@ import Data.ByteString.Builder.Extra (flush)
 import           GHC.IO.Encoding.Types           (textEncodingName)
 import qualified Data.ByteString as B
 import           System.IO                  (hGetEncoding, localeEncoding)
+import           System.IO.Error            (illegalOperationErrorType,
+                                             mkIOError, ioError)
 import           GHC.Foreign                (peekCString, withCString)
 import Data.Semigroup (Semigroup (..))
 
@@ -300,6 +302,11 @@ logStickyDone = logOther "sticky-done"
 
 canUseUtf8 :: MonadIO m => Handle -> m Bool
 canUseUtf8 h = liftIO $ do
+  isWritable <- hIsWritable h
+  when (not isWritable) $ ioError $ mkIOError illegalOperationErrorType
+                                              "canUseUtf8"
+                                              (Just h)
+                                              Nothing
   maybeEnc <- hGetEncoding h
   return $ fmap textEncodingName maybeEnc == Just "UTF-8"
 
