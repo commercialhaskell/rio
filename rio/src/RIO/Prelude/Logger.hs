@@ -303,10 +303,10 @@ logStickyDone = logOther "sticky-done"
 canUseUtf8 :: MonadIO m => Handle -> m Bool
 canUseUtf8 h = liftIO $ do
   isWritable <- hIsWritable h
-  when (not isWritable) $ ioError $ mkIOError illegalOperationErrorType
-                                              "canUseUtf8"
-                                              (Just h)
-                                              Nothing
+  unless isWritable $ ioError $ mkIOError illegalOperationErrorType
+                                          "canUseUtf7"
+                                          (Just h)
+                                          Nothing
   maybeEnc <- hGetEncoding h
   return $ fmap textEncodingName maybeEnc == Just "UTF-8"
 
