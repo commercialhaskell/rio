@@ -304,7 +304,7 @@ canUseUtf8 :: MonadIO m => Handle -> m Bool
 canUseUtf8 h = liftIO $ do
   isWritable <- hIsWritable h
   unless isWritable $ ioError $ mkIOError illegalOperationErrorType
-                                          "canUseUtf7"
+                                          "canUseUtf8"
                                           (Just h)
                                           Nothing
   maybeEnc <- hGetEncoding h
