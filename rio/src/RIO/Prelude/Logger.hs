@@ -36,6 +36,7 @@ module RIO.Prelude.Logger
     -- *** Sticky logging
   , logSticky
   , logStickyDone
+  , withLogContext
     -- *** With source
     --
     -- $withSource
@@ -816,6 +817,26 @@ logFuncAccentColorsL = logFuncL.to
 -- @since 0.1.5.0
 noLogging :: (HasLogFunc env, MonadReader env m) => m a -> m a
 noLogging = local (set logFuncL mempty)
+
+-- | Add context to log messages
+--
+-- > {-# LANGUAGE OverloadedStrings #-}
+-- >
+-- > main = do
+-- >  runSimpleApp do
+-- >    withLogContext ("processing job 123: " <>) do
+-- >      logInfo "hello"
+--
+-- Prints "processing job 123: hello"
+withLogContext :: (HasLogFunc env, MonadReader env m) => (Utf8Builder -> Utf8Builder) -> m a -> m a
+withLogContext addContext action = local (over logFuncL wrapLogFunc) action
+  where
+    wrapLogFunc :: LogFunc -> LogFunc
+    wrapLogFunc (LogFunc oldLogFunc oldLfOptions) =
+      LogFunc
+        (\cs ls ll utf8Builder -> oldLogFunc cs ls ll (addContext utf8Builder))
+        oldLfOptions
+
 
 --------------------------------------------------------------------------------
 --
