@@ -2,9 +2,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module RIO.LoggerSpec (spec) where
 
-import Test.Hspec
-import RIO
-import Data.ByteString.Builder (toLazyByteString)
+import           Data.ByteString.Builder (toLazyByteString)
+import           RIO
+import           Test.Hspec
 
 spec :: Spec
 spec = do
@@ -86,3 +86,10 @@ spec = do
       logInfoS "tests" "should appear"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "[info] (tests) should appear\n"
+  it "withLogContext" $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc (options & setLogVerboseFormat True) $ \lf -> runRIO lf $ do
+      withLogContext ("[context] " <>) $
+        logInfoS "tests" "should appear"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "[info] (tests) [context] should appear\n"
