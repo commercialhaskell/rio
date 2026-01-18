@@ -460,7 +460,7 @@ withLogFunc options inner = withRunInIO $ \run -> do
 -- If no 'LogOptions' is available, warns (if able) and runs the nested
 -- function as-is.
 --
--- @since 0.1.24.0
+-- @since 0.1.25.0
 withLocalLogFunc :: (MonadUnliftIO m, HasLogFunc env, MonadReader env m)
                  => (LogOptions -> LogOptions) -> m a -> m a
 withLocalLogFunc f inner = do
@@ -642,7 +642,7 @@ setLogUseLoc l options = options { logUseLoc = l }
 
 -- | Format method for messages
 --
--- @since 0.1.24.0
+-- @since 0.1.25.0
 type LogFormat = Utf8Builder -> Utf8Builder
 
 -- | Set format method for messages
@@ -655,7 +655,7 @@ setLogFormat f options = options { logFormat = f }
 
 -- | Modify existing format method
 --
--- @since 0.1.24.0
+-- @since 0.1.25.0
 composeLogFormat :: (LogFormat -> LogFormat) -> LogOptions -> LogOptions
 composeLogFormat f' options = setLogFormat (f' $ logFormat options) options
 
