@@ -67,13 +67,6 @@ spec = do
       noLogging $ logInfo "should not appear"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "[info] should appear\n"
-  it "setLogFormat" $ do
-    (ref, options) <- logOptionsMemory
-    let format = ("[context] " <>)
-    withLogFunc (options & setLogFormat format) $ \lf -> runRIO lf $ do
-      logInfo "should be formatted"
-    builder <- readIORef ref
-    toLazyByteString builder `shouldBe` "[context] should be formatted\n"
   it "noSource" $ do
     (ref, options) <- logOptionsMemory
     withLogFunc options $ \lf -> runRIO lf $ do
@@ -86,12 +79,38 @@ spec = do
       logInfoS "tests" "should appear"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "[info] (tests) should appear\n"
+  it "setLogFormat" $ do
+    (ref, options) <- logOptionsMemory
+    let format = ("[context] " <>)
+    withLogFunc (options & setLogFormat format) $ \lf -> runRIO lf $ do
+      logInfo "should be formatted"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "[context] should be formatted\n"
+  it "setLogFormat noSource" $ do
+    (ref, options) <- logOptionsMemory
+    let format = ("[context] " <>)
+    withLogFunc (options & setLogFormat format) $ \lf -> runRIO lf $ do
+      logInfoS "tests" "should be formatted"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "(tests) [context] should be formatted\n"
+  it "composeLogFormat" $ do
+    (ref, options) <- logOptionsMemory
+    let format = (<> ">") . ("<" <>)
+        composeInner = (. ("inner: " <>))
+        composeOuter = (("[outer] " <>) .)
+        options' = options & setLogFormat format
+                           & composeLogFormat composeInner
+                           & composeLogFormat composeOuter
+    withLogFunc options' $ \lf -> runRIO lf $ do
+      logInfo "should be bracketed"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "[outer] <inner: should be bracketed>\n"
   it "withLocalLogFunc" $ do
     (ref, options) <- logOptionsMemory
     withLogFunc options $ \lf -> runRIO lf $ do
-      let formatComposition = composeLogFormat (("[local] " <>) .)
-      withLocalLogFunc formatComposition $ do
+      let composeLocal = composeLogFormat (("[local] " <>) .)
+      withLocalLogFunc composeLocal $ do
         logInfo "should be formatted"
-      logInfo "should be unformatted"
+      logInfo "should not be formatted"
     builder <- readIORef ref
-    toLazyByteString builder `shouldBe` "[local] should be formatted\nshould be unformatted\n"
+    toLazyByteString builder `shouldBe` "[local] should be formatted\nshould not be formatted\n"
