@@ -344,6 +344,7 @@ logOptionsMemory = do
 -- overridden using appropriate @set@ functions.
 -- Logging output is guaranteed to be non-interleaved only for a
 -- UTF-8 'Handle' in a multi-thread environment.
+-- If the handle is not writable, an exception is thrown immediately.
 --
 -- When Verbose Flag is @True@, the following happens:
 --
