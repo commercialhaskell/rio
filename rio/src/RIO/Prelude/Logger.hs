@@ -9,6 +9,7 @@ module RIO.Prelude.Logger
   ( -- ** Running with logging
     withLogFunc
   , newLogFunc
+  , withLocalLogFunc
   , LogFunc
   , HasLogFunc (..)
   , logOptionsHandle
@@ -452,6 +453,22 @@ withLogFunc options inner = withRunInIO $ \run -> do
   bracket (newLogFunc options)
           snd
           (run . inner . fst)
+
+-- | Within an app context, create a new 'LogFunc' with reference to the
+-- 'LogOptions' of the one in scope, and run a nested function with it.
+--
+-- If no 'LogOptions' is available, warns and runs the nested function as-is.
+--
+-- @since 0.1.24.0
+withLocalLogFunc :: (MonadUnliftIO m, HasLogFunc env, MonadReader env m)
+                 => (LogOptions -> LogOptions) -> m a -> m a
+withLocalLogFunc f inner = do
+  lf <- view logFuncL
+  maybe (warn *> inner) (nest . f) $ lfOptions lf
+  where
+    nest options = withLogFunc options $ flip local inner . set logFuncL
+    warn = logWarnS "RIO"
+           "withLocalLogFunc called with no LogOptions in the environment"
 
 
 -- | Replace Unicode characters with non-Unicode equivalents

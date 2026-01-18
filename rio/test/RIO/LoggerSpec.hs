@@ -86,3 +86,12 @@ spec = do
       logInfoS "tests" "should appear"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "[info] (tests) should appear\n"
+  it "withLocalLogFunc" $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc options $ \lf -> runRIO lf $ do
+      let formatComposition = composeLogFormat (("[local] " <>) .)
+      withLocalLogFunc formatComposition $ do
+        logInfo "should be formatted"
+      logInfo "should be unformatted"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "[local] should be formatted\nshould be unformatted\n"
