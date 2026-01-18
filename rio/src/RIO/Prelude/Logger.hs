@@ -22,7 +22,9 @@ module RIO.Prelude.Logger
   , setLogUseTime
   , setLogUseColor
   , setLogUseLoc
+  , LogFormat
   , setLogFormat
+  , composeLogFormat
   , setLogLevelColors
   , setLogSecondaryColor
   , setLogAccentColors
@@ -475,7 +477,7 @@ data LogOptions = LogOptions
   , logUseColor :: !Bool
   , logColors :: !LogColors
   , logUseLoc :: !Bool
-  , logFormat :: !(Utf8Builder -> Utf8Builder)
+  , logFormat :: !LogFormat
   , logSend :: !(Builder -> IO ())
   }
 
@@ -620,13 +622,24 @@ setLogAccentColors accentColors options =
 setLogUseLoc :: Bool -> LogOptions -> LogOptions
 setLogUseLoc l options = options { logUseLoc = l }
 
+-- | Format method for messages
+--
+-- @since 0.1.24.0
+type LogFormat = Utf8Builder -> Utf8Builder
+
 -- | Set format method for messages
 --
 -- Default: `id`
 --
 -- @since 0.1.13.0
-setLogFormat :: (Utf8Builder -> Utf8Builder) -> LogOptions -> LogOptions
+setLogFormat :: LogFormat -> LogOptions -> LogOptions
 setLogFormat f options = options { logFormat = f }
+
+-- | Modify existing format method
+--
+-- @since 0.1.24.0
+composeLogFormat :: (LogFormat -> LogFormat) -> LogOptions -> LogOptions
+composeLogFormat f' options = setLogFormat (f' $ logFormat options) options
 
 simpleLogFunc :: LogOptions -> CallStack -> LogSource -> LogLevel -> Utf8Builder -> IO ()
 simpleLogFunc lo cs src level msg = do
