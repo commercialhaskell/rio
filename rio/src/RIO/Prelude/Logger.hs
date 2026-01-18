@@ -457,7 +457,8 @@ withLogFunc options inner = withRunInIO $ \run -> do
 -- | Within an app context, create a new 'LogFunc' with reference to the
 -- 'LogOptions' of the one in scope, and run a nested function with it.
 --
--- If no 'LogOptions' is available, warns and runs the nested function as-is.
+-- If no 'LogOptions' is available, warns (if able) and runs the nested
+-- function as-is.
 --
 -- @since 0.1.24.0
 withLocalLogFunc :: (MonadUnliftIO m, HasLogFunc env, MonadReader env m)
