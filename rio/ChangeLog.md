@@ -1,5 +1,10 @@
 # Changelog for rio
 
+## 0.1.24.0
+
+* add `LogFormat` type alias
+* add `composeLogFormat` and `withLocalLogFormat`
+
 ## 0.1.23.0
 
 * Support GHC 9.14
