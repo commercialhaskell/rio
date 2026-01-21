@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.25.0
+
+* work around GHC's [#26479](https://gitlab.haskell.org/ghc/ghc/-/issues/26479)
+
 ## 0.1.24.0
 
 * Fix a bug in the `Utf8Builder` instance of `Monoid`, introduced in `rio-0.1.23.0`
