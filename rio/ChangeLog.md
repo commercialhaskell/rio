@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.25.0
+
+* Prevent warnings when compiling with newer GHC versions
+
 ## 0.1.24.0
 
 * Fix a bug in the `Utf8Builder` instance of `Monoid`, introduced in `rio-0.1.23.0`
