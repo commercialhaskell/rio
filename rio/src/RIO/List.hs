@@ -254,7 +254,7 @@ safeListCall f xs
 
 -- | @since 0.1.3.0
 headMaybe :: [a] -> Maybe a
-headMaybe = safeListCall Data.List.head
+headMaybe = fmap fst . Data.List.uncons
 
 -- | @since 0.1.3.0
 lastMaybe :: [a] -> Maybe a
@@ -262,7 +262,7 @@ lastMaybe = safeListCall Data.List.last
 
 -- | @since 0.1.3.0
 tailMaybe :: [a] -> Maybe [a]
-tailMaybe = safeListCall Data.List.tail
+tailMaybe = fmap snd . Data.List.uncons
 
 -- | @since 0.1.3.0
 initMaybe :: [a] -> Maybe [a]
