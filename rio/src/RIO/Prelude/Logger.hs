@@ -144,7 +144,6 @@ instance Semigroup LogFunc where
 -- @since 0.0.0.0
 instance Monoid LogFunc where
   mempty = mkLogFunc $ \_ _ _ _ -> return ()
-  mappend = (<>)
 
 -- | Create a 'LogFunc' from the given function.
 --
@@ -933,7 +932,6 @@ instance Semigroup (GLogFunc msg) where
 -- @since 0.1.13.0
 instance Monoid (GLogFunc msg) where
   mempty = mkGLogFunc $ \_ _ -> return ()
-  mappend = (<>)
 
 -- | A vesion of 'contramapMaybeGLogFunc' which supports filering.
 --
