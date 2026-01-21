@@ -3,6 +3,7 @@
 ## 0.1.25.0
 
 * Prevent warnings when compiling with newer GHC versions
+* work around GHC's [#26479](https://gitlab.haskell.org/ghc/ghc/-/issues/26479)
 
 ## 0.1.24.0
 

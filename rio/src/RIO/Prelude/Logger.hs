@@ -301,13 +301,16 @@ logStickyDone = logOther "sticky-done"
 
 canUseUtf8 :: MonadIO m => Handle -> m Bool
 canUseUtf8 h = liftIO $ do
-  isWritable <- hIsWritable h
-  unless isWritable $ ioError $ mkIOError illegalOperationErrorType
-                                          "canUseUtf8"
-                                          (Just h)
-                                          Nothing
   maybeEnc <- hGetEncoding h
   return $ fmap textEncodingName maybeEnc == Just "UTF-8"
+
+assertWritable :: MonadIO m => Handle -> m ()
+assertWritable h = liftIO $ do
+  isOpen <- hIsOpen h -- workaround for hIsWritable bug on duplex handles
+                      -- https://gitlab.haskell.org/ghc/ghc/-/issues/26479
+  isWritable <- hIsWritable h
+  unless (isOpen && isWritable) . ioError
+    $ mkIOError illegalOperationErrorType "assertWritable" (Just h) Nothing
 
 -- | Create a 'LogOptions' value which will store its data in
 -- memory. This is primarily intended for testing purposes. This will
@@ -340,6 +343,7 @@ logOptionsMemory = do
 -- overridden using appropriate @set@ functions.
 -- Logging output is guaranteed to be non-interleaved only for a
 -- UTF-8 'Handle' in a multi-thread environment.
+-- If the handle is not writable, an exception is thrown immediately.
 --
 -- When Verbose Flag is @True@, the following happens:
 --
@@ -356,6 +360,7 @@ logOptionsHandle
   -> Bool -- ^ Verbose Flag
   -> m LogOptions
 logOptionsHandle handle' verbose = liftIO $ do
+  assertWritable handle' -- throw IOError now, if it would already throw later
   terminal <- hIsTerminalDevice handle'
   useUtf8 <- canUseUtf8 handle'
   unicode <- if useUtf8 then return True else getCanUseUnicode
