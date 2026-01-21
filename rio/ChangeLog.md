@@ -1,5 +1,9 @@
 # Changelog for rio
 
+## 0.1.24.0
+
+* Fix a bug in the `Utf8Builder` instance of `Monoid`, introduced in `rio-0.1.23.0`
+
 ## 0.1.23.0
 
 * Support GHC 9.14
