@@ -86,13 +86,6 @@ whenM boolM action = boolM >>= (`when` action)
 unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM boolM action = boolM >>= (`unless` action)
 
-#if !MIN_VERSION_base(4, 11, 0)
-(<&>) :: Functor f => f a -> (a -> b) -> f b
-as <&> f = f <$> as
-
-infixl 1 <&>
-#endif
-
 
 -- | Helper function to force an action to run in 'IO'. Especially
 -- useful for overly general contexts, like hspec tests.
