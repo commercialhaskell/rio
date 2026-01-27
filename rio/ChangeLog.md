@@ -1,8 +1,73 @@
 # Changelog for rio
 
+## 0.1.25.0
+
+* work around GHC's [#26479](https://gitlab.haskell.org/ghc/ghc/-/issues/26479)
+* Move vector `slice` functions to `Partial` modules and add `RIO.Vector.sliceMaybe` function.
+
+## 0.1.24.0
+
+* Fix a bug in the `Utf8Builder` instance of `Monoid`, introduced in `rio-0.1.23.0`
+
+## 0.1.23.0
+
+* Support GHC 9.14
+* Re-export type operator `~`, from `base-4.17.0.0`
+
+## 0.1.22.0
+
+* Expose `augmentPathMap'`
+
+## 0.1.21.0
+
+* Fix minor bug in `augmentPathMap` on windows wrt [#234](https://github.com/commercialhaskell/rio/issues/234) not adhering to case-insensitive semantics
+
+## 0.1.20.0
+
+* Export `UnliftIO.QSem` and `UnliftIO.QSemN` in `RIO`
+
+## 0.1.19.0
+
+* Expose `fromLeft` and `fromRight`
+
+## 0.1.18.0
+
+* Add colours to the `LogOption` constructor [#222](https://github.com/commercialhaskell/rio/pull/222)
+
+## 0.1.17.0
+
+* Expose `Bifunctor`, `Bifoldable`, and `Bitraversable`.
+* The `first` and `second` functions exported by `RIO` formerly originated from
+  `Control.Arrow`. They now come from `Bifunctor`.
+
+## 0.1.16.0
+
+* Expand the number of `microlens` functions exported by the RIO prelude.
+* Add new module `RIO.Lens` which provides the rest of `microlens`.
+
+## 0.1.15.1
+
+* Replace `canonicalizePath` with `makeAbsolute` [#217](https://github.com/commercialhaskell/rio/issues/217)
+
+## 0.1.15.0
+
+* Include source in log messages
+
+## 0.1.14.1
+
+* Support `unliftio-core` 0.2
+
+## 0.1.14.0
+
+* Addition of `mkSimpleApp`
+* Addition of `lookupEnvFromContext`
+
 ## 0.1.13.0
 
-* Move vector `slice` functions to `Partial` modules and add `RIO.Vector.sliceMaybe` function.
+* Add `withLazyFileUtf8`
+* Add `mapRIO`
+* Add generic logger
+* Add `exeExtensions` and improve `findExecutable` on Windows [#205](https://github.com/commercialhaskell/rio/issues/205)
 
 ## 0.1.12.0
 
@@ -88,7 +153,7 @@
 * Add `foldMapM`
 * Add `headMaybe`, `lastMaybe`, `tailMaybe`, `initMaybe`, `maximumMaybe`, `minimumMaybe`,
   `maximumByMaybe`, `minimumByMaybe` functions to `RIO.List` module (issue #82)
-* Move non partial functions `scanr1` and `scanl1` from `RIO.List.Partial` to `RIO.List` (issue #82)
+* Move non-partial functions `scanr1` and `scanl1` from `RIO.List.Partial` to `RIO.List` (issue #82)
 * Add `SimpleApp` and `runSimpleApp`
 * Add `asIO`
 

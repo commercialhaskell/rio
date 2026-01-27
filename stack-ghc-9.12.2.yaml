@@ -1,0 +1,4 @@
+snapshot: nightly-2025-11-07 # GHC 9.12.2
+packages:
+- rio
+- rio-orphans

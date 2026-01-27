@@ -2,14 +2,14 @@
 
 *A standard library for Haskell*
 
-![Rio](https://camo.githubusercontent.com/fc162fb0024699c85f00eae769085a5fe528153e/68747470733a2f2f7777772e61687374617469632e636f6d2f70686f746f732f636974792f76692d76363837315f30305f31343030783434322e6a7067)
+![Rio](https://github.com/user-attachments/assets/20e95e85-0124-47ad-98ea-c211e9114b9b)
 
-[![Build Status](https://dev.azure.com/snoyberg/rio/_apis/build/status/commercialhaskell.rio?branchName=master)](https://dev.azure.com/snoyberg/rio/_build/latest?definitionId=6&branchName=master)
+![Tests](https://github.com/commercialhaskell/rio/workflows/Tests/badge.svg)
 
 The goal of the `rio` library is to make it easier to adopt Haskell
 for writing production software.  It is intended as a cross between:
 
-* Collection of well designed, trusted libraries
+* Collection of well-designed, trusted libraries
 * Useful `Prelude` replacement
 * A set of best practices for writing production quality Haskell code
 
@@ -197,7 +197,7 @@ StaticPointers
 
 ### GHC Options
 
-We recommend using these GHC complier warning flags on all projects, to catch
+We recommend using these GHC compiler warning flags on all projects, to catch
 problems that might otherwise go overlooked:
 
 * `-Wall`

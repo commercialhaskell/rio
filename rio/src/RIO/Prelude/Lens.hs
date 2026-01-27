@@ -1,5 +1,6 @@
 module RIO.Prelude.Lens
   ( view
+  , preview
   , Lens.Micro.ASetter
   , Lens.Micro.ASetter'
   , Lens.Micro.Getting
@@ -12,12 +13,11 @@ module RIO.Prelude.Lens
   , Lens.Micro.sets
   , Lens.Micro.to
   , (Lens.Micro.^.)
+  , (Lens.Micro.^?)
+  , (Lens.Micro.^..)
+  , (Lens.Micro.%~)
+  , (Lens.Micro..~)
   ) where
 
 import Lens.Micro
-import Control.Monad.Reader (MonadReader, asks)
-import           Lens.Micro.Internal      (( #. ))
-import           Control.Applicative      (Const (..))
-
-view :: MonadReader s m => Getting a s a -> m a
-view l = asks (getConst #. l Const)
+import Lens.Micro.Mtl

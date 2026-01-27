@@ -1,5 +1,5 @@
 name: rio
-version: 0.1.12.0
+version: 0.1.24.0
 synopsis: A standard library for Haskell
 description: See README and Haddocks at <https://www.stackage.org/package/rio>
 license: MIT
@@ -7,12 +7,13 @@ author: Michael Snoyman
 maintainer: michael@snoyman.com
 github: commercialhaskell/rio
 category: Control
+
 extra-source-files:
 - README.md
 - ChangeLog.md
 
 dependencies:
-- base >= 4.10 && < 10
+- base >= 4.12 && < 10
 - bytestring
 - containers
 - deepseq
@@ -20,13 +21,14 @@ dependencies:
 - exceptions
 - filepath
 - hashable
-- microlens
+- microlens >= 0.4.2.0
+- microlens-mtl
 - mtl
 - primitive
 - text
 - time
 - typed-process >= 0.2.5.0
-- unliftio >= 0.2.12
+- unliftio >= 0.2.14
 - unliftio-core
 - unordered-containers
 - vector
@@ -47,69 +49,70 @@ when:
 library:
   source-dirs: src/
   exposed-modules:
-    - RIO
-    - RIO.ByteString
-    - RIO.ByteString.Lazy
-    - RIO.ByteString.Lazy.Partial
-    - RIO.ByteString.Partial
-    - RIO.Char
-    - RIO.Char.Partial
-    - RIO.Deque
-    - RIO.Directory
-    - RIO.File
-    - RIO.FilePath
-    - RIO.HashMap
-    - RIO.HashMap.Partial
-    - RIO.HashSet
-    - RIO.List
-    - RIO.List.Partial
-    - RIO.Map
-    - RIO.Map.Partial
-    - RIO.Map.Unchecked
-    - RIO.NonEmpty
-    - RIO.NonEmpty.Partial
-    - RIO.Partial
-    - RIO.Prelude
-    - RIO.Prelude.Simple
-    - RIO.Prelude.Types
-    - RIO.Process
-    - RIO.Seq
-    - RIO.Set
-    - RIO.Set.Partial
-    - RIO.Set.Unchecked
-    - RIO.State
-    - RIO.Text
-    - RIO.Text.Lazy
-    - RIO.Text.Lazy.Partial
-    - RIO.Text.Partial
-    - RIO.Time
-    - RIO.Vector
-    - RIO.Vector.Boxed
-    - RIO.Vector.Boxed.Partial
-    - RIO.Vector.Boxed.Unsafe
-    - RIO.Vector.Partial
-    - RIO.Vector.Storable
-    - RIO.Vector.Storable.Partial
-    - RIO.Vector.Storable.Unsafe
-    - RIO.Vector.Unboxed
-    - RIO.Vector.Unboxed.Partial
-    - RIO.Vector.Unboxed.Unsafe
-    - RIO.Vector.Unsafe
-    - RIO.Writer
+  - RIO
+  - RIO.ByteString
+  - RIO.ByteString.Lazy
+  - RIO.ByteString.Lazy.Partial
+  - RIO.ByteString.Partial
+  - RIO.Char
+  - RIO.Char.Partial
+  - RIO.Deque
+  - RIO.Directory
+  - RIO.File
+  - RIO.FilePath
+  - RIO.HashMap
+  - RIO.HashMap.Partial
+  - RIO.HashSet
+  - RIO.Lens
+  - RIO.List
+  - RIO.List.Partial
+  - RIO.Map
+  - RIO.Map.Partial
+  - RIO.Map.Unchecked
+  - RIO.NonEmpty
+  - RIO.NonEmpty.Partial
+  - RIO.Partial
+  - RIO.Prelude
+  - RIO.Prelude.Simple
+  - RIO.Prelude.Types
+  - RIO.Process
+  - RIO.Seq
+  - RIO.Set
+  - RIO.Set.Partial
+  - RIO.Set.Unchecked
+  - RIO.State
+  - RIO.Text
+  - RIO.Text.Lazy
+  - RIO.Text.Lazy.Partial
+  - RIO.Text.Partial
+  - RIO.Time
+  - RIO.Vector
+  - RIO.Vector.Boxed
+  - RIO.Vector.Boxed.Partial
+  - RIO.Vector.Boxed.Unsafe
+  - RIO.Vector.Partial
+  - RIO.Vector.Storable
+  - RIO.Vector.Storable.Partial
+  - RIO.Vector.Storable.Unsafe
+  - RIO.Vector.Unboxed
+  - RIO.Vector.Unboxed.Partial
+  - RIO.Vector.Unboxed.Unsafe
+  - RIO.Vector.Unsafe
+  - RIO.Writer
 
   other-modules:
-    - RIO.Prelude.Display
-    - RIO.Prelude.Exit
-    - RIO.Prelude.Extra
-    - RIO.Prelude.IO
-    - RIO.Prelude.Lens
-    - RIO.Prelude.Logger
-    - RIO.Prelude.Reexports
-    - RIO.Prelude.Renames
-    - RIO.Prelude.RIO
-    - RIO.Prelude.Text
-    - RIO.Prelude.Trace
-    - RIO.Prelude.URef
+  - RIO.Prelude.Display
+  - RIO.Prelude.Exit
+  - RIO.Prelude.Extra
+  - RIO.Prelude.IO
+  - RIO.Prelude.Lens
+  - RIO.Prelude.Logger
+  - RIO.Prelude.Reexports
+  - RIO.Prelude.Renames
+  - RIO.Prelude.RIO
+  - RIO.Prelude.Text
+  - RIO.Prelude.Trace
+  - RIO.Prelude.URef
 
 tests:
   spec:
@@ -119,3 +122,6 @@ tests:
     - rio
     - hspec
     - QuickCheck
+    verbatim: |
+      build-tool-depends:
+          hspec-discover:hspec-discover

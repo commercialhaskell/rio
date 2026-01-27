@@ -1,0 +1,7 @@
+snapshot: lts-14.27 # GHC 8.6.5
+packages:
+- rio
+- rio-orphans
+extra-deps:
+# lts-14.27 specifies unliftio-0.2.12
+- unliftio-0.2.14

@@ -1,0 +1,70 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: CI
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        stack-yaml:
+        - stack-ghc-9.12.2.yaml # GHC 9.12.2
+        - stack-ghc-9.10.3.yaml # GHC 9.10.3
+        include:
+        - os: windows-latest
+          stack-yaml: stack-ghc-9.8.4.yaml # GHC 9.8.4
+        - os: ubuntu-latest
+          stack-yaml: stack-ghc-9.8.4.yaml # GHC 9.8.4
+        - os: windows-latest
+          stack-yaml: stack-ghc-9.6.7.yaml # GHC 9.6.7
+        - os: ubuntu-latest
+          stack-yaml: stack-ghc-9.6.7.yaml # GHC 9.6.7
+        - os: ubuntu-latest
+          stack-yaml: stack-ghc-9.4.8.yaml # GHC 9.4.8
+        - os: ubuntu-latest
+          stack-yaml: stack-ghc-8.6.5.yaml # GHC 8.6.5 and base-4.12.0.0
+
+    steps:
+    - name: Clone project
+      uses: actions/checkout@v4
+    - name: Cache dependencies on Unix-like OS
+      if: startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS')
+      uses: actions/cache@v4
+      with:
+        path: ~/.stack
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.stack-yaml }}
+    - name: Cache dependencies on Windows
+      if: startsWith(runner.os, 'Windows')
+      uses: actions/cache@v4
+      with:
+        path: |
+           ~\AppData\Roaming\stack
+           ~\AppData\Local\Programs\stack
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.stack-yaml }}
+    # macos-latest can restrict permissions to TMPDIR, so we designate a
+    # different temporary directory.
+    - name: Set TMPDIR on macOS
+      if: startsWith(runner.os, 'macOS')
+      run: |
+        echo "TMPDIR=$RUNNER_TEMP" >> $GITHUB_ENV
+    - name: Build and run tests
+      shell: bash
+      run: |
+        set -ex
+
+        if [[ "${{ matrix.os }}" == "macos-latest" ]]
+        then
+          # macos-latest does not include Haskell tools as at 2025-10-04.
+          curl -sSL https://get.haskellstack.org/ | sh
+        fi
+
+        stack --version
+        stack --stack-yaml=${{ matrix.stack-yaml }} test --fast --no-terminal

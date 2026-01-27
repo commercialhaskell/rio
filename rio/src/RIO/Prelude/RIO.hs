@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -8,6 +7,7 @@ module RIO.Prelude.RIO
   ( RIO (..)
   , runRIO
   , liftRIO
+  , mapRIO
   -- SomeRef for Writer/State interfaces
   , SomeRef
   , HasStateRef (..)
@@ -58,10 +58,17 @@ liftRIO rio = do
   env <- ask
   runRIO env rio
 
+-- | Lift one RIO env to another.
+--
+-- @since 0.1.13.0
+mapRIO :: (outer -> inner) -> RIO inner a -> RIO outer a
+mapRIO f m = do
+  outer <- ask
+  runRIO (f outer) m
+
 instance MonadUnliftIO (RIO env) where
-    askUnliftIO = RIO $ ReaderT $ \r ->
-                  withUnliftIO $ \u ->
-                  return (UnliftIO (unliftIO u . flip runReaderT r . unRIO))
+  withRunInIO inner = RIO $ withRunInIO $ \run -> inner (run . unRIO)
+  {-# INLINE withRunInIO #-}
 
 instance PrimMonad (RIO env) where
     type PrimState (RIO env) = PrimState IO
@@ -91,12 +98,12 @@ writeSomeRef (SomeRef _ x) = liftIO . x
 -- @since 0.1.4.0
 modifySomeRef :: MonadIO m => SomeRef a -> (a -> a) -> m ()
 modifySomeRef (SomeRef read' write) f =
-  liftIO $ (f <$> read') >>= write
+  liftIO (read' >>= write . f)
 
 ioRefToSomeRef :: IORef a -> SomeRef a
 ioRefToSomeRef ref =
   SomeRef (readIORef ref)
-          (\val -> modifyIORef' ref (\_ -> val))
+          (modifyIORef' ref . const)
 
 uRefToSomeRef :: Unbox a => URef RealWorld a -> SomeRef a
 uRefToSomeRef ref =
@@ -112,7 +119,7 @@ class HasStateRef s env | env -> s where
 --
 -- @since 0.1.4.0
 instance HasStateRef a (SomeRef a) where
-  stateRefL = lens id (\_ x -> x)
+  stateRefL = id
 
 -- | Environment values with writing capabilities to SomeRef
 --
@@ -124,7 +131,7 @@ class HasWriteRef w env | env -> w where
 --
 -- @since 0.1.4.0
 instance HasWriteRef a (SomeRef a) where
-  writeRefL = lens id (\_ x -> x)
+  writeRefL = id
 
 instance HasStateRef s env => MonadState s (RIO env) where
   get = do
@@ -167,4 +174,4 @@ newSomeRef a = do
 -- @since 0.1.4.0
 newUnboxedSomeRef :: (MonadIO m, Unbox a) => a -> m (SomeRef a)
 newUnboxedSomeRef a =
-  uRefToSomeRef <$> (liftIO $ newURef a)
+  uRefToSomeRef <$>   liftIO (newURef a)

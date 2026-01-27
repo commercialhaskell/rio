@@ -16,12 +16,13 @@ module RIO.Orphans
 import RIO
 import Control.Monad.Catch (MonadCatch, MonadMask)
 import Control.Monad.Base (MonadBase)
+import Control.Monad.IO.Unlift (askRunInIO)
 import Control.Monad.Trans.Resource.Internal (MonadResource (..), ReleaseMap, ResourceT (..))
 import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 
 import qualified Control.Monad.Logger as LegacyLogger
-import Control.Monad.Logger (MonadLogger (..), LogStr)
+import Control.Monad.Logger (MonadLogger (..), MonadLoggerIO (..), LogStr)
 import System.Log.FastLogger (fromLogStr)
 import qualified GHC.Stack as GS
 
@@ -48,24 +49,39 @@ instance Display LogStr where
 -- | @since 0.1.1.0
 instance HasLogFunc env => MonadLogger (RIO env) where
   monadLoggerLog loc source level msg =
-      let ?callStack = GS.fromCallSiteList [("", GS.SrcLoc
-            { GS.srcLocPackage = LegacyLogger.loc_package loc
-            , GS.srcLocModule = LegacyLogger.loc_module loc
-            , GS.srcLocFile = LegacyLogger.loc_filename loc
-            , GS.srcLocStartLine = fst $ LegacyLogger.loc_start loc
-            , GS.srcLocStartCol = snd $ LegacyLogger.loc_start loc
-            , GS.srcLocEndLine = fst $ LegacyLogger.loc_end loc
-            , GS.srcLocEndCol = snd $ LegacyLogger.loc_end loc
-            })]
-       in logGeneric source rioLogLevel (display $ LegacyLogger.toLogStr msg)
-    where
-      rioLogLevel =
-        case level of
-          LegacyLogger.LevelDebug -> LevelDebug
-          LegacyLogger.LevelInfo  -> LevelInfo
-          LegacyLogger.LevelWarn  -> LevelWarn
-          LegacyLogger.LevelError  -> LevelError
-          LegacyLogger.LevelOther name -> LevelOther name
+      let ?callStack = rioCallStack loc
+       in logGeneric source (rioLogLevel level) (display $ LegacyLogger.toLogStr msg)
+
+-- | Do not let the generated function escape its RIO context. This may lead
+--   to log-related cleanup running /before/ the function is called.
+--
+--   @since 0.1.2.0
+instance HasLogFunc env => MonadLoggerIO (RIO env) where
+  askLoggerIO = do
+    runInIO <- askRunInIO
+    pure $ \loc source level str ->
+      let ?callStack = rioCallStack loc
+       in runInIO (logGeneric source (rioLogLevel level) (display str))
+
+rioLogLevel :: LegacyLogger.LogLevel -> LogLevel
+rioLogLevel level =
+  case level of
+    LegacyLogger.LevelDebug -> LevelDebug
+    LegacyLogger.LevelInfo  -> LevelInfo
+    LegacyLogger.LevelWarn  -> LevelWarn
+    LegacyLogger.LevelError  -> LevelError
+    LegacyLogger.LevelOther name -> LevelOther name
+
+rioCallStack :: LegacyLogger.Loc -> CallStack
+rioCallStack loc = GS.fromCallSiteList [("", GS.SrcLoc
+  { GS.srcLocPackage = LegacyLogger.loc_package loc
+  , GS.srcLocModule = LegacyLogger.loc_module loc
+  , GS.srcLocFile = LegacyLogger.loc_filename loc
+  , GS.srcLocStartLine = fst $ LegacyLogger.loc_start loc
+  , GS.srcLocStartCol = snd $ LegacyLogger.loc_start loc
+  , GS.srcLocEndLine = fst $ LegacyLogger.loc_end loc
+  , GS.srcLocEndCol = snd $ LegacyLogger.loc_end loc
+  })]
 
 -- | A collection of all of the registered resource cleanup actions.
 --

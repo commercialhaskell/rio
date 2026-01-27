@@ -1,4 +1,8 @@
+{-# HLINT ignore "Use fold" #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module RIO.Prelude.Display
   ( Utf8Builder (..)
   , Display (..)
@@ -37,8 +41,11 @@ newtype Utf8Builder = Utf8Builder { getUtf8Builder :: Builder }
 instance Monoid Utf8Builder where
   mempty = Utf8Builder mempty
   {-# INLINE mempty #-}
+
   mappend = (Data.Semigroup.<>)
   {-# INLINE mappend #-}
+
+  -- Data.Foldable.fold cannot be used here because it results in a circularity:
   mconcat = foldr mappend mempty
   {-# INLINE mconcat #-}
 

@@ -181,9 +181,17 @@ module RIO.Map
   , Data.Map.Strict.maxViewWithKey
 
   -- * Debugging
+#if MIN_VERSION_containers(0,5,9)
+  , Data.Map.Internal.Debug.showTree
+  , Data.Map.Internal.Debug.showTreeWith
+#else
   , Data.Map.Strict.showTree
   , Data.Map.Strict.showTreeWith
+#endif
   , Data.Map.Strict.valid
   ) where
 
+#if MIN_VERSION_containers(0,5,9)
+import qualified Data.Map.Internal.Debug
+#endif
 import qualified Data.Map.Strict

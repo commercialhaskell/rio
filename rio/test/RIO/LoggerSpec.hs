@@ -45,7 +45,7 @@ spec = do
       $ \lf -> runRIO lf $ do
         logDebug "should appear"
         -- reset log min level to info
-        atomicModifyIORef' logLevelRef (\_ -> (LevelInfo, ()))
+        atomicModifyIORef' logLevelRef (const (LevelInfo, ()))
         logDebug "should not appear"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "should appear\n"
@@ -56,7 +56,7 @@ spec = do
       $ \lf -> runRIO lf $ do
         logInfo "verbose log"
         -- reset verbose format
-        atomicModifyIORef' logVerboseFormatRef (\_ -> (False, ()))
+        atomicModifyIORef' logVerboseFormatRef (const (False, ()))
         logInfo "no verbose log"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "[info] verbose log\nno verbose log\n"
@@ -74,3 +74,15 @@ spec = do
       logInfo "should be formatted"
     builder <- readIORef ref
     toLazyByteString builder `shouldBe` "[context] should be formatted\n"
+  it "noSource" $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc options $ \lf -> runRIO lf $ do
+      logInfoS "tests" "should appear"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "(tests) should appear\n"
+  it "noSource verbose" $ do
+    (ref, options) <- logOptionsMemory
+    withLogFunc (options & setLogVerboseFormat True) $ \lf -> runRIO lf $ do
+      logInfoS "tests" "should appear"
+    builder <- readIORef ref
+    toLazyByteString builder `shouldBe` "[info] (tests) should appear\n"

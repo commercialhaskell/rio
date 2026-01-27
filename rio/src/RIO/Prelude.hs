@@ -28,6 +28,8 @@ module RIO.Prelude
     -- * @Either@
     -- | Re-exported from "Data.Either":
   , Data.Either.either
+  , Data.Either.fromLeft
+  , Data.Either.fromRight
   , Data.Either.isLeft
   , Data.Either.isRight
   , RIO.Prelude.Extra.mapLeft
@@ -264,6 +266,55 @@ module RIO.Prelude
   , Control.Monad.when
   , Control.Monad.unless
 
+    -- * @Bifunctor@
+    -- | Re-exported from "Data.Bifunctor":
+  , Data.Bifunctor.bimap
+  , Data.Bifunctor.first
+  , Data.Bifunctor.second
+
+    -- * @Bifoldable@
+    -- | Re-exported from "Data.Bifoldable":
+  , Data.Bifoldable.bifold
+  , Data.Bifoldable.bifoldMap
+  , Data.Bifoldable.bifoldr
+  , Data.Bifoldable.bifoldl
+  , Data.Bifoldable.bifoldr'
+  , Data.Bifoldable.bifoldr1
+  , Data.Bifoldable.bifoldrM
+  , Data.Bifoldable.bifoldl'
+  , Data.Bifoldable.bifoldl1
+  , Data.Bifoldable.bifoldlM
+  , Data.Bifoldable.bitraverse_
+  , Data.Bifoldable.bifor_
+  , Data.Bifoldable.bisequence_
+  , Data.Bifoldable.biasum
+  , Data.Bifoldable.biList
+  , Data.Bifoldable.binull
+  , Data.Bifoldable.bilength
+  , Data.Bifoldable.bielem
+  , Data.Bifoldable.bimaximum
+  , Data.Bifoldable.biminimum
+  , Data.Bifoldable.bisum
+  , Data.Bifoldable.biproduct
+  , Data.Bifoldable.biconcat
+  , Data.Bifoldable.biconcatMap
+  , Data.Bifoldable.biand
+  , Data.Bifoldable.bior
+  , Data.Bifoldable.biany
+  , Data.Bifoldable.biall
+  , Data.Bifoldable.bimaximumBy
+  , Data.Bifoldable.biminimumBy
+  , Data.Bifoldable.binotElem
+  , Data.Bifoldable.bifind
+
+    -- * @Bitraverse@
+    -- | Re-exported from "Data.Bitraversable":
+  , Data.Bitraversable.bitraverse
+  , Data.Bitraversable.bisequence
+  , Data.Bitraversable.bifor
+  , Data.Bitraversable.bimapAccumL
+  , Data.Bitraversable.bimapAccumR
+
     -- * @MonadPlus@
     -- | Re-exported from "Control.Monad":
   , Control.Monad.mzero
@@ -273,8 +324,6 @@ module RIO.Prelude
 
     -- * @Arrow@
     -- | Re-exported from "Control.Arrow" and "Control.Category":
-  , Control.Arrow.first
-  , Control.Arrow.second
   , (Control.Arrow.&&&)
   , (Control.Arrow.***)
   , (Control.Category.>>>)
@@ -385,61 +434,38 @@ import qualified RIO.Prelude.Renames
 import qualified RIO.Prelude.Text
 import qualified RIO.Prelude.Types
 
-import Prelude ((*))
-import qualified Prelude
-
-import qualified Data.Bool
-
-import qualified Data.Maybe
-
-import qualified Data.Either
-
-import qualified Data.Tuple
-
-import qualified Data.Eq
-
-import qualified Data.Ord
-
-import qualified Data.Word
-
-import qualified Data.Semigroup
-
-import qualified Data.Monoid
-
-import qualified Data.Functor
-
 import qualified Control.Applicative
-
-import qualified Control.Monad
-
-import qualified Data.Foldable
-
-import qualified Data.Traversable
-
 import qualified Control.Arrow
 import qualified Control.Category
-
-import qualified Data.Function
-
-import qualified Data.List
-
-import qualified Data.String
-
-import qualified Text.Show
-
-import qualified Text.Read
-
 import qualified Control.DeepSeq
-
-import qualified Data.Void
-
-import qualified Control.Monad.Reader
-
-import qualified Data.ByteString.Short
-
-import qualified Data.Text.Encoding (decodeUtf8', decodeUtf8With, encodeUtf8,
-                                     encodeUtf8Builder)
-import qualified Data.Text.Encoding.Error (lenientDecode)
-
+import qualified Control.Monad
 import qualified Control.Monad.Primitive (primitive)
+import qualified Control.Monad.Reader
 import qualified Control.Monad.ST
+import qualified Data.Bifoldable
+import qualified Data.Bifunctor
+import qualified Data.Bitraversable
+import qualified Data.Bool
+import qualified Data.ByteString.Short
+import qualified Data.Either
+import qualified Data.Eq
+import qualified Data.Foldable
+import qualified Data.Function
+import qualified Data.Functor
+import qualified Data.List
+import qualified Data.Maybe
+import qualified Data.Monoid
+import qualified Data.Ord
+import qualified Data.Semigroup
+import qualified Data.String
+import qualified Data.Text.Encoding
+    (decodeUtf8', decodeUtf8With, encodeUtf8, encodeUtf8Builder)
+import qualified Data.Text.Encoding.Error (lenientDecode)
+import qualified Data.Traversable
+import qualified Data.Tuple
+import qualified Data.Void
+import qualified Data.Word
+import           Prelude ((*))
+import qualified Prelude
+import qualified Text.Read
+import qualified Text.Show

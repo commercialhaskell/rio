@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | Interacting with external processes.
 --
@@ -44,6 +45,7 @@ module RIO.Process
   , mkDefaultProcessContext
   , modifyEnvVars
   , withModifyEnvVars
+  , lookupEnvFromContext
   , withWorkingDir
     -- ** Lenses
   , workingDirL
@@ -72,8 +74,10 @@ module RIO.Process
     -- * Utilities
   , doesExecutableExist
   , findExecutable
+  , exeExtensions
   , augmentPath
   , augmentPathMap
+  , augmentPathMap'
   , showProcessArgDebug
     -- * Reexports
   , P.ProcessConfig
@@ -188,7 +192,7 @@ data ProcessException
     | ExecutableNotFound String [FilePath]
     | ExecutableNotFoundAt FilePath
     | PathsInvalidInPath [FilePath]
-    deriving Typeable
+    deriving (Typeable, Eq)
 instance Show ProcessException where
     show NoPathFound = "PATH not found in ProcessContext"
     show (ExecutableNotFound name path) = concat
@@ -225,6 +229,13 @@ currentEnvVarFormat =
   EVFNotWindows
 #endif
 
+-- Don't use CPP so that the Windows code path is at least type checked
+-- regularly
+isWindows :: Bool
+isWindows = case currentEnvVarFormat of
+              EVFWindows -> True
+              EVFNotWindows -> False
+
 -- | Override the working directory processes run in. @Nothing@ means
 -- the current process's working directory.
 --
@@ -260,7 +271,7 @@ exeSearchPathL = processContextL.to pcPath
 --
 -- @since 0.0.3.0
 mkProcessContext :: MonadIO m => EnvVars -> m ProcessContext
-mkProcessContext tm' = do
+mkProcessContext (normalizePathEnv -> tm) = do
     ref <- newIORef Map.empty
     return ProcessContext
         { pcTextMap = tm
@@ -271,25 +282,27 @@ mkProcessContext tm' = do
         , pcExeCache = ref
         , pcExeExtensions =
             if isWindows
-                then let pathext = fromMaybe
-                           ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
-                           (Map.lookup "PATHEXT" tm)
-                      in map T.unpack $ "" : T.splitOn ";" pathext
+                then let pathext = fromMaybe defaultPATHEXT
+                                             (Map.lookup "PATHEXT" tm)
+                      in map T.unpack $ T.splitOn ";" pathext
                 else [""]
         , pcWorkingDir = Nothing
         }
   where
-    -- Fix case insensitivity of the PATH environment variable on Windows.
-    tm
-        | isWindows = Map.fromList $ map (first T.toUpper) $ Map.toList tm'
-        | otherwise = tm'
+    -- Default value for PATHTEXT on Windows versions after Windows XP. (The
+    -- documentation of the default at
+    -- https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/start
+    -- is incomplete.)
+    defaultPATHEXT = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
 
-    -- Don't use CPP so that the Windows code path is at least type checked
-    -- regularly
-    isWindows =
-        case currentEnvVarFormat of
-            EVFWindows -> True
-            EVFNotWindows -> False
+
+-- Fix case insensitivity of the PATH environment variable on Windows,
+-- by forcing all keys full uppercase.
+normalizePathEnv :: EnvVars -> EnvVars
+normalizePathEnv env
+  | isWindows = Map.fromList $ map (first T.toUpper) $ Map.toList env
+  | otherwise = env
+
 
 -- | Reset the executable cache.
 --
@@ -299,7 +312,10 @@ resetExeCache = do
   pc <- view processContextL
   atomicModifyIORef (pcExeCache pc) (const mempty)
 
--- | Load up an 'EnvOverride' from the standard environment.
+-- | Same as 'mkProcessContext' but uses the system environment (from
+-- 'System.Environment.getEnvironment').
+--
+-- @since 0.0.3.0
 mkDefaultProcessContext :: MonadIO m => m ProcessContext
 mkDefaultProcessContext =
     liftIO $
@@ -307,10 +323,8 @@ mkDefaultProcessContext =
           mkProcessContext
         . Map.fromList . map (T.pack *** T.pack)
 
--- | Modify the environment variables of a 'ProcessContext'.
---
--- This will keep other settings unchanged, in particular the working
--- directory.
+-- | Modify the environment variables of a 'ProcessContext'. This will not
+-- change the working directory.
 --
 -- Note that this requires 'MonadIO', as it will create a new 'IORef'
 -- for the cache.
@@ -325,7 +339,7 @@ modifyEnvVars pc f = do
   pc' <- mkProcessContext (f $ pcTextMap pc)
   return pc' { pcWorkingDir = pcWorkingDir pc }
 
--- | Use 'modifyEnvVarMap' to create a new 'ProcessContext', and then
+-- | Use 'modifyEnvVars' to create a new 'ProcessContext', and then
 -- use it in the provided action.
 --
 -- @since 0.0.3.0
@@ -338,6 +352,13 @@ withModifyEnvVars f inner = do
   pc <- view processContextL
   pc' <- modifyEnvVars pc f
   local (set processContextL pc') inner
+
+-- | Look into the `ProcessContext` and return the specified environmet variable if one is
+-- available.
+--
+-- @since 0.1.14.0
+lookupEnvFromContext :: (MonadReader env m, HasProcessContext env) => Text -> m (Maybe Text)
+lookupEnvFromContext envName = Map.lookup envName <$> view envVarsL
 
 -- | Set the working directory to be used by child processes.
 --
@@ -392,9 +413,10 @@ withProcessTimeLog mdir name args proc' = do
   end <- getMonotonicTime
   let diff = end - start
   useColor <- view logFuncUseColorL
+  accentColors <- view logFuncAccentColorsL
   logDebug
       ("Process finished in " <>
-      (if useColor then "\ESC[92m" else "") <> -- green
+      (if useColor then accentColors 0 else "") <> -- accent color 0
       timeSpecMilliSecondText diff <>
       (if useColor then "\ESC[0m" else "") <> -- reset
        ": " <> display cmdText)
@@ -552,54 +574,95 @@ doesExecutableExist
   :: (MonadIO m, MonadReader env m, HasProcessContext env)
   => String            -- ^ Name of executable
   -> m Bool
-doesExecutableExist = liftM isRight . findExecutable
+doesExecutableExist = fmap isRight . findExecutable
 
--- | Find the complete path for the executable.
+-- | Find the complete path for the given executable name.
+--
+-- On POSIX systems, filenames that match but are not exectuables are excluded.
+--
+-- On Windows systems, the executable names tried, in turn, are the supplied
+-- name (only if it has an extension) and that name extended by each of the
+-- 'exeExtensions'. Also, this function may behave differently from
+-- 'RIO.Directory.findExecutable'. The latter excludes as executables filenames
+-- without a @.bat@, @.cmd@, @.com@ or @.exe@ extension (case-insensitive).
 --
 -- @since 0.0.3.0
 findExecutable
   :: (MonadIO m, MonadReader env m, HasProcessContext env)
-  => String            -- ^ Name of executable
-  -> m (Either ProcessException FilePath) -- ^ Full path to that executable on success
-findExecutable name0 | any FP.isPathSeparator name0 = do
-    pc <- view processContextL
-    let names0 = map (name0 ++) (pcExeExtensions pc)
-        testNames [] = return $ Left $ ExecutableNotFoundAt name0
-        testNames (name:names) = do
-            exists <- liftIO $ D.doesFileExist name
-            if exists
-                then do
-                    path <- liftIO $ D.canonicalizePath name
-                    return $ return path
-                else testNames names
-    testNames names0
+  => String
+  -- ^ Name of executable
+  -> m (Either ProcessException FilePath)
+  -- ^ Full path to that executable on success
+findExecutable name | any FP.isPathSeparator name = do
+  names <- addPcExeExtensions name
+  testFPs (pure $ Left $ ExecutableNotFoundAt name) D.makeAbsolute names
 findExecutable name = do
-    pc <- view processContextL
-    m <- readIORef $ pcExeCache pc
-    epath <- case Map.lookup name m of
-        Just epath -> return epath
-        Nothing -> do
-            let loop [] = return $ Left $ ExecutableNotFound name (pcPath pc)
-                loop (dir:dirs) = do
-                    let fp0 = dir FP.</> name
-                        fps0 = map (fp0 ++) (pcExeExtensions pc)
-                        testFPs [] = loop dirs
-                        testFPs (fp:fps) = do
-                            exists <- D.doesFileExist fp
-                            existsExec <- if exists then liftM D.executable $ D.getPermissions fp else return False
-                            if existsExec
-                                then do
-                                    fp' <- D.makeAbsolute fp
-                                    return $ return fp'
-                                else testFPs fps
-                    testFPs fps0
-            epath <- liftIO $ loop $ pcPath pc
-            () <- atomicModifyIORef (pcExeCache pc) $ \m' ->
-                (Map.insert name epath m', ())
-            return epath
-    return epath
+  pc <- view processContextL
+  m <- readIORef $ pcExeCache pc
+  case Map.lookup name m of
+    Just epath -> pure epath
+    Nothing -> do
+      let loop [] = pure $ Left $ ExecutableNotFound name (pcPath pc)
+          loop (dir:dirs) = do
+            fps <- addPcExeExtensions $ dir FP.</> name
+            testFPs (loop dirs) D.makeAbsolute fps
+      epath <- loop $ pcPath pc
+      () <- atomicModifyIORef (pcExeCache pc) $ \m' ->
+          (Map.insert name epath m', ())
+      pure epath
 
--- | Augment the PATH environment variable with the given extra paths.
+-- | A helper function to add the executable extensions of the process context
+-- to a file path. On Windows, the original file path is included, if it has an
+-- existing extension.
+addPcExeExtensions
+  :: (MonadIO m, MonadReader env m, HasProcessContext env)
+  => FilePath -> m [FilePath]
+addPcExeExtensions fp = do
+  pc <- view processContextL
+  pure $ (if isWindows && FP.hasExtension fp then (fp:) else id)
+         (map (fp ++) (pcExeExtensions pc))
+
+-- | A helper function to test whether file paths are to an executable
+testFPs
+  :: (MonadIO m, MonadReader env m, HasProcessContext env)
+  => m (Either ProcessException FilePath)
+  -- ^ Default if no executable exists at any file path
+  -> (FilePath -> IO FilePath)
+  -- ^ Modification to apply to a file path, if an executable exists there
+  -> [FilePath]
+  -- ^ File paths to test, in turn
+  -> m (Either ProcessException FilePath)
+testFPs ifNone _ [] = ifNone
+testFPs ifNone modify (fp:fps) = do
+  exists <- liftIO $ D.doesFileExist fp
+  existsExec <- liftIO $ if exists
+    then if isWindows then pure True else isExecutable
+    else pure False
+  if existsExec then liftIO $ Right <$> modify fp else testFPs ifNone modify fps
+ where
+  isExecutable = D.executable <$> D.getPermissions fp
+
+-- | Get the filename extensions for executable files, including the dot (if
+-- any).
+--
+-- On POSIX systems, this is @[""]@.
+--
+-- On Windows systems, the list is determined by the value of the @PATHEXT@
+-- environment variable, if it present in the environment. If the variable is
+-- absent, this is its default value on a Windows system. This function may,
+-- therefore, behave differently from 'RIO.Directory.exeExtension',
+-- which returns only @".exe"@.
+--
+-- @since 0.1.13.0
+exeExtensions :: (MonadIO m, MonadReader env m, HasProcessContext env)
+              => m [String]
+exeExtensions = do
+  pc <- view processContextL
+  return $ pcExeExtensions pc
+
+-- | Augment the given value (assumed to be that of an environment variable
+-- that lists paths, such as PATH; this is not checked) with the given extra
+-- paths. Those paths are prepended (as in: they take precedence).
 --
 -- @since 0.0.3.0
 augmentPath :: [FilePath] -> Maybe Text -> Either ProcessException Text
@@ -611,15 +674,29 @@ augmentPath dirs mpath =
             ++ maybeToList mpath
     illegal -> Left $ PathsInvalidInPath illegal
 
--- | Apply 'augmentPath' on the PATH value in the given 'EnvVars'.
+-- | Apply 'augmentPath' on the value of the PATH environment variable in the
+-- given 'EnvVars'.
 --
 -- @since 0.0.3.0
 augmentPathMap :: [FilePath] -> EnvVars -> Either ProcessException EnvVars
-augmentPathMap dirs origEnv =
+augmentPathMap = augmentPathMap' "PATH"
+
+-- | Apply 'augmentPath' on the value of the given environment variable in the
+-- given 'EnvVars'.
+--
+-- @since 0.1.22.0
+augmentPathMap'
+  :: Text
+  -- ^ Environment variable. If it does not already exist in the given
+  -- 'EnvVars', it will be created.
+  -> [FilePath]
+  -> EnvVars
+  -> Either ProcessException EnvVars
+augmentPathMap' envVar dirs (normalizePathEnv -> origEnv) =
   do path <- augmentPath dirs mpath
-     return $ Map.insert "PATH" path origEnv
+     return $ Map.insert envVar path origEnv
   where
-    mpath = Map.lookup "PATH" origEnv
+    mpath = Map.lookup envVar origEnv
 
 -- | Show a process arg including speechmarks when necessary. Just for
 -- debugging purposes, not functionally important.

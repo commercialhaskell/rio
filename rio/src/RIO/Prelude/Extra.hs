@@ -42,7 +42,7 @@ forMaybeA = flip mapMaybeA
 
 -- | Monadic 'mapMaybe'.
 mapMaybeM :: Monad m => (a -> m (Maybe b)) -> [a] -> m [b]
-mapMaybeM f = liftM catMaybes . mapM f
+mapMaybeM f = fmap catMaybes . mapM f
 
 -- | @'forMaybeM' '==' 'flip' 'mapMaybeM'@
 forMaybeM :: Monad m => [a] -> (a -> m (Maybe b)) -> m [b]
@@ -85,13 +85,6 @@ whenM boolM action = boolM >>= (`when` action)
 -- | Run the second value if the first value returns 'False'
 unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM boolM action = boolM >>= (`unless` action)
-
-#if !MIN_VERSION_base(4, 11, 0)
-(<&>) :: Functor f => f a -> (a -> b) -> f b
-as <&> f = f <$> as
-
-infixl 1 <&>
-#endif
 
 
 -- | Helper function to force an action to run in 'IO'. Especially
