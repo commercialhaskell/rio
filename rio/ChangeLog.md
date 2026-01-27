@@ -4,6 +4,7 @@
 
 * work around GHC's [#26479](https://gitlab.haskell.org/ghc/ghc/-/issues/26479)
 * Move vector `slice` functions to `Partial` modules and add `RIO.Vector.sliceMaybe` function.
+* require `vector-0.12.1`, dropping support for Stackage LTS 13.x ([why](https://github.com/haskell/vector/issues/276#issuecomment-1133765595))
 
 ## 0.1.24.0
 

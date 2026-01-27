@@ -31,7 +31,7 @@ dependencies:
 - unliftio >= 0.2.14
 - unliftio-core
 - unordered-containers
-- vector
+- vector >= 0.12.1.0
 
 # Just for preprocessor directives
 - process

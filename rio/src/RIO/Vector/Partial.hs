@@ -17,7 +17,7 @@ module RIO.Vector.Partial
   -- ** Extracting subvectors
   , Data.Vector.Generic.init
   , Data.Vector.Generic.tail
-  , slice  -- Pending <https://gitlab.haskell.org/ghc/ghc/issues/17233>
+  , Data.Vector.Generic.slice
 
   -- * Modifying vectors
   -- ** Bulk updates
@@ -63,23 +63,3 @@ module RIO.Vector.Partial
   ) where
 
 import qualified Data.Vector.Generic
-
--- | /O(1)/ Yield a slice of the vector without copying it. The vector must
--- contain at least @i+n@ elements.
-slice :: Data.Vector.Generic.Vector v a
-  => Int   -- ^ @i@ starting index
-  -> Int   -- ^ @n@ length
-  -> v a
-  -> v a
-slice i n v = if i > 0 && n > 0 && i + n < 0  -- `i+n` overflows
-  -- Special case handling for cases when `i+n` overflows. This is
-  -- required due to <https://gitlab.haskell.org/ghc/ghc/issues/17233>.
-  -- Once that GHC issue is closed this function can be replaced by
-  -- `Data.Vector.Generic.slice`.
-  -- (Negative overflow is not an issue as an `Date.Vector.Generic.slice`
-  -- throws an exception is thrown for negative arguments.)
-  then error $ "slice: invalid slice ("
-    ++ show i ++ ","
-    ++ show n ++ ","
-    ++ show (Data.Vector.Generic.length v) ++ ")"
-  else Data.Vector.Generic.slice i n v
