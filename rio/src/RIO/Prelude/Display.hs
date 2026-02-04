@@ -42,9 +42,6 @@ instance Monoid Utf8Builder where
   mempty = Utf8Builder mempty
   {-# INLINE mempty #-}
 
-  mappend = (Data.Semigroup.<>)
-  {-# INLINE mappend #-}
-
   -- Data.Foldable.fold cannot be used here because it results in a circularity:
   mconcat = foldr mappend mempty
   {-# INLINE mconcat #-}

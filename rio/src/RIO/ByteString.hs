@@ -13,6 +13,7 @@ module RIO.ByteString
 
 import Data.ByteString hiding (head, last, tail, init, foldl1, foldl1', foldr1, foldr1', maximum, minimum, findSubstring, findSubstrings, packCString, packCStringLen, useAsCString, useAsCStringLen, getLine, getContents, putStr, putStrLn, interact, readFile, writeFile, appendFile, hGetLine, hGetContents, hGet, hGetSome, hGetNonBlocking, hPut, hPutNonBlocking, hPutStr, hPutStrLn, breakByte)
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as B8
 import RIO
 import Foreign.C.String (CString, CStringLen)
 
@@ -34,7 +35,7 @@ useAsCStringLen bs inner = withRunInIO $ \run -> B.useAsCStringLen bs $ run . in
 
 -- | Lifted 'B.getLine'
 getLine :: MonadIO m => m ByteString
-getLine = liftIO B.getLine
+getLine = liftIO B8.getLine
 
 -- | Lifted 'B.getContents'
 getContents :: MonadIO m => m ByteString
@@ -62,7 +63,7 @@ appendFile fp = liftIO . B.appendFile fp
 
 -- | Lifted 'B.hGetLine'
 hGetLine :: MonadIO m => Handle -> m ByteString
-hGetLine = liftIO . B.hGetLine
+hGetLine = liftIO . B8.hGetLine
 
 -- | Lifted 'B.hGetContents'
 hGetContents :: MonadIO m => Handle -> m ByteString
