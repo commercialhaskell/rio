@@ -42,7 +42,6 @@ instance Semigroup a => Semigroup (RIO env a) where
   (<>) = liftA2 (<>)
 instance Monoid a => Monoid (RIO env a) where
   mempty = pure mempty
-  mappend = liftA2 mappend
 
 -- | Using the environment run in IO the action that requires that environment.
 --
