@@ -45,6 +45,8 @@ when:
   else:
     dependencies:
     - unix
+- condition: os(darwin)
+  cpp-options: -DMACOS
 
 library:
   source-dirs: src/
