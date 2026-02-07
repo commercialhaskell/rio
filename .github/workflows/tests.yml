@@ -55,6 +55,30 @@ jobs:
       if: startsWith(runner.os, 'macOS')
       run: |
         echo "TMPDIR=$RUNNER_TEMP" >> $GITHUB_ENV
+    - name: Diagnostic on macOS
+      if: startsWith(runner.os, 'macOS')
+      run: |
+        set -euxo pipefail
+
+        echo "whoami=$(whoami)"
+        id
+        umask
+        echo "RUNNER_TEMP=$RUNNER_TEMP"
+        echo "TMPDIR=${TMPDIR:-"(unset)"}"
+
+        # Show perms + ACLs on the temp area (macOS: -e shows ACLs)
+        ls -ldOe@ /Users/runner/work/_temp || true
+        ls -ldOe@ "$RUNNER_TEMP" || true
+
+        # If the failing directory exists, dump its perms too
+        ls -ldOe@ /Users/runner/work/_temp/rio* || true
+
+        # Repro: create + write in a fresh subdir
+        d="$(mktemp -d "$RUNNER_TEMP/rio-probe.XXXXXX")"
+        ls -ldOe@ "$d"
+        touch "$d/can_write"
+        ls -lOe@ "$d/can_write"
+
     - name: Build and run tests
       shell: bash
       run: |
