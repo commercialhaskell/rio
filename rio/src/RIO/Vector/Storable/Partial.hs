@@ -17,6 +17,7 @@ module RIO.Vector.Storable.Partial
   -- ** Extracting subvectors
   , Data.Vector.Storable.init
   , Data.Vector.Storable.tail
+  , Data.Vector.Storable.slice
 
   -- * Modifying vectors
   -- ** Bulk updates
