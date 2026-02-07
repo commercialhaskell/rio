@@ -58,9 +58,11 @@ sameAsWithFiletest = do
   -- appear to be in that environment.
   mGitHubActions <- lookupEnv "GITHUB_ACTIONS"
   case mGitHubActions of
+  {-
     Just "true" -> pendingWith $
       "On GitHub macOS runners, the file system appears to reject " <>
       "durability-related open flags."
+  -}
     _ -> test
 #endif
  where
