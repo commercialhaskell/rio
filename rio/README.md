@@ -232,7 +232,7 @@ A primary design choice you'll need to make in your code is how to
 structure your monads. There are many options out there, with various
 trade-offs. Instead of going through all of the debates, we're going
 to point to
-[an existing blog post](https://www.fpcomplete.com/blog/2017/07/the-rio-monad),
+[an existing blog post](https://web.archive.org/web/20260811232007/https://academy.fpblock.com/blog/2017/07/the-rio-monad/),
 and here just give recommendations.
 
 * If your code is going to perform I/O: it should live in the `RIO`
